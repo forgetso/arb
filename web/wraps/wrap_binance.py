@@ -81,7 +81,7 @@ class binance():
     def trade(self, trade_type, volume, price, trade_id=None):
         result = None
         if trade_type == 'buy':
-            result = self.api.order_limit_buy(symbol=self.trade_pair, quantity=str(volume), price=price)
+            result = self.api.order_limit_buy(symbol=self.trade_pair, quantity=volume, price=price)
         elif trade_type == 'sell':
             result = self.api.order_limit_sell(symbol=self.trade_pair, quantity=volume, price=price)
 
