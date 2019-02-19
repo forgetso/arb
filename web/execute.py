@@ -85,7 +85,7 @@ class JobQueueExecutor:
             jobthread = JobQueueThread(self.jq, job, safecmd)
             jobthread.setDaemon(True)
             jobthread.start()
-            job['job_startat'] = datetime.datetime.now()
+            job['job_startat'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             job['job_status'] = STATUS_RUNNING
             job['job_lock'] = True
             self.jq.update_job(job)
