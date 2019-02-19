@@ -51,6 +51,8 @@ def compare(cur_x, cur_y, markets, fiat_rate):
             arbitrage['buy'].get_balances()
             arbitrage['sell'].get_balances()
 
+        logging.debug(arbitrage['sell'].balances)
+
         viable_arbitrages, replenish_jobs = determine_arbitrage_viability(arbitrages)
 
     # result is a list of downstream jobs to add to the queue
@@ -86,6 +88,7 @@ def determine_arbitrage_viability(arbitrages):
                     # we only want to sell the amount we managed to buy
                     volume = sell_volume
                     currency = exchange.base_currency
+
                     if volume > exchange.balances.get(exchange.base_currency):
                         volume = exchange.balances.get(exchange.base_currency)
                         # therefore we also only want to buy this much
@@ -100,6 +103,7 @@ def determine_arbitrage_viability(arbitrages):
                             'currency': currency
                         }
                     })
+                    viable_arbitrages = []
                     break
 
                 job = {
@@ -207,7 +211,6 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
         fees = price_sell * volume * fee
         profit = ((price_sell - price_buy) * volume - fees) * fiat_rate
     except Exception as e:
-        print(e)
         raise Exception(e)
 
     return profit
