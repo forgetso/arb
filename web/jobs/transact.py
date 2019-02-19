@@ -55,7 +55,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
 
         # finally, check if the volume we're attempting to trade is above the min trade size in BTC
         if price * volume < exchange_obj.min_trade_size_btc:
-            volume = exchange_obj.min_trade_size_btc / price + exchange_obj.min_trade_size,
+            volume = exchange_obj.min_trade_size_btc / price + exchange_obj.min_trade_size
 
     # otherwise if an exchange only specifies a set number of decimal places (gatecoin), we can use this in isolation
     elif hasattr(exchange_obj, 'decimal_places'):
@@ -65,7 +65,14 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
         # TODO following code was for test transactions, need to reinstate
         # volume = 10 ** -exchange_obj.decimal_places / price
 
-    trade = exchange_obj.trade(trade_type=type, volume=str(volume), price=price, trade_id=trade_id)
+    # we convert Decimal objects to str for the API requests
+    try:
+        volume_str = str(volume)
+        price_str = str(price)
+    except Exception as e:
+        raise TransactionError('Error converting price/volume to str {}'.format(e))
+
+    trade = exchange_obj.trade(trade_type=type, volume=volume_str, price=price_str, trade_id=trade_id)
 
     if trade:
         store_trade(trade)
