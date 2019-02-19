@@ -36,5 +36,6 @@
 ehthumbs.db
 Thumbs.db
 
-#Settings file#
+# Settings file #
+######################
 apikeys.py   
