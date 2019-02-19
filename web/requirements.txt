@@ -1,0 +1,4 @@
+bittrex
+gatecoin_api
+pymongo
+requests
