@@ -52,8 +52,6 @@ def compare(cur_x, cur_y, markets, fiat_rate):
             arbitrage['buy'].get_balances()
             arbitrage['sell'].get_balances()
 
-        logging.debug(arbitrage['sell'].balances)
-
         viable_arbitrages, replenish_jobs = determine_arbitrage_viability(arbitrages)
 
     # result is a list of downstream jobs to add to the queue

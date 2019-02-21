@@ -1,8 +1,11 @@
 from web.settings import FIAT_REPLENISH_AMOUNT, FIAT_DEFAULT_SYMBOL
-from math import modf
-from decimal import Decimal
+from math import log10, log2
+from decimal import Decimal, Context, setcontext
 import os, json, requests
+import logging
+from web.settings import LOGLEVEL
 
+logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 COINGECKO_META = "/web/coingecko_meta.json"
 
 
@@ -19,15 +22,21 @@ def get_replenish_quantity(currency):
 def get_number_of_decimal_places(number):
     try:
         # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
-        decimal_places = round(1 / modf(number)[0])
+        decimal_places = int(log2(number) / log10(number)) + 1
     except Exception as e:
         raise CommonError('Error getting decimal places {}'.format(e))
     return decimal_places
 
 
 def round_decimal_number(number, decimal_places):
+    context = Context(prec=int(decimal_places))
+    setcontext(context)
     # rounds the volume to the correct number of decimal places
-    number_corrected = number.quantize(Decimal('1.{}'.format(decimal_places * '0')))
+    logging.debug('Rounding to {} decimal_places'.format(decimal_places))
+    quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
+    logging.debug('Accuracy set to {} '.format(quantize_accuracy))
+    logging.debug('Number is  {}'.format(number))
+    number_corrected = number.quantize(quantize_accuracy)
     return number_corrected
 
 

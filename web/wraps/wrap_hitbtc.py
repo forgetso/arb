@@ -40,7 +40,7 @@ class hitbtc:
             self.trade_pair_common = trade_pair
             self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
             self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(markets.get(self.name).get(trade_pair).get('min_trade_size'))
+            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
 
             self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
             self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
@@ -143,6 +143,7 @@ class hitbtc:
         result = False
 
         # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
+        logging.debug('Min Trade Size HitBtc {}'.format(self.min_trade_size))
         allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
 

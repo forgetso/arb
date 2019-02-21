@@ -51,8 +51,9 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
 
         logging.debug('Trading volume {} price {} notional {}'.format(volume_str, price_str, price * volume))
         trade = exchange_obj.trade(trade_type=type, volume=volume_str, price=price_str, trade_id=trade_id)
-
+        logging.debug(trade)
         if trade:
+            logging.debug(trade)
             store_trade(trade)
             return_value_to_stdout(trade)
 
@@ -97,8 +98,8 @@ def setup():
     args = parser.parse_args()
     logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
     markets = load_currency_pairs()
-    price = Decimal(args.price)
-    volume = Decimal(args.volume)
+    price = Decimal(args.price).normalize()
+    volume = Decimal(args.volume).normalize()
 
     transact(args.exchange, args.trade_pair_common, volume, price, args.type, markets, args.test_transaction)
 

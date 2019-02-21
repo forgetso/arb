@@ -28,8 +28,8 @@ class binance():
         try:
             self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
             if self.decimal_places:
-                self.decimal_places = Decimal(self.decimal_places)
-                decimal_rounding_context = Context(prec=int(self.decimal_places))
+                self.decimal_places = int(self.decimal_places)
+                decimal_rounding_context = Context(prec=self.decimal_places)
                 setcontext(decimal_rounding_context)
             self.trade_pair_common = trade_pair
             self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
@@ -108,7 +108,6 @@ class binance():
         order_result = {}
         while not order_completed:
             order_result = self.get_order(symbol=symbol, order_id=order_id)
-            print(order_result)
             if order_result['status'].upper() == 'FILLED':
                 break
             time.sleep(5)
@@ -170,7 +169,8 @@ class binance():
         for trade in trades_itemised:
             total_commission += Decimal(trade.get('commission'))
         total_commission_in_btc = total_commission * Decimal(price)
-        return total_commission_in_btc
+        result = str(total_commission_in_btc.normalize())
+        return result
 
     def get_pending_balances(self):
         try:
