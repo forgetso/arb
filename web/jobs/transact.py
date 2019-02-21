@@ -16,6 +16,8 @@ import os
 import uuid
 from web.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal, Context, setcontext
+from web.lib.db import store_trade
+from web.lib.common import get_number_of_decimal_places
 
 
 def transact(exchange, trade_pair_common, volume, price, type, markets, test_transaction=False):
@@ -24,7 +26,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
                                                                               exchange))
     logging.info('Trade pair {} has base currency of {}'.format(trade_pair_common,
                                                                 markets[exchange][trade_pair_common]['base_currency']))
-
+    trade = {}
     trade_id = get_trade_id()
 
     exchange_obj = get_exchange(exchange)()
@@ -37,68 +39,24 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
         exchange_obj.order_book()
         price = exchange_obj.lowest_ask['price']
 
-    # if an exchange has a minimum trade size and our price is less than this, we must use the minimum trade size
-    # minimum trade size is measured in non-BTC, e.g. ETH, ADX, NEO, etc.
-    if hasattr(exchange_obj, 'min_trade_size') and price < exchange_obj.min_trade_size:
-        volume = exchange_obj.min_trade_size
+    trade_valid, price, volume = exchange_obj.trade_validity(price=price, volume=volume)
 
-    # if an exchange has a minimum trade size in BTC, we need to make sure our BTC trade amount is greater than or equal to this
-    if hasattr(exchange_obj, 'min_trade_size_btc'):
-        if hasattr(exchange_obj, 'decimal_places'):
-            # binance has a min BTC trade size and also decimal places per trading pair
-            allowed_decimal_places = int(exchange_obj.decimal_places)
-        else:
-            # otherwise we work out the decimal places from the min trade size
-            allowed_decimal_places = get_number_of_decimal_places(exchange_obj.min_trade_size)
-        decimal_rounding_context = Context(prec=allowed_decimal_places)
-        setcontext(decimal_rounding_context)
+    if trade_valid:
+        # we convert Decimal objects to str for the API requests
+        try:
+            volume_str = str(volume)
+            price_str = str(price)
+        except Exception as e:
+            raise TransactionError('Error converting price/volume to str {}'.format(e))
 
-        # finally, check if the volume we're attempting to trade is above the min trade size in BTC
-        if price * volume < exchange_obj.min_trade_size_btc:
-            volume = exchange_obj.min_trade_size_btc / price + exchange_obj.min_trade_size
+        logging.debug('Trading volume {} price {} notional {}'.format(volume_str, price_str, price * volume))
+        trade = exchange_obj.trade(trade_type=type, volume=volume_str, price=price_str, trade_id=trade_id)
 
-    # otherwise if an exchange only specifies a set number of decimal places (gatecoin), we can use this in isolation
-    elif hasattr(exchange_obj, 'decimal_places'):
-        decimal_rounding_context = Context(prec=int(exchange_obj.decimal_places))
-        setcontext(decimal_rounding_context)
-        volume = volume * Decimal(1)
-        # TODO following code was for test transactions, need to reinstate
-        # volume = 10 ** -exchange_obj.decimal_places / price
-
-    # we convert Decimal objects to str for the API requests
-    try:
-        volume_str = str(volume)
-        price_str = str(price)
-    except Exception as e:
-        raise TransactionError('Error converting price/volume to str {}'.format(e))
-
-    trade = exchange_obj.trade(trade_type=type, volume=volume_str, price=price_str, trade_id=trade_id)
-
-    if trade:
-        store_trade(trade)
-        return_value_to_stdout(trade)
+        if trade:
+            store_trade(trade)
+            return_value_to_stdout(trade)
 
     return trade
-
-
-def get_number_of_decimal_places(number):
-    try:
-        print(number)
-
-        decimal_part = str(number).split('.')[1]
-
-        if decimal_part == '0':
-            decimal_places = 0
-        else:
-            decimal_places = len(decimal_part)
-    except Exception as e:
-        raise TransactionError('Error getting decimal places {}'.format(e))
-    return decimal_places
-
-
-def store_trade(trade):
-    db = trades_db()
-    db.trades.update_one({'_id': trade.get('_id')}, {'$set': trade}, upsert=True)
 
 
 def get_exchange(exchange):

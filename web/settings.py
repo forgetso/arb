@@ -5,6 +5,7 @@ FIAT_DEFAULT_SYMBOL = 'GBP'
 # This should be set to a value based in the fiat default symol above. e.g. 1 = 1 GBP
 FIAT_ARBITRAGE_MINIMUM = 0.0
 
+BASE_CURRENCY = 'BTC'
 DB_HOST_JOBQUEUE = 'localhost'
 DB_PORT_JOBQUEUE = 27017
 DB_NAME_JOBQUEUE = 'jobqueue'

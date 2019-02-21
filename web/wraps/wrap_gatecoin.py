@@ -6,6 +6,7 @@ import logging
 import time
 from gatecoin_api.request import Request
 from decimal import Decimal, Context, setcontext
+from web.lib.common import round_decimal_number
 
 GATECOIN_TAKER_FEE = 0.0035
 
@@ -39,7 +40,7 @@ class gatecoin():
                 self.decimal_places = Decimal(self.decimal_places)
                 decimal_rounding_context = Context(prec=int(self.decimal_places))
                 setcontext(decimal_rounding_context)
-
+            self.price_decimal_places = markets.get(self.name).get(trade_pair).get('price_decimal_places')
             self.trade_pair_common = trade_pair
             self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
             self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
@@ -72,7 +73,7 @@ class gatecoin():
                 'trading_code': c.trading_code,
                 'base_currency': c.base_currency,
                 'quote_currency': c.quote_currency,
-
+                'price_decimal_places': c.price_decimal_places,
                 # TODO store both maker and taker fee
                 'fee': GATECOIN_TAKER_FEE
             })
@@ -179,6 +180,14 @@ class gatecoin():
         except Exception as e:
             raise WrapGatecoinError('Error getting pending balances {}'.format(e))
         self.pending_balances = pending_balances
+
+    def trade_validity(self, price, volume):
+        if not self.trade_pair:
+            raise WrapGatecoinError('Trade pair must be set')
+        allowed_decimal_places = self.decimal_places
+        price_corrected = round_decimal_number(price, allowed_decimal_places)
+        result = True
+        return result, price_corrected, volume
 
 
 class WrapGatecoinError(Exception):

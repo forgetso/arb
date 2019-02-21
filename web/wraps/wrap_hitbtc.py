@@ -5,6 +5,7 @@ from web.lib.errors import ErrorTradePairDoesNotExist
 import uuid
 import logging
 from web.settings import LOGLEVEL
+from web.lib.common import get_number_of_decimal_places, round_decimal_number
 
 URL = 'https://api.hitbtc.com'
 
@@ -25,7 +26,7 @@ class hitbtc:
         self.name = 'hitbtc'
         self.balances = {}
         self.pending_balances = {}
-        #self.min_trade_size_btc = Decimal(0.0001)
+        # self.min_trade_size_btc = Decimal(0.0001)
         logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 
     def set_trade_pair(self, trade_pair, markets):
@@ -109,7 +110,7 @@ class hitbtc:
                 'exchange': self.name
             }
         except Exception as e:
-            raise Exception('Error formatting trade {}'.format(e))
+            raise WrapHitBtcError('Error formatting trade {}'.format(e))
 
         return trade
 
@@ -117,14 +118,14 @@ class hitbtc:
         try:
             balances = {x.get('currency'): Decimal(x.get('available')) for x in self.api.get_trading_balance()}
         except Exception as e:
-            raise Exception('Error getting trading balances {}'.format(e))
+            raise WrapHitBtcError('Error getting trading balances {}'.format(e))
         self.balances = balances
 
     def get_address(self, symbol):
         try:
             address_json = self.api.get_address(currency_code=symbol)
         except Exception as e:
-            raise Exception('Error getting currency address in HitBtc {}'.format(e))
+            raise WrapHitBtcError('Error getting currency address in HitBtc {}'.format(e))
         return address_json.get('address')
 
     def get_pending_balances(self):
@@ -135,3 +136,21 @@ class hitbtc:
         except Exception as e:
             raise Exception('Error getting pending balances in HitBtc {}'.format(e))
         self.pending_balances = pending_balances
+
+    def trade_validity(self, price, volume):
+        if not self.trade_pair:
+            raise WrapHitBtcError('Trade pair must be set')
+        result = False
+
+        # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
+        allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
+        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+
+        if volume_corrected > self.min_trade_size:
+            result = True
+
+        return result, price, volume_corrected
+
+
+class WrapHitBtcError(Exception):
+    pass

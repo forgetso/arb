@@ -1,19 +1,21 @@
 import argparse
 import logging
-from web.settings import LOGLEVEL, MASTER_EXCHANGE, FIAT_REPLENISH_AMOUNT, FIAT_DEFAULT_SYMBOL
-from web.lib.setup import get_exchanges, get_current_fiat_rate
+from web.settings import LOGLEVEL, MASTER_EXCHANGE, BASE_CURRENCY
+from web.lib.setup import get_exchanges
 from web.lib.jobqueue import return_value_to_stdout
-
+from web.lib.common import get_replenish_quantity
 
 def replenish(exchange, currency):
-    # this exchange has none of this currency
-    # we need to replenish the stocks from ... TODO choose a master exchange? Bittrex?
+    # *exchange* has zero quanity of *currency*
+    # we need to replenish the stocks from MASTER_EXCHANGE
     # TODO make a method to get one exchange
+    downstream_jobs = []
     exchanges = get_exchanges()
     master_exchange = [e for e in exchanges if e.name == MASTER_EXCHANGE][0]
     child_exchange = [e for e in exchanges if e.name == exchange][0]
     quantity = get_replenish_quantity(currency)
     to_address = child_exchange.get_address(currency)
+    result = {'success': False}
 
     if not to_address:
         raise ReplenishError('No address to send {} for exchange {}'.format(currency, exchange))
@@ -23,19 +25,26 @@ def replenish(exchange, currency):
     # we may already be waiting for a deposit to complete with pending confirmations
     # if so, we will not try to replenish again
     if currency not in child_exchange.pending_balances:
-        master_exchange.withdraw(currency.upper(), to_address, quantity)
+        withdrawal_success = master_exchange.withdraw(currency.upper(), to_address, quantity)
+        if not withdrawal_success:
+            # this means we did not have enough of the currency to withdraw and will need to convert some BTC to this currency
+            downstream_jobs.append({
+                'job_type': 'CONVERT',
+                'job_args': {
+                    'exchange': exchange.name,
+                    'currency_from': BASE_CURRENCY,
+                    'currency_to': currency
+                }
+            })
+            # we will retry this job in 20 seconds time
+            result['retry'] = int(20)
+        else:
+            result['success'] = True
 
-    return_value_to_stdout({'success': True})
+    return_value_to_stdout(result)
 
 
-def get_replenish_quantity(currency):
-    fiat_rate = get_current_fiat_rate(fiat_symbol=FIAT_DEFAULT_SYMBOL, crypto_symbol=currency)
-    try:
-        quantity = FIAT_REPLENISH_AMOUNT / fiat_rate
-    except Exception as e:
-        raise ReplenishError('Error getting replenish quantity {}'.format(e))
 
-    return quantity
 
 
 def setup():

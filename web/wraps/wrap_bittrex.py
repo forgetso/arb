@@ -3,6 +3,8 @@ from web.settings import BITTREX_PRIVATE_KEY, BITTREX_PUBLIC_KEY
 from web.lib.errors import ErrorTradePairDoesNotExist
 import time
 from decimal import Decimal, Context, setcontext
+from web.lib.common import get_number_of_decimal_places, round_decimal_number
+from web.settings import BASE_CURRENCY
 
 BITTREX_TAKER_FEE = 0.0025
 
@@ -23,6 +25,8 @@ class bittrex():
         self.highest_bid = None
         self.name = 'bittrex'
         self.min_trade_size_btc = Decimal(0.0005)
+        self.balances = None
+        self.pending_balances = None
 
     def set_trade_pair(self, trade_pair, markets):
         try:
@@ -34,7 +38,7 @@ class bittrex():
             self.trade_pair_common = trade_pair
             self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
             self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(markets.get(self.name).get(trade_pair).get('min_trade_size'))
+            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
             self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
             self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
         except AttributeError:
@@ -73,7 +77,7 @@ class bittrex():
     def trade(self, trade_type, volume, price, trade_id=None):
         result = None
         if trade_type == 'buy':
-            self.upgrade_api()
+            # self.upgrade_api()
             # result = self.api.trade_buy(market=self.trade_pair, order_type=ORDERTYPE_LIMIT, quantity=volume, rate=price,
             #                             time_in_effect=TIMEINEFFECT_GOOD_TIL_CANCELLED)
             result = self.api.buy_limit(market=self.trade_pair, quantity=volume, rate=price)
@@ -160,13 +164,48 @@ class bittrex():
         return address
 
     def get_pending_balances(self):
-        raise NotImplementedError('Not implemented as Bittrex is the current master exchange')
+        try:
+            balances = {x.get('Currency'): x.get('Pending') for x in self.api.get_balances().get('result', {})}
+        except Exception as e:
+            raise Exception('Error getting trading balances {}'.format(e))
+        self.pending_balances = balances
 
     # currently withdraw is only implemented for bittrex
     def withdraw(self, currency, to_address, quantity):
+        withdrawn = False
         withdraw_response = self.api.withdraw(currency, quantity, to_address)
         if not withdraw_response.get('success'):
-            raise WrapBittrexError('Error withdrawing {}'.format(withdraw_response.get('message')))
+            if withdraw_response.get('message') != 'INSUFFICIENT_FUNDS':
+                raise WrapBittrexError('Error withdrawing {}'.format(withdraw_response.get('message')))
+        else:
+            withdrawn = True
+        return withdrawn
+
+    def trade_validity(self, price, volume):
+        if not self.trade_pair:
+            raise WrapBittrexError('Trade pair must be set')
+        allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
+        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+
+        # if price * volume < self.min_trade_size_btc:
+        #     volume = self.min_trade_size_btc / price
+        result = False
+        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
+        if volume_corrected > self.min_trade_size:
+            result = True
+
+        # this is an extra check to make sure that the trade size is bigger than the smallest trade size allowed in BTC
+        if self.quote_currency == BASE_CURRENCY:
+            if price * volume_corrected > self.min_trade_size_btc:
+                result = True
+            else:
+                result = False
+
+        # TODO work out if non BASE CURRENCY trades are above the BASE_CURRENCY threshold, for example ETH-LTC
+        if self.quote_currency != BASE_CURRENCY:
+            raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
+
+        return result, price, volume_corrected
 
 
 class WrapBittrexError(Exception):

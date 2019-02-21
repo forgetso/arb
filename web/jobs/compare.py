@@ -1,7 +1,8 @@
 import argparse
 import logging
 import itertools
-from web.lib.setup import setup_environment, get_exchanges, load_currency_pairs, get_current_fiat_rate
+from web.lib.setup import setup_environment, get_exchanges, load_currency_pairs
+from web.lib.common import get_current_fiat_rate
 from web.lib.errors import ErrorTradePairDoesNotExist
 from web.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
 from web.lib.jobqueue import return_value_to_stdout
@@ -94,8 +95,15 @@ def determine_arbitrage_viability(arbitrages):
                         # therefore we also only want to buy this much
                         viable_arbitrages[0]['job_args']['volume'] = decimal_as_string(volume)
 
+                trade_valid, price, volume = exchange.trade_validity(price=price, volume=volume)
+
+                if not trade_valid:
+                    logging.debug('INVALID TRADE! {} {} {}'.format(exchange.name, price, volume))
+                    viable_arbitrages = []
+                    break
+
                 # the account has none of this currency, need to replenish
-                if volume == 0:
+                if volume == 0 or volume < exchange.min_trade_size:
                     replenish_jobs.append({
                         'job_type': 'REPLENISH',
                         'job_args': {
@@ -204,7 +212,8 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
 
             fee = exchange_sell.fee * volume * price_sell + exchange_buy.fee * volume * price_buy
         except:
-            raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee), type(exchange_sell.fee))
+            raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee),
+                            type(exchange_sell.fee))
 
         if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['price']:
             volume = exchange_sell.highest_bid['volume']
@@ -222,12 +231,18 @@ def setup():
     parser.add_argument('curr_y', type=str, help='Currency to compare')
     parser.add_argument('fiat_rate', type=float, help='The FIAT rate of BTC to work out profit')
     parser.add_argument('--setup', action='store_true')
+    parser.add_argument('--setuponly', action='store_true',
+                        help='Only run the setup process, not the comparison process')
     args = parser.parse_args()
     logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 
     # configure a bunch of stuff for running like currency pairs, database, ... TODO make this a class?
-    if args.setup:
+    if args.setup and not args.setuponly:
         setup_environment()
+
+    if args.setuponly:
+        setup_environment()
+        exit()
 
     markets = load_currency_pairs()
 

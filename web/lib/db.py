@@ -18,3 +18,7 @@ def db_connection():
     dbconn = pymongo.MongoClient(host=settings.DB_HOST_JOBQUEUE,
                                  port=settings.DB_PORT_JOBQUEUE)
     return dbconn
+
+def store_trade(trade):
+    db = trades_db()
+    db.trades.update_one({'_id': trade.get('_id')}, {'$set': trade}, upsert=True)

@@ -5,7 +5,7 @@ from web.lib.jobqueue import Jobqueue, JOB_STATUS_COLLECTION, JOB_DEFINITIONS, J
 import logging
 import traceback
 import datetime
-from web.lib.setup import get_current_fiat_rate
+from web.lib.common import get_current_fiat_rate
 
 # Create an instance of the app! Execute a job queue. Begin scraping prices of crypto. Look for jobs to start based on
 # the scrapes.
@@ -58,7 +58,7 @@ class JobQueueExecutor:
         return
 
     def get_current_fiat_rate(self):
-        fiat_rate = get_current_fiat_rate()
+        fiat_rate = get_current_fiat_rate('BTC')
         return fiat_rate
 
     def start_jobs(self):

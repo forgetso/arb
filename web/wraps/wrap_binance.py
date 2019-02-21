@@ -3,6 +3,8 @@ from web.settings import BINANCE_SECRET_KEY, BINANCE_PUBLIC_KEY
 from web.lib.errors import ErrorTradePairDoesNotExist
 import time
 from decimal import Decimal, Context, setcontext
+import math
+from web.lib.common import round_decimal_number
 
 BITTREX_TAKER_FEE = 0.0025
 
@@ -32,8 +34,8 @@ class binance():
             self.trade_pair_common = trade_pair
             self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
             self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(markets.get(self.name).get(trade_pair).get('min_trade_size'))
-            self.min_trade_size_btc = Decimal(markets.get(self.name).get(trade_pair).get('min_trade_size_btc'))
+            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
+            self.min_notional = Decimal(str((markets.get(self.name).get(trade_pair).get('min_notional'))))
             self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
             self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
         except AttributeError:
@@ -64,10 +66,11 @@ class binance():
                     'trading_code': c['symbol'],
                     'base_currency': c['baseAsset'],
                     'quote_currency': c['quoteAsset'],
-                    'decimal_places': c['baseAssetPrecision'],
+                    'decimal_places': -int(math.log10(
+                        Decimal([x.get('stepSize') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]))),
                     'min_trade_size': float(
                         [x.get('minQty') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]),
-                    'min_trade_size_btc': float(
+                    'min_notional': float(
                         [x.get('minNotional') for x in c['filters'] if x['filterType'] == 'MIN_NOTIONAL'][0]),
                     'fee': float(fees_dict.get(c.get('symbol')))
                 })
@@ -177,6 +180,17 @@ class binance():
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
         self.pending_balances = pending_balances
+
+    def trade_validity(self, price, volume):
+        if not self.trade_pair:
+            raise WrapBinanceError('Trade pair must be set')
+        allowed_decimal_places = self.decimal_places
+        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+        result = False
+        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
+        if price * volume_corrected > self.min_notional:
+            result = True
+        return result, price, volume_corrected
 
 
 def Decimal_to_string(number, precision=20):

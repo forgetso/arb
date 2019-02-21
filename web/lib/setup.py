@@ -1,13 +1,13 @@
 from web.wraps import wrap_hitbtc, wrap_gatecoin, wrap_bittrex, wrap_binance
 import json
 import os
-import requests
-from web.settings import FIAT_DEFAULT_SYMBOL, DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
+from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
 from pymongo import MongoClient
 from pymongo.errors import CollectionInvalid
 from web.lib.jobqueue import JOB_COLLECTION
-
+from web.lib.common import get_coingecko_meta
 MARKETS_JSON = "/web/markets.json"
+
 
 
 def setup_database():
@@ -70,28 +70,7 @@ def get_exchanges():
     exchanges.append(wrap_binance.binance())
     return exchanges
 
-
-def get_current_fiat_rate(fiat_symbol=None, crypto_symbol=None):
-    try:
-        if not fiat_symbol:
-            fiat_symbol = FIAT_DEFAULT_SYMBOL
-
-        req = requests.get('https://api.coingecko.com/api/v3/exchange_rates')
-        rates = json.loads(req.content)
-        rate = rates.get('rates', {}).get(fiat_symbol.lower())['value']
-        result = rate
-
-        if crypto_symbol:
-            # TODO fix error here...
-            crypto_rate_in_btc = 1 / rates.get('rates', {}).get(crypto_symbol.lower())['value']
-            crypto_rate_in_fiat = crypto_rate_in_btc * rate
-            result = crypto_rate_in_fiat
-    except Exception as e:
-        raise Exception('Error getting current fiat rate of {} {}'.format(crypto_symbol, e))
-
-    return result
-
-
 def setup_environment():
     setup_currency_pairs()
     setup_database()
+    get_coingecko_meta()
