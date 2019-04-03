@@ -4,6 +4,7 @@ from decimal import Decimal, Context, setcontext
 import os, json, requests
 import logging
 from web.settings import LOGLEVEL
+from math import modf
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 COINGECKO_META = "/web/coingecko_meta.json"
@@ -21,22 +22,33 @@ def get_replenish_quantity(currency):
 
 def get_number_of_decimal_places(number):
     try:
-        # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
-        decimal_places = int(log2(number) / log10(number)) + 1
+        # turns out decimal has the length of the decimal part built in
+        decimal_places = Decimal(number).as_tuple()[2] * -1
     except Exception as e:
         raise CommonError('Error getting decimal places {}'.format(e))
     return decimal_places
 
 
 def round_decimal_number(number, decimal_places):
-    context = Context(prec=int(decimal_places))
+    # prec=1 implies no decimal places, e.g. 5.45 rounds to 5
+    precision = decimal_places + 1
+    logging.debug('Decimal places {}'.format(decimal_places))
+    logging.debug('Number is  {}'.format(number))
+    decimal_part = modf(number)[0]
+    if decimal_part == 0.0 and decimal_places == 0:
+        return Decimal(number)
+
+    context = Context(prec=int(precision))
     setcontext(context)
     # rounds the volume to the correct number of decimal places
     logging.debug('Rounding to {} decimal_places'.format(decimal_places))
-    quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
+    if decimal_places > 0:
+        quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
+    else:
+        quantize_accuracy = Decimal(1)
     logging.debug('Accuracy set to {} '.format(quantize_accuracy))
-    logging.debug('Number is  {}'.format(number))
-    number_corrected = number.quantize(quantize_accuracy)
+
+    number_corrected = Decimal(number).normalize().quantize(quantize_accuracy)
     return number_corrected
 
 
