@@ -1,10 +1,9 @@
 from web.settings import FIAT_REPLENISH_AMOUNT, FIAT_DEFAULT_SYMBOL
-from math import log10, log2
+from math import log10, log2, modf, floor
 from decimal import Decimal, Context, setcontext
 import os, json, requests
 import logging
 from web.settings import LOGLEVEL
-from math import modf
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 COINGECKO_META = "/web/coingecko_meta.json"
@@ -29,9 +28,21 @@ def get_number_of_decimal_places(number):
     return decimal_places
 
 
+def get_number_of_places_before_point(number):
+    try:
+        # turns out decimal has the length of the decimal part built in
+        number_int = int(number)
+        # http://mathworld.wolfram.com/NumberLength.html
+        places = floor(log10(number_int)) + 1
+    except Exception as e:
+        raise CommonError('Error getting places before decimal point {}'.format(e))
+    return places
+
+
 def round_decimal_number(number, decimal_places):
+    places_before_point = get_number_of_places_before_point(number)
     # prec=1 implies no decimal places, e.g. 5.45 rounds to 5
-    precision = decimal_places + 1
+    precision = decimal_places + places_before_point
     logging.debug('Decimal places {}'.format(decimal_places))
     logging.debug('Number is  {}'.format(number))
     decimal_part = modf(number)[0]
@@ -42,6 +53,7 @@ def round_decimal_number(number, decimal_places):
     setcontext(context)
     # rounds the volume to the correct number of decimal places
     logging.debug('Rounding to {} decimal_places'.format(decimal_places))
+    logging.debug('Precision set to {}'.format(precision))
     if decimal_places > 0:
         quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
     else:
