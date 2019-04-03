@@ -1,4 +1,4 @@
-from web.wraps import wrap_hitbtc, wrap_gatecoin, wrap_bittrex, wrap_binance
+from web.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance
 import json
 import os
 from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
@@ -64,7 +64,6 @@ def load_currency_pairs():
 def get_exchanges():
     # instantiate each of the api wrappers
     exchanges = []
-    exchanges.append(wrap_gatecoin.gatecoin())
     exchanges.append(wrap_hitbtc.hitbtc())
     exchanges.append(wrap_bittrex.bittrex())
     exchanges.append(wrap_binance.binance())
