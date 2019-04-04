@@ -72,14 +72,19 @@ class binance():
                         [x.get('minQty') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]),
                     'min_notional': float(
                         [x.get('minNotional') for x in c['filters'] if x['filterType'] == 'MIN_NOTIONAL'][0]),
-                    'fee': float(fees_dict.get(c.get('symbol')))
+                    'taker_fee': float(fees_dict.get(c.get('symbol')).get('taker_fee')),
+                    'maker_fee': float(fees_dict.get(c.get('symbol')).get('maker_fee')),
+                    # just use taker for now as it will always be more than maker. so we will under estimate profit
+                    'fee': float(fees_dict.get(c.get('symbol')).get('taker_fee'))
                 })
 
         return currency_pairs_list
 
     def get_currency_fees(self):
         fees_response = self.api.get_trade_fee()
-        return {x.get('symbol'): x.get('taker') for x in fees_response.get('tradeFee')}
+        return {x.get('symbol'):
+                    {'maker_fee': x.get('maker'), 'taker_fee': x.get('taker')}
+                for x in fees_response.get('tradeFee')}
 
     def trade(self, trade_type, volume, price, trade_id=None):
         result = None
@@ -141,7 +146,8 @@ class binance():
                 'price': raw_trade['price'],
                 'volume': raw_trade['executedQty'],
                 'trades_itemised': raw_trade.get('fills', []),
-                'date': raw_trade['transactTime'],
+                # seems like either one of these can be present
+                'date': raw_trade.get('transactTime') or raw_trade.get('time'),
                 'fees': self.calculate_fees(raw_trade['fills'], raw_trade['price']),
                 'exchange': self.name
             }

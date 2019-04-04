@@ -50,7 +50,9 @@ def compare(cur_x, cur_y, markets, fiat_rate):
     if arbitrages:
         for arbitrage in arbitrages:
             arbitrage['buy'].get_balances()
+            logging.debug('BUY balances {}'.format(arbitrage['buy'].balances))
             arbitrage['sell'].get_balances()
+            logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
 
         viable_arbitrages, replenish_jobs = determine_arbitrage_viability(arbitrages)
 
@@ -121,7 +123,8 @@ def determine_arbitrage_viability(arbitrages):
                         'price': decimal_as_string(price),
                         'type': buy_type,
 
-                    }}
+                    },
+                    'job_info': {'profit': str(arbitrage['profit']), 'currency': FIAT_DEFAULT_SYMBOL}}
                 viable_arbitrages.append(job)
 
     return viable_arbitrages, replenish_jobs
@@ -202,23 +205,29 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate):
 
 
 def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
+    # try:
+    volume = exchange_buy.lowest_ask['volume']
+    price_sell = exchange_sell.highest_bid['price']
+    price_buy = exchange_buy.lowest_ask['price']
+    trade_valid_sell, price_sell, volume_sell = exchange_sell.trade_validity(price=price_sell, volume=volume)
+    trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(price=price_buy, volume=volume)
+    if not trade_valid_buy or not trade_valid_sell:
+        return 0
     try:
-        volume = exchange_buy.lowest_ask['volume']
-        price_sell = exchange_sell.highest_bid['price']
-        price_buy = exchange_buy.lowest_ask['price']
-        try:
 
-            fee = exchange_sell.fee * volume * price_sell + exchange_buy.fee * volume * price_buy
-        except:
-            raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee),
-                            type(exchange_sell.fee))
+        fee = exchange_sell.fee * volume_sell * price_sell + exchange_buy.fee * volume_buy * price_buy
+    except:
+        raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee),
+                        type(exchange_sell.fee))
 
-        if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['price']:
-            volume = exchange_sell.highest_bid['volume']
-        fees = price_sell * volume * fee
-        profit = ((price_sell - price_buy) * volume - fees) * fiat_rate
-    except Exception as e:
-        raise Exception(e)
+    if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['price']:
+        volume = exchange_sell.highest_bid['volume']
+
+    # TODO what about fees when buying?
+    fees = price_sell * volume_sell * fee
+    profit = ((price_sell - price_buy) * volume - fees) * fiat_rate
+    # except Exception as e:
+    #     raise Exception(e)
 
     return profit
 

@@ -54,6 +54,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
         logging.debug(trade)
         if trade:
             trade['type'] = 'TRANSACT'
+            trade['_id'] = trade_id
             logging.debug(trade)
             store_trade(trade)
             return_value_to_stdout(trade)

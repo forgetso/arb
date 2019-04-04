@@ -1,4 +1,4 @@
-from web.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance
+from web.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex
 import json
 import os
 from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
@@ -67,6 +67,7 @@ def get_exchanges():
     exchanges.append(wrap_hitbtc.hitbtc())
     exchanges.append(wrap_bittrex.bittrex())
     exchanges.append(wrap_binance.binance())
+    exchanges.append(wrap_poloniex.poloniex())
     return exchanges
 
 def setup_environment():
