@@ -30,7 +30,6 @@ JOB_DEFINITIONS = {'TRANSACT':
                    'COMPARE':
                        {'curr_x': {'type': str},
                         'curr_y': {'type': str},
-                        'fiat_rate': {'type': float}
                         },
                    'REPLENISH':
                        {'exchange': {'type': str},
