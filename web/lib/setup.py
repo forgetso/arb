@@ -5,8 +5,10 @@ from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
 from pymongo import MongoClient
 from pymongo.errors import CollectionInvalid
 from web.lib.jobqueue import JOB_COLLECTION
-from web.lib.common import get_coingecko_meta
+from web.lib.common import get_coingecko_meta, get_current_fiat_rate
+from web.lib.db import store_fiat_rates
 MARKETS_JSON = "/web/markets.json"
+FIAT_RATES_JSON = "/web/fiat_rates.json"
 
 
 
@@ -74,3 +76,9 @@ def setup_environment():
     setup_currency_pairs()
     setup_database()
     get_coingecko_meta()
+
+def update_fiat_rates(self):
+    btc_rate = get_current_fiat_rate('BTC')
+    eth_rate = get_current_fiat_rate('ETH')
+    fiat_rates = {'BTC': btc_rate, 'ETH': eth_rate}
+    store_fiat_rates(fiat_rates)

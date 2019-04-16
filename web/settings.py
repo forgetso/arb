@@ -10,6 +10,8 @@ DB_HOST_JOBQUEUE = 'localhost'
 DB_PORT_JOBQUEUE = 27017
 DB_NAME_JOBQUEUE = 'jobqueue'
 DB_NAME_TRADES = 'trades'
+DB_NAME_AUDIT = 'audit'
+DB_NAME_COMMON = 'common'
 
 TRADE_PAIRS = [
     '1ST-BTC',

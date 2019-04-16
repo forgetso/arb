@@ -5,7 +5,7 @@ import time
 from decimal import Decimal, Context, setcontext
 from web.lib.common import get_number_of_decimal_places, round_decimal_number
 from web.settings import BASE_CURRENCY
-
+import logging
 BITTREX_TAKER_FEE = 0.0025
 
 BITTREX_ERROR_CODES = [
@@ -203,7 +203,9 @@ class bittrex():
 
         # TODO work out if non BASE CURRENCY trades are above the BASE_CURRENCY threshold, for example ETH-LTC
         if self.quote_currency != BASE_CURRENCY:
-            raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
+            #raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
+            logging.warning('Cannot determine if trade meets minimum BTC trade requirements')
+            result = True
 
         return result, price, volume_corrected
 

@@ -31,7 +31,11 @@ def get_number_of_decimal_places(number):
 def get_number_of_places_before_point(number):
     try:
         # http://mathworld.wolfram.com/NumberLength.html
-        places = floor(log10(number)) + 1
+        log_10_number = log10(number)
+        if log_10_number < 0:
+            places = 1
+        else:
+            places = floor(log_10_number) + 1
     except Exception as e:
         raise CommonError('Error getting places before decimal point {}'.format(e))
     return places

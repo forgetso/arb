@@ -2,19 +2,24 @@ import argparse
 import logging
 import itertools
 from web.lib.setup import setup_environment, get_exchanges, load_currency_pairs
-from web.lib.common import get_current_fiat_rate
 from web.lib.errors import ErrorTradePairDoesNotExist
 from web.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
 from web.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
+from web.lib.db import store_audit, get_fiat_rates
 
 
-def compare(cur_x, cur_y, markets, fiat_rate):
+def compare(cur_x, cur_y, markets):
     exchanges = get_exchanges()
     apis_trade_pair_valid = []
     arbitrages = []
     viable_arbitrages = []
     replenish_jobs = []
+    fiat_rates = get_fiat_rates()
+    try:
+        fiat_rate = fiat_rates[cur_y]
+    except:
+        raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
     result = {'downstream_jobs': []}
 
     # make our trade pair equal to a list [ETH, USD]
@@ -54,11 +59,17 @@ def compare(cur_x, cur_y, markets, fiat_rate):
             arbitrage['sell'].get_balances()
             logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
 
-        viable_arbitrages, replenish_jobs = determine_arbitrage_viability(arbitrages)
+        viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
+
+        if profit_audit:
+            for profit_audit_record in profit_audit:
+                store_audit(profit_audit_record)
 
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
     logging.debug('Returning {}'.format(result))
+
+    # store details of potential profits to work out if all of this is worthwhile
 
     # make sure the job queue executor can access the result by writing to stdout
     return_value_to_stdout(result)
@@ -68,14 +79,18 @@ def compare(cur_x, cur_y, markets, fiat_rate):
 
 def determine_arbitrage_viability(arbitrages):
     viable_arbitrages = []
+    profit_audit = []
     replenish_jobs = []
     currency = None
     sell_volume = None
+    exchange_names = set()
     for arbitrage in arbitrages:
         if arbitrage['profit'] > FIAT_ARBITRAGE_MINIMUM:
             logging.info('Viable arbitrage found')
+
             for buy_type in ['buy', 'sell']:
                 exchange = arbitrage[buy_type]
+                exchange_names |= set((exchange.name,))
                 if buy_type == 'buy':
                     price = exchange.lowest_ask['price']
                     volume = exchange.lowest_ask['volume']
@@ -126,8 +141,15 @@ def determine_arbitrage_viability(arbitrages):
                     },
                     'job_info': {'profit': str(arbitrage['profit']), 'currency': FIAT_DEFAULT_SYMBOL}}
                 viable_arbitrages.append(job)
+                profit_audit.append(
+                    {
+                        'profit': str(arbitrage['profit']),
+                        'currency': FIAT_DEFAULT_SYMBOL,
+                        'exchange_names': exchange_names,
+                    }
+                )
 
-    return viable_arbitrages, replenish_jobs
+    return viable_arbitrages, replenish_jobs, profit_audit
 
 
 def decimal_as_string(number):
@@ -223,7 +245,7 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
     if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['price']:
         volume = exchange_sell.highest_bid['volume']
 
-    # TODO what about fees when buying?
+    # TODO what about fees when buying? Right now we just use the taker fee for calculating but need to switch between taker and maker
     fees = price_sell * volume_sell * fee
     profit = ((price_sell - price_buy) * volume - fees) * fiat_rate
     # except Exception as e:
@@ -236,7 +258,6 @@ def setup():
     parser = argparse.ArgumentParser(description='Process some currencies.')
     parser.add_argument('curr_x', type=str, help='Currency to compare')
     parser.add_argument('curr_y', type=str, help='Currency to compare')
-    parser.add_argument('fiat_rate', type=float, help='The FIAT rate of BTC to work out profit')
     parser.add_argument('--setup', action='store_true')
     parser.add_argument('--setuponly', action='store_true',
                         help='Only run the setup process, not the comparison process')
@@ -253,14 +274,15 @@ def setup():
 
     markets = load_currency_pairs()
 
-    if args.curr_y != 'BTC':
-        fiat_rate = 1
-    else:
-        fiat_rate = Decimal(args.fiat_rate)
+    fiat_rates = get_fiat_rates()
 
-    output = compare(args.curr_x, args.curr_y, markets, fiat_rate)
+    output = compare(args.curr_x, args.curr_y, markets)
     return output
 
 
 if __name__ == "__main__":  # pragma: nocoverage
     setup()
+
+
+class CompareError(Exception):
+    pass

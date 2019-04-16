@@ -5,7 +5,8 @@ from web.lib.jobqueue import Jobqueue, JOB_STATUS_COLLECTION, JOB_DEFINITIONS, J
 import logging
 import traceback
 import datetime
-from web.lib.common import get_current_fiat_rate
+from web.lib.setup import update_fiat_rates
+
 
 # Create an instance of the app! Execute a job queue. Begin scraping prices of crypto. Look for jobs to start based on
 # the scrapes.
@@ -19,7 +20,6 @@ class JobQueueExecutor:
         self._id = None
         self.running = False
         self.finishedjobs = []
-        self.fiat_rate = self.get_current_fiat_rate()
         return
 
     def execute(self):
@@ -39,7 +39,7 @@ class JobQueueExecutor:
 
         # we periodically update the fiat rate of BTC to identify potential profit
 
-        self.fiat_rate_interval = call_repeatedly(settings.INTERVAL_FIAT_RATE, self.get_current_fiat_rate)
+        self.fiat_rate_interval = call_repeatedly(settings.INTERVAL_FIAT_RATE, update_fiat_rates)
 
         # when opportunities are identified they are added as jobs to the db. this next function will find these jobs
         # and execute them, adding any subsequent downstream jobs to the queue
@@ -57,10 +57,6 @@ class JobQueueExecutor:
 
         return
 
-    def get_current_fiat_rate(self):
-        fiat_rate = get_current_fiat_rate('BTC')
-        return fiat_rate
-
     def start_jobs(self):
         # stop command may have been issued
         self.is_running()
@@ -68,7 +64,8 @@ class JobQueueExecutor:
             # cancels the interval
             self.start_jobs_interval()
 
-        jobs_to_start = self.jq.db[JOB_COLLECTION].find({'job_status': STATUS_CREATING, 'job_type':{'$nin':settings.JOBS_NOT_RUNNING}})
+        jobs_to_start = self.jq.db[JOB_COLLECTION].find(
+            {'job_status': STATUS_CREATING, 'job_type': {'$nin': settings.JOBS_NOT_RUNNING}})
         for job in jobs_to_start:
             job_type = job['job_type']
             if job_type not in JOB_DEFINITIONS:
@@ -112,7 +109,7 @@ class JobQueueExecutor:
             self.runningjobs.remove(jobthread)
             jobthread.job['job_status'] = STATUS_COMPLETE
             self.jq.update_job(jobthread.job)
-            #logging.debug('Job has finished {}'.format(jobthread.job['job_pid']))
+            # logging.debug('Job has finished {}'.format(jobthread.job['job_pid']))
         return ok
 
     def compare_trade_pair(self, trade_pair):
@@ -122,7 +119,7 @@ class JobQueueExecutor:
             # cancels the interval
             self.compare_trade_pairs_intervals[trade_pair]()
 
-        #logging.info('Now adding compare trade pair jobs')
+        # logging.info('Now adding compare trade pair jobs')
 
         # Always run a compare job for each trade pair
 
@@ -139,12 +136,12 @@ class JobQueueExecutor:
                                                             })
 
         if not existing_job:
-            #logging.info('Adding comparison job for {}'.format(trade_pair))
+            # logging.info('Adding comparison job for {}'.format(trade_pair))
             # check for an existing job running under **this** job queue. means old dead RUNNING jobs are ignored.
             self.jq.add_job(
                 {
                     'job_type': 'COMPARE',
-                    'job_args': {'curr_x': curr_x, 'curr_y': curr_y, 'fiat_rate': self.fiat_rate},
+                    'job_args': {'curr_x': curr_x, 'curr_y': curr_y},
                     'jobqueue_id': self._id
                 },
                 self._id)
@@ -168,7 +165,7 @@ class JobQueueExecutor:
 
         try:
             # cancels the interval
-            self.start_jobs_ainterval()
+            self.start_jobs_interval()
 
         except:
             pass
