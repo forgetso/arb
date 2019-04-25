@@ -38,8 +38,8 @@ TRADE_PAIRS = [
     # 'IND-ETH',
     # 'LOC-BTC',
     # 'LOC-ETH',
-    # 'LTC-BTC',
-    # 'LTC-ETH',
+    'LTC-BTC',
+    'LTC-ETH',
     # 'LTC-USD',
     # 'MAN-BTC',
     # 'MAN-ETH',
@@ -49,12 +49,12 @@ TRADE_PAIRS = [
     # 'PIX-ETH',
     # 'REP-BTC',
     # 'RLC-BTC',
-    # 'SNT-BTC',
-    # 'SNT-ETH',
+    'SNT-BTC',
+    'SNT-ETH',
     # 'XTZ-BTC',
     # 'XTZ-USD',
-    # 'ZRX-BTC',
-    # 'ZRX-ETH'
+    'ZRX-BTC',
+    'ZRX-ETH'
 ]
 LOGLEVEL = 'DEBUG'
 JOBS_NOT_RUNNING = ['TRANSACT']

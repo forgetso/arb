@@ -42,14 +42,15 @@ def get_number_of_places_before_point(number):
 
 
 def round_decimal_number(number, decimal_places):
+    # logging.debug('Number is  {}'.format(number))
     places_before_point = get_number_of_places_before_point(number)
     # prec=1 implies no decimal places, e.g. 5.45 rounds to 5
     precision = decimal_places + places_before_point
     if precision == 0:
         precision = 1
-    logging.debug('Precision set to {}'.format(precision))
-    logging.debug('Decimal places {}'.format(decimal_places))
-    logging.debug('Number is  {}'.format(number))
+    # logging.debug('Precision set to {}'.format(precision))
+    # logging.debug('Decimal places {}'.format(decimal_places))
+
     decimal_part = modf(number)[0]
     if decimal_part == 0.0 and decimal_places == 0:
         return Decimal(number)
@@ -57,13 +58,13 @@ def round_decimal_number(number, decimal_places):
     context = Context(prec=int(precision))
     setcontext(context)
     # rounds the volume to the correct number of decimal places
-    logging.debug('Rounding to {} decimal_places'.format(decimal_places))
+    # logging.debug('Rounding to {} decimal_places'.format(decimal_places))
 
     if decimal_places > 0:
         quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
     else:
         quantize_accuracy = Decimal(1)
-    logging.debug('Accuracy set to {} '.format(quantize_accuracy))
+    # logging.debug('Accuracy set to {} '.format(quantize_accuracy))
 
     number_corrected = Decimal(number).normalize().quantize(quantize_accuracy)
     return number_corrected
@@ -71,6 +72,7 @@ def round_decimal_number(number, decimal_places):
 
 def get_current_fiat_rate(crypto_symbol, fiat_symbol=None):
     crypto_symbol = crypto_symbol.lower()
+    result = None
     try:
         if not fiat_symbol:
             fiat_symbol = FIAT_DEFAULT_SYMBOL.lower()

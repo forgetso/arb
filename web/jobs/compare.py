@@ -7,6 +7,7 @@ from web.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
 from web.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from web.lib.db import store_audit, get_fiat_rates
+from web.lib.common import round_decimal_number
 
 
 def compare(cur_x, cur_y, markets):
@@ -17,7 +18,8 @@ def compare(cur_x, cur_y, markets):
     replenish_jobs = []
     fiat_rates = get_fiat_rates()
     try:
-        fiat_rate = fiat_rates[cur_y]
+        fiat_rate = round_decimal_number(fiat_rates[cur_y], 2)
+        logging.debug('Fiat rate is {}'.format(fiat_rate))
     except:
         raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
     result = {'downstream_jobs': []}
@@ -55,13 +57,14 @@ def compare(cur_x, cur_y, markets):
     if arbitrages:
         for arbitrage in arbitrages:
             arbitrage['buy'].get_balances()
-            logging.debug('BUY balances {}'.format(arbitrage['buy'].balances))
+            #logging.debug('BUY balances {}'.format(arbitrage['buy'].balances))
             arbitrage['sell'].get_balances()
-            logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
+            #logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
 
         viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
 
         if profit_audit:
+            # store details of potential profits to work out if all of this is worthwhile
             for profit_audit_record in profit_audit:
                 store_audit(profit_audit_record)
 
@@ -69,7 +72,7 @@ def compare(cur_x, cur_y, markets):
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
     logging.debug('Returning {}'.format(result))
 
-    # store details of potential profits to work out if all of this is worthwhile
+
 
     # make sure the job queue executor can access the result by writing to stdout
     return_value_to_stdout(result)
@@ -145,7 +148,7 @@ def determine_arbitrage_viability(arbitrages):
                     {
                         'profit': str(arbitrage['profit']),
                         'currency': FIAT_DEFAULT_SYMBOL,
-                        'exchange_names': exchange_names,
+                        'exchange_names': list(exchange_names),
                     }
                 )
 
@@ -280,9 +283,9 @@ def setup():
     return output
 
 
-if __name__ == "__main__":  # pragma: nocoverage
-    setup()
-
-
 class CompareError(Exception):
     pass
+
+
+if __name__ == "__main__":  # pragma: nocoverage
+    setup()

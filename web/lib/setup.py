@@ -1,4 +1,4 @@
-from web.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex
+from web.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex, wrap_p2pb2b
 import json
 import os
 from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
@@ -7,9 +7,9 @@ from pymongo.errors import CollectionInvalid
 from web.lib.jobqueue import JOB_COLLECTION
 from web.lib.common import get_coingecko_meta, get_current_fiat_rate
 from web.lib.db import store_fiat_rates
+
 MARKETS_JSON = "/web/markets.json"
 FIAT_RATES_JSON = "/web/fiat_rates.json"
-
 
 
 def setup_database():
@@ -70,14 +70,18 @@ def get_exchanges():
     exchanges.append(wrap_bittrex.bittrex())
     exchanges.append(wrap_binance.binance())
     exchanges.append(wrap_poloniex.poloniex())
+    exchanges.append(wrap_p2pb2b.p2pb2b())
     return exchanges
+
 
 def setup_environment():
     setup_currency_pairs()
     setup_database()
     get_coingecko_meta()
+    update_fiat_rates()
 
-def update_fiat_rates(self):
+
+def update_fiat_rates():
     btc_rate = get_current_fiat_rate('BTC')
     eth_rate = get_current_fiat_rate('ETH')
     fiat_rates = {'BTC': btc_rate, 'ETH': eth_rate}

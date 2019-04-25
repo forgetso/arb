@@ -1,24 +1,47 @@
-from poloniex import Poloniex
-from web.settings import POLONIEX_SECRET_KEY, POLONIEX_PUBLIC_KEY
+from p2pb2bapi import P2PB2B
+from web.settings import P2PB2B_SECRET_KEY, P2PB2B_PUBLIC_KEY
 from web.lib.errors import ErrorTradePairDoesNotExist
 import time
 from decimal import Decimal, Context, setcontext
 import math
 from web.lib.common import round_decimal_number, get_number_of_decimal_places
+import time
 
-POLONIEX_TAKER_FEE = 0.002
-POLONIEX_MAKER_FEE = 0.0008
+P2PB2B_TAKER_FEE = 0.0020
+P2PB2B_MAKER_FEE = 0.0020
 
-POLONIEX_ERROR_CODES = []
+P2PB2B__ERROR_CODES = []
+
+# TODO work out a way of automatically importing addresses
+P2PB2B_ADDRESSES = {
+    'BTC': '3MBYPQNeAL9L6dSEFkG6AfmyMycoMjsJYV',
+    'ETH': '0x6cA28a73b125b3F1C3760673AacE15A1EF9c3C90',
+    'BNB': '0x1c6FEF78ccd5FEDaf580e09695322ea699377b87',
+    'ETC': '0xAF58C3C4383611Ab84581D7A59B4Bf84C07D58Dd',
+    'LTC': 'MRbqHQmaf1zhKUZ3MRkxQ5yQqKjSgyfYuF',
+    'WAVES': '3PNr7xxDCUcaLZ6yrfd9DJs6AbQYQzeeXSM',
+    'BTG': 'GYi8938gZXjeXJmeDwP9rY7ofm51gLjq49',
+    'XLM': 'GB347U2XAKGGGUVJMWMVW5YVXPF66RNQISPJAFWUIZKV3PNJL75WXCF7',
+    'BCH': 'bitcoincash:qrugdfq28f03upz7uadga04skzah3zet7qxqcwsayk',
+    'DOGE': 'DT9QUoJ2Zbd91USWrPuUzijF3SDEhR9w3y',
+    'TUSD': '0xCD470e2c03E3DB140aB22e89244dA600a6Cb0c88',
+    'PAX': '0x54763C9c531192Ea53E66b51c71E9b02fbb0d838',
+    'NEO': 'AMmm8hg3xR8BGpp1WZvs8Zu6rG2Xqxz1M7',
+    'DASH': 'Xej5dEvap2iVeCXShGy9iri7T3mQkEN6Ku',
+    'GAS': 'AGaef46GedPJV7uBTFEfgvUN68Evxr9b6T',
+
+}
 
 
-class poloniex():
+class p2pb2b():
     def __init__(self):
 
-        self.api = Poloniex(POLONIEX_PUBLIC_KEY, POLONIEX_SECRET_KEY)
+        self.api = P2PB2B(P2PB2B_PUBLIC_KEY, P2PB2B_SECRET_KEY)
         self.lowest_ask = None
         self.highest_bid = None
-        self.name = 'poloniex'
+        self.name = 'p2pb2b'
+        self.balances = None
+        self.balances_time = None
 
     def set_trade_pair(self, trade_pair, markets):
         try:
@@ -31,45 +54,65 @@ class poloniex():
             self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
             self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
             self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-            self.min_notional = Decimal(str((markets.get(self.name).get(trade_pair).get('min_notional'))))
             self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
             self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
         except AttributeError:
             raise ErrorTradePairDoesNotExist
 
     def order_book(self):
-        ticker = self.api.returnTicker()
-        order_book_dict = ticker[self.trade_pair]
-        if order_book_dict.get('error'):
-            raise (WrapPoloniexError(order_book_dict.get('error')))
+        order_book_dict = {}
+        ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
+        if not ticker_buy_response.get('success'):
+            raise WrapP2PB2BError(
+                'Error getting order book for {} : {}'.format(self.trade_pair, ticker_buy_response.get('message')))
+        order_book_dict['buy'] = ticker_buy_response.get('result')
+        ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
+        if not ticker_sell_response.get('success'):
+            raise WrapP2PB2BError(
+                'Error getting order book for {} : {}'.format(self.trade_pair, ticker_sell_response.get('message')))
+        order_book_dict['sell'] = ticker_sell_response.get('result')
+        # print(order_books)
+        # {'buy': {'offset': 0, 'limit': 1, 'total': 362, 'orders': [
+        #     {'id': 14835298, 'left': '1.375', 'market': 'ETH_BTC', 'amount': '2.909', 'type': 'limit',
+        #      'price': '0.029842', 'timestamp': 1556176474.980993, 'side': 'buy', 'dealFee': '0', 'takerFee': '0',
+        #      'makerFee': '0', 'dealStock': '1.534', 'dealMoney': '0.045777628'}]},
+        #  'sell': {'offset': 0, 'limit': 1, 'total': 408, 'orders': [
+        #      {'id': 14855016, 'left': '60.222', 'market': 'ETH_BTC', 'amount': '60.222', 'type': 'limit',
+        #       'price': '0.02985', 'timestamp': 1556192089.28709, 'side': 'sell', 'dealFee': '0', 'takerFee': '0.002',
+        #       'makerFee': '0.002', 'dealStock': '0', 'dealMoney': '0'}]}}
+
         # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
-        self.asks = [order_book_dict.get('lowestAsk')]
+        self.asks = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
+                     order_book_dict['buy']['orders']]
         self.lowest_ask = self.asks[0]
-        self.bids = [order_book_dict.get('highestBid')]
+        self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
+                     order_book_dict['sell']['orders']]
         self.highest_bid = self.bids[0]
         return order_book_dict
 
     def get_currency_pairs(self):
         # get all of their currency pairs in the format for the markets file
-        currency_pairs_response = self.api.returnTicker()
-        # {"BTC_BCN":{"id":7,"last":"0.00000019","lowestAsk":"0.00000019","highestBid":"0.00000018","percentChange":"0.05555555","baseVolume":"31.34657914","quoteVolume":"167711796.95537490","isFrozen":"0","high24hr":"0.00000019","low24hr":"0.00000018"}
+        currency_pairs_response = self.api.getMarkets()
+        # {'name': 'ETH_BTC', 'moneyPrec': '6', 'stock': 'ETH', 'money': 'BTC', 'stockPrec': '3', 'feePrec': '4', 'minAmount': '0.001'})
         currency_pairs_list = []
-        for symbol, c in currency_pairs_response.items():
+        if not currency_pairs_response.get('success'):
+            raise WrapP2PB2BError('Error getting currency pairs')
+        for c in currency_pairs_response['result']:
+            symbol = c.get('name')
             symbol_split = symbol.split('_')
-            if c['isFrozen'] == 0:
-                currency_pairs_list.append({
-                    # poloniex names things the opposite way round to other exchanges BTC_ETH instead of ETH_BTC
-                    'name': '{}_{}'.format(symbol_split[1], symbol_split[0]),
-                    'trading_code': symbol,
-                    'base_currency': symbol_split[0],
-                    'quote_currency': symbol_split[1],
-                    'decimal_places': get_number_of_decimal_places(str(c['highestBid'])),
-                    'min_trade_size': float(0.0001),
-                    'maker_fee': POLONIEX_MAKER_FEE,
-                    'taker_fee': POLONIEX_TAKER_FEE,
-                    # just use taker for now as it will always be more than maker. so we will under estimate profit
-                    'fee': POLONIEX_TAKER_FEE,
-                })
+            currency_pairs_list.append({
+                'name': symbol.replace('_', '-'),
+                'trading_code': symbol,
+                'base_currency': symbol_split[0],
+                'quote_currency': symbol_split[1],
+                'decimal_places': c.get('stockPrec'),
+                'decimal_places_base': c.get('moneyPrec'),
+                'min_trade_size': c.get('minAmount'),
+                'maker_fee': P2PB2B_MAKER_FEE,
+                'taker_fee': P2PB2B_TAKER_FEE,
+                # just use taker for now as it will always be more than maker. so we will under estimate profit
+                'fee': P2PB2B_TAKER_FEE,
+            })
 
         return currency_pairs_list
 
@@ -81,7 +124,7 @@ class poloniex():
             result = self.api.order_limit_sell(symbol=self.trade_pair, quantity=volume, price=price)
 
         if not result.get('status'):
-            raise WrapPoloniexError('{}'.format(result.get('message')))
+            raise WrapP2PB2BError('{}'.format(result.get('message')))
 
         if result.get('status').upper() == 'FILLED':
             raw_trade = result
@@ -89,7 +132,7 @@ class poloniex():
             raw_trade = self.get_order_status(result.get('symbol'), result.get('orderId'))
 
         if not raw_trade.get('status').upper() == 'FILLED':
-            raise WrapPoloniexError('{}'.format(result.get('message')))
+            raise WrapP2PB2BError('{}'.format(result.get('message')))
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 
@@ -139,22 +182,30 @@ class poloniex():
                 'exchange': self.name
             }
         except Exception as e:
-            raise WrapPoloniexError('Error formatting trade {}'.format(e))
+            raise WrapP2PB2BError('Error formatting trade {}'.format(e))
 
         return trade
 
     def get_balances(self):
+        if self.balances_time and time.time() - self.balances_time < 2:
+            return
+
         try:
-            balances = {x.get('asset'): Decimal(x.get('free')) for x in self.api.get_account().get('balances')}
+            balances_response = self.api.getBalances()
+            if not balances_response.get('success'):
+                raise Exception(balances_response.get('message'))
+            balances = {symbol: Decimal(balances.get('available')) for symbol, balances in
+                        balances_response.get('result').items()}
         except Exception as e:
-            raise Exception('Error getting trading balances {}'.format(e))
+            raise WrapP2PB2BError('Error getting trading balances {}'.format(e))
         self.balances = balances
+        self.balances_time = time.time()
 
     def get_address(self, symbol):
         try:
-            address_json = self.api.get_deposit_address(asset=symbol)
+            address_json = P2PB2B_ADDRESSES[symbol]
         except Exception as e:
-            raise Exception('Error getting currency address in Binance {}'.format(e))
+            raise Exception('Error getting currency address in P2P {}'.format(e))
         return address_json.get('address')
 
     def calculate_fees(self, trades_itemised, price):
@@ -167,24 +218,25 @@ class poloniex():
 
     def get_pending_balances(self):
         try:
-            deposit_history = self.api.get_deposit_history()
-            pending_balances = {x.get('asset'): Decimal(x.get('amount')) for x in deposit_history['depositList'] if
-                                x.get('status') == 0}
+            raise NotImplementedError('')
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
-        self.pending_balances = pending_balances
 
     def trade_validity(self, price, volume):
         if not self.trade_pair:
-            raise WrapPoloniexError('Trade pair must be set')
+            raise WrapP2PB2BError('Trade pair must be set')
         allowed_decimal_places = self.decimal_places
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
         result = False
-        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
-        if price * volume_corrected > self.min_notional:
-            result = True
+
         return result, price, volume_corrected
 
 
-class WrapPoloniexError(Exception):
+def Decimal_to_string(number, precision=20):
+    return '{0:.{prec}f}'.format(
+        number, prec=precision,
+    ).rstrip('0').rstrip('.') or '0'
+
+
+class WrapP2PB2BError(Exception):
     pass
