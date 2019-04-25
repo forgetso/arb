@@ -76,9 +76,9 @@ class poloniex():
     def trade(self, trade_type, volume, price, trade_id=None):
         result = None
         if trade_type == 'buy':
-            result = self.api.order_limit_buy(symbol=self.trade_pair, quantity=volume, price=price)
+            result = self.api.buy(currencyPair=self.trade_pair, amount=volume, rate=price)
         elif trade_type == 'sell':
-            result = self.api.order_limit_sell(symbol=self.trade_pair, quantity=volume, price=price)
+            result = self.api.sell(currencyPair=self.trade_pair, amount=volume, rate=price)
 
         if not result.get('status'):
             raise WrapPoloniexError('{}'.format(result.get('message')))
@@ -95,19 +95,20 @@ class poloniex():
 
         return trade
 
-    def get_order_status(self, symbol, order_id):
+    def get_order_status(self, order_id):
+        #TODO work out how these responses works
         order_completed = False
         order_result = {}
         while not order_completed:
-            order_result = self.get_order(symbol=symbol, order_id=order_id)
-            if order_result['status'].upper() == 'FILLED':
+            order_result = self.get_orders()
+            if order_id not in order_result:
                 break
             time.sleep(5)
 
         return order_result
 
-    def get_order(self, symbol, order_id):
-        return self.api.get_order(symbol=symbol, orderId=order_id)
+    def get_orders(self):
+        return self.api.returnOpenOrders(currencyPair=self.trade_pair)
 
     def format_trade(self, raw_trade, trade_type, trade_id):
 
