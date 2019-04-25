@@ -16,19 +16,19 @@ P2PB2B__ERROR_CODES = []
 P2PB2B_ADDRESSES = {
     'BTC': '3MBYPQNeAL9L6dSEFkG6AfmyMycoMjsJYV',
     'ETH': '0x6cA28a73b125b3F1C3760673AacE15A1EF9c3C90',
-    'BNB': '0x1c6FEF78ccd5FEDaf580e09695322ea699377b87',
+    # 'BNB': '0x1c6FEF78ccd5FEDaf580e09695322ea699377b87',
     'ETC': '0xAF58C3C4383611Ab84581D7A59B4Bf84C07D58Dd',
     'LTC': 'MRbqHQmaf1zhKUZ3MRkxQ5yQqKjSgyfYuF',
-    'WAVES': '3PNr7xxDCUcaLZ6yrfd9DJs6AbQYQzeeXSM',
-    'BTG': 'GYi8938gZXjeXJmeDwP9rY7ofm51gLjq49',
-    'XLM': 'GB347U2XAKGGGUVJMWMVW5YVXPF66RNQISPJAFWUIZKV3PNJL75WXCF7',
-    'BCH': 'bitcoincash:qrugdfq28f03upz7uadga04skzah3zet7qxqcwsayk',
-    'DOGE': 'DT9QUoJ2Zbd91USWrPuUzijF3SDEhR9w3y',
-    'TUSD': '0xCD470e2c03E3DB140aB22e89244dA600a6Cb0c88',
-    'PAX': '0x54763C9c531192Ea53E66b51c71E9b02fbb0d838',
-    'NEO': 'AMmm8hg3xR8BGpp1WZvs8Zu6rG2Xqxz1M7',
-    'DASH': 'Xej5dEvap2iVeCXShGy9iri7T3mQkEN6Ku',
-    'GAS': 'AGaef46GedPJV7uBTFEfgvUN68Evxr9b6T',
+    # 'WAVES': '3PNr7xxDCUcaLZ6yrfd9DJs6AbQYQzeeXSM',
+    # 'BTG': 'GYi8938gZXjeXJmeDwP9rY7ofm51gLjq49',
+    # 'XLM': 'GB347U2XAKGGGUVJMWMVW5YVXPF66RNQISPJAFWUIZKV3PNJL75WXCF7',
+    # 'BCH': 'bitcoincash:qrugdfq28f03upz7uadga04skzah3zet7qxqcwsayk',
+    # 'DOGE': 'DT9QUoJ2Zbd91USWrPuUzijF3SDEhR9w3y',
+    # 'TUSD': '0xCD470e2c03E3DB140aB22e89244dA600a6Cb0c88',
+    # 'PAX': '0x54763C9c531192Ea53E66b51c71E9b02fbb0d838',
+    # 'NEO': 'AMmm8hg3xR8BGpp1WZvs8Zu6rG2Xqxz1M7',
+    # 'DASH': 'Xej5dEvap2iVeCXShGy9iri7T3mQkEN6Ku',
+    # 'GAS': 'AGaef46GedPJV7uBTFEfgvUN68Evxr9b6T',
 
 }
 
@@ -100,19 +100,21 @@ class p2pb2b():
         for c in currency_pairs_response['result']:
             symbol = c.get('name')
             symbol_split = symbol.split('_')
-            currency_pairs_list.append({
-                'name': symbol.replace('_', '-'),
-                'trading_code': symbol,
-                'base_currency': symbol_split[0],
-                'quote_currency': symbol_split[1],
-                'decimal_places': c.get('stockPrec'),
-                'decimal_places_base': c.get('moneyPrec'),
-                'min_trade_size': c.get('minAmount'),
-                'maker_fee': P2PB2B_MAKER_FEE,
-                'taker_fee': P2PB2B_TAKER_FEE,
-                # just use taker for now as it will always be more than maker. so we will under estimate profit
-                'fee': P2PB2B_TAKER_FEE,
-            })
+            # P2PB2B has a limit on the API which means we should only use a few currencies
+            if symbol_split[0] in P2PB2B_ADDRESSES and symbol_split[1] in P2PB2B_ADDRESSES:
+                currency_pairs_list.append({
+                    'name': symbol.replace('_', '-'),
+                    'trading_code': symbol,
+                    'base_currency': symbol_split[0],
+                    'quote_currency': symbol_split[1],
+                    'decimal_places': c.get('stockPrec'),
+                    'decimal_places_base': c.get('moneyPrec'),
+                    'min_trade_size': c.get('minAmount'),
+                    'maker_fee': P2PB2B_MAKER_FEE,
+                    'taker_fee': P2PB2B_TAKER_FEE,
+                    # just use taker for now as it will always be more than maker. so we will under estimate profit
+                    'fee': P2PB2B_TAKER_FEE,
+                })
 
         return currency_pairs_list
 
