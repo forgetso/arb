@@ -10,8 +10,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 COINGECKO_META = "/app/coingecko_meta.json"
 
 
-def get_replenish_quantity(currency):
-    fiat_rate = get_current_fiat_rate(crypto_symbol=currency, fiat_symbol=FIAT_DEFAULT_SYMBOL)
+def get_replenish_quantity(fiat_rate):
     try:
         quantity = FIAT_REPLENISH_AMOUNT / fiat_rate
     except Exception as e:
@@ -21,6 +20,8 @@ def get_replenish_quantity(currency):
 
 
 def get_number_of_decimal_places(number):
+    if not isinstance(number, Decimal):
+        raise TypeError('number must be of type Decimal')
     try:
         # turns out decimal has the length of the decimal part built in
         decimal_places = Decimal(number).as_tuple()[2] * -1

@@ -1,9 +1,9 @@
 import argparse
 import logging
-from app.settings import LOGLEVEL, MASTER_EXCHANGE, BASE_CURRENCY
+from app.settings import LOGLEVEL, MASTER_EXCHANGE, BASE_CURRENCY, FIAT_DEFAULT_SYMBOL
 from app.lib.setup import get_exchanges
 from app.lib.jobqueue import return_value_to_stdout
-from app.lib.common import get_replenish_quantity
+from app.lib.common import get_replenish_quantity, get_current_fiat_rate
 
 def replenish(exchange, currency):
     # *exchange* has zero quanity of *currency*
@@ -13,7 +13,8 @@ def replenish(exchange, currency):
     exchanges = get_exchanges()
     master_exchange = [e for e in exchanges if e.name == MASTER_EXCHANGE][0]
     child_exchange = [e for e in exchanges if e.name == exchange][0]
-    quantity = get_replenish_quantity(currency)
+    fiat_rate = get_current_fiat_rate(crypto_symbol=currency, fiat_symbol=FIAT_DEFAULT_SYMBOL)
+    quantity = get_replenish_quantity(fiat_rate)
     to_address = child_exchange.get_address(currency)
     result = {'success': False}
 
