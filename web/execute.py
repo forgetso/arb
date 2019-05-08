@@ -6,6 +6,7 @@ import logging
 import traceback
 import datetime
 from web.lib.setup import update_fiat_rates
+from web.lib.db import remove_api_method_locks
 
 
 # Create an instance of the app! Execute a job queue. Begin scraping prices of crypto. Look for jobs to start based on
@@ -27,7 +28,12 @@ class JobQueueExecutor:
         # it will periodically run compares for a set list of currency pairs
 
         self.jq.db[JOB_STATUS_COLLECTION].remove()
+
         self._id = self.jq.db[JOB_STATUS_COLLECTION].insert({'running': True})
+
+        # remove any api locks that were stored previously
+        # TODO tie these locks to the jobqueue ID
+        remove_api_method_locks()
 
         # we are going to constantly check apis for arbitrage opportunities
 

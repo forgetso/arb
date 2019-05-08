@@ -4,6 +4,7 @@ from decimal import Decimal, Context, setcontext
 import os, json, requests
 import logging
 from web.settings import LOGLEVEL
+import importlib
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 COINGECKO_META = "/web/coingecko_meta.json"
@@ -120,6 +121,19 @@ def write_coingecko_meta(data):
     markets_location = ''.join([os.getcwd(), COINGECKO_META])
     with open(markets_location, 'w') as outfile:
         json.dump(data, outfile, indent=2)
+
+
+def dynamically_import_exchange(exchange):
+    try:
+        module_name = 'web.wraps.wrap_{}'.format(exchange)
+        exchange_module = importlib.import_module(module_name)
+        if hasattr(exchange_module, exchange):
+            exchange_class = getattr(exchange_module, exchange)
+            return exchange_class
+        else:
+            raise Exception('exchange module does not have class {}'.format(exchange))
+    except ImportError:
+        raise Exception('Could not import {}'.format(exchange))
 
 
 class CommonError(Exception):

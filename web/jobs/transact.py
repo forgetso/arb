@@ -17,7 +17,7 @@ import uuid
 from web.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal, Context, setcontext
 from web.lib.db import store_trade
-from web.lib.common import get_number_of_decimal_places
+from web.lib.common import dynamically_import_exchange
 
 
 def transact(exchange, trade_pair_common, volume, price, type, markets, test_transaction=False):
@@ -29,7 +29,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
     trade = {}
     trade_id = get_trade_id()
 
-    exchange_obj = get_exchange(exchange)()
+    exchange_obj = dynamically_import_exchange(exchange)()
     exchange_obj.set_trade_pair(trade_pair_common, markets)
 
     # just check that we can actually transact by placing the minimum transaction
@@ -60,19 +60,6 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
             return_value_to_stdout(trade)
 
     return trade
-
-
-def get_exchange(exchange):
-    try:
-        module_name = 'web.wraps.wrap_{}'.format(exchange)
-        exchange_module = importlib.import_module(module_name)
-        if hasattr(exchange_module, exchange):
-            exchange_class = getattr(exchange_module, exchange)
-            return exchange_class
-        else:
-            raise Exception('exchange module does not have class {}'.format(exchange))
-    except ImportError:
-        raise Exception('Could not import {}'.format(exchange))
 
 
 def get_trade_id():

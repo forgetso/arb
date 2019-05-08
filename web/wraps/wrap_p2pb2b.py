@@ -1,10 +1,12 @@
 from p2pb2bapi import P2PB2B
 from web.settings import P2PB2B_SECRET_KEY, P2PB2B_PUBLIC_KEY
 from web.lib.errors import ErrorTradePairDoesNotExist
-import time
 from decimal import Decimal, Context, setcontext
-import math
 from web.lib.common import round_decimal_number, get_number_of_decimal_places
+from web.lib.db import store_balances, get_balances, store_api_access_time, get_api_access_time, lock_api_method, \
+    unlock_api_method, get_api_method_lock
+import logging
+from datetime import datetime
 import time
 
 P2PB2B_TAKER_FEE = 0.0020
@@ -61,10 +63,12 @@ class p2pb2b():
 
     def order_book(self):
         order_book_dict = {}
+        ticker_buy_response = None
         ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
         if not ticker_buy_response.get('success'):
             raise WrapP2PB2BError(
-                'Error getting order book for {} : {}'.format(self.trade_pair, ticker_buy_response.get('message')))
+                'Error getting order book for {} : {}, {}'.format(self.trade_pair, ticker_buy_response.get('message'),
+                                                                  ticker_buy_response))
         order_book_dict['buy'] = ticker_buy_response.get('result')
         ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
         if not ticker_sell_response.get('success'):
@@ -189,19 +193,45 @@ class p2pb2b():
         return trade
 
     def get_balances(self):
-        if self.balances_time and time.time() - self.balances_time < 2:
+        last_accessed_time = get_api_access_time(self.name, 'get_balances')
+        # this api has limits so we've stored the balances in the database in case of querying too frequently
+        # fingers crossed they are correct !
+        # TODO check that the balances were last retrieved within a reasonable timeframe (TBC)
+        logging.debug('Last accessed time {}'.format(last_accessed_time))
+        if self.balances_time and time.time() - self.balances_time < 30 or time.time() - last_accessed_time < 30:
+            balances = get_balances(self.name)
+            self.balances = balances
+            logging.debug('p2pb2b balances already retrieved')
             return
 
+        wait_count = 0
+        while get_api_method_lock(self.name, 'get_balances'):
+            time.sleep(5)
+            wait_count += 1
+            if wait_count > 4:
+                logging.warning('API method "get_balances" has been locked for more than 20s')
+                return
+
         try:
+
+            lock_api_method(self.name, 'get_balances')
             balances_response = self.api.getBalances()
             if not balances_response.get('success'):
                 raise Exception(balances_response.get('message'))
+            unlock_api_method(self.name, 'get_balances')
+            self.balances_time = time.time()
+            store_api_access_time(self.name, 'get_balances', self.balances_time)
             balances = {symbol: Decimal(balances.get('available')) for symbol, balances in
                         balances_response.get('result').items()}
         except Exception as e:
-            raise WrapP2PB2BError('Error getting trading balances {}'.format(e))
+            raise WrapP2PB2BError('Error getting trading balances {} Last Accessed {} Time Now {}'.format(e,
+                                                                                                          datetime.fromtimestamp(
+                                                                                                              last_accessed_time),
+                                                                                                          datetime.utcnow()))
         self.balances = balances
-        self.balances_time = time.time()
+
+        store_balances(self.name, balances)
+        return
 
     def get_address(self, symbol):
         try:

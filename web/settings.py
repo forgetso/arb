@@ -12,6 +12,9 @@ DB_NAME_JOBQUEUE = 'jobqueue'
 DB_NAME_TRADES = 'trades'
 DB_NAME_AUDIT = 'audit'
 DB_NAME_COMMON = 'common'
+DB_NAME_EXCHANGE = 'exchange'
+
+EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'p2pb2b', 'poloniex']
 
 TRADE_PAIRS = [
     '1ST-BTC',
@@ -20,8 +23,8 @@ TRADE_PAIRS = [
     'AMB-BTC',
     'AMB-ETH',
     'AVT-ETH',
-    #'BCH-BTC',
-    #'BTC-USD',
+    # 'BCH-BTC',
+    # 'BTC-USD',
     'CDT-BTC',
     'CDT-ETH',
     'CLN-BTC',

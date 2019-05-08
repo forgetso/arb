@@ -1,11 +1,11 @@
 from web.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex, wrap_p2pb2b
 import json
 import os
-from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE
+from web.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES
 from pymongo import MongoClient
 from pymongo.errors import CollectionInvalid
 from web.lib.jobqueue import JOB_COLLECTION
-from web.lib.common import get_coingecko_meta, get_current_fiat_rate
+from web.lib.common import get_coingecko_meta, get_current_fiat_rate, dynamically_import_exchange
 from web.lib.db import store_fiat_rates
 
 MARKETS_JSON = "/web/markets.json"
@@ -66,11 +66,10 @@ def load_currency_pairs():
 def get_exchanges():
     # instantiate each of the api wrappers
     exchanges = []
-    exchanges.append(wrap_hitbtc.hitbtc())
-    exchanges.append(wrap_bittrex.bittrex())
-    exchanges.append(wrap_binance.binance())
-    exchanges.append(wrap_poloniex.poloniex())
-    exchanges.append(wrap_p2pb2b.p2pb2b())
+    for exchange in EXCHANGES:
+        # add the instantiated exchange client to a list of clients, e.g. wrap_binance.binance()
+        exchanges.append(dynamically_import_exchange(exchange)())
+
     return exchanges
 
 

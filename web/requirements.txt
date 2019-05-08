@@ -1,4 +1,4 @@
-bittrex
-gatecoin_api
+python-bittrex
 pymongo
 requests
+python-binance
