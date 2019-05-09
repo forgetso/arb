@@ -36,6 +36,12 @@
 ehthumbs.db
 Thumbs.db
 
+#Pycharm file#
+.idea
+
 # Settings file #
 ######################
-apikeys.py   
+apikeys.py
+
+# Test files #
+__pycache__

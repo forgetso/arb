@@ -43,32 +43,37 @@ def get_number_of_places_before_point(number):
     return places
 
 
+# rounds a float or a Decimal to a certain number of decimal places and returns it as a Decimal
 def round_decimal_number(number, decimal_places):
-    # logging.debug('Number is  {}'.format(number))
-    places_before_point = get_number_of_places_before_point(number)
-    # prec=1 implies no decimal places, e.g. 5.45 rounds to 5
-    precision = decimal_places + places_before_point
-    if precision == 0:
-        precision = 1
-    # logging.debug('Precision set to {}'.format(precision))
-    # logging.debug('Decimal places {}'.format(decimal_places))
+    try:
+        # logging.debug('Number is  {}'.format(number))
+        places_before_point = get_number_of_places_before_point(number)
+        # prec=1 implies no decimal places, e.g. 5.45 rounds to 5
+        precision = decimal_places + places_before_point
+        if precision == 0:
+            precision = 1
+        # logging.debug('Precision set to {}'.format(precision))
+        # logging.debug('Decimal places {}'.format(decimal_places))
 
-    decimal_part = modf(number)[0]
-    if decimal_part == 0.0 and decimal_places == 0:
-        return Decimal(number)
+        decimal_part = modf(number)[0]
+        if decimal_part == 0.0 and decimal_places == 0:
+            return Decimal(number)
 
-    context = Context(prec=int(precision))
-    setcontext(context)
-    # rounds the volume to the correct number of decimal places
-    # logging.debug('Rounding to {} decimal_places'.format(decimal_places))
+        context = Context(prec=int(precision))
+        setcontext(context)
+        # rounds the volume to the correct number of decimal places
+        # logging.debug('Rounding to {} decimal_places'.format(decimal_places))
 
-    if decimal_places > 0:
-        quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
-    else:
-        quantize_accuracy = Decimal(1)
-    # logging.debug('Accuracy set to {} '.format(quantize_accuracy))
+        if decimal_places > 0:
+            quantize_accuracy = Decimal('1.{}'.format(decimal_places * '0'))
+        else:
+            quantize_accuracy = Decimal(1)
+        # logging.debug('Accuracy set to {} '.format(quantize_accuracy))
 
-    number_corrected = Decimal(number).normalize().quantize(quantize_accuracy)
+        number_corrected = Decimal(number).normalize().quantize(quantize_accuracy)
+    except Exception as e:
+        raise CommonError('Error rounding decimal number: {}'.format(e))
+
     return number_corrected
 
 
