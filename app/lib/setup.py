@@ -7,6 +7,7 @@ from pymongo.errors import CollectionInvalid
 from app.lib.jobqueue import JOB_COLLECTION
 from app.lib.common import get_coingecko_meta, get_current_fiat_rate, dynamically_import_exchange
 from app.lib.db import store_fiat_rates
+import random
 
 MARKETS_JSON = "/app/markets.json"
 FIAT_RATES_JSON = "/app/fiat_rates.json"
@@ -73,6 +74,23 @@ def get_exchanges():
     return exchanges
 
 
+# take all of the exchanges and choose two of them
+def choose_two_random_exchanges():
+    try:
+        exchanges = []
+        total_exchanges = len(EXCHANGES)
+        random_indexes = []
+        while len(exchanges) != 2:
+            random_index = random.randint(0, total_exchanges - 1)
+            if random_index not in random_indexes:
+                random_indexes.append(random_index)
+                # add the instantiated exchange client to a list of clients, e.g. wrap_binance.binance()
+                exchanges.append(dynamically_import_exchange(EXCHANGES[random_index])())
+    except Exception as e:
+        raise SetupError('Error randomly selecting exchanges for comparison: {}'.format(e))
+    return exchanges
+
+
 def setup_environment():
     setup_currency_pairs()
     setup_database()
@@ -85,3 +103,7 @@ def update_fiat_rates():
     eth_rate = get_current_fiat_rate('ETH')
     fiat_rates = {'BTC': btc_rate, 'ETH': eth_rate}
     store_fiat_rates(fiat_rates)
+
+
+class SetupError(Exception):
+    pass

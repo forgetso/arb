@@ -1,7 +1,7 @@
 import argparse
 import logging
 import itertools
-from app.lib.setup import setup_environment, get_exchanges, load_currency_pairs
+from app.lib.setup import setup_environment, load_currency_pairs, choose_two_random_exchanges
 from app.lib.errors import ErrorTradePairDoesNotExist
 from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
 from app.lib.jobqueue import return_value_to_stdout
@@ -11,7 +11,7 @@ from app.lib.common import round_decimal_number
 
 
 def compare(cur_x, cur_y, markets):
-    exchanges = get_exchanges()
+    exchanges = choose_two_random_exchanges()
     apis_trade_pair_valid = []
     arbitrages = []
     viable_arbitrages = []
@@ -57,9 +57,9 @@ def compare(cur_x, cur_y, markets):
     if arbitrages:
         for arbitrage in arbitrages:
             arbitrage['buy'].get_balances()
-            #logging.debug('BUY balances {}'.format(arbitrage['buy'].balances))
+            # logging.debug('BUY balances {}'.format(arbitrage['buy'].balances))
             arbitrage['sell'].get_balances()
-            #logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
+            # logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
 
         viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
 
@@ -71,8 +71,6 @@ def compare(cur_x, cur_y, markets):
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
     logging.debug('Returning {}'.format(result))
-
-
 
     # make sure the job queue executor can access the result by writing to stdout
     return_value_to_stdout(result)
