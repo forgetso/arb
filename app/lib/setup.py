@@ -7,7 +7,7 @@ from pymongo.errors import CollectionInvalid
 from app.lib.jobqueue import JOB_COLLECTION
 from app.lib.common import get_coingecko_meta, get_current_fiat_rate, dynamically_import_exchange
 from app.lib.db import store_fiat_rates
-import randome
+import random
 
 MARKETS_JSON = "/app/markets.json"
 FIAT_RATES_JSON = "/app/fiat_rates.json"
