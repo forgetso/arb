@@ -20,7 +20,7 @@ def get_replenish_quantity(fiat_rate):
 
 
 def get_number_of_decimal_places(number):
-    if not isinstance(number, Decimal) or not isinstance(number, str) or not isinstance(number, float):
+    if not isinstance(number, Decimal) and not isinstance(number, str) and not isinstance(number, float):
         raise TypeError('number must be of type Decimal or str or float not {} {}'.format(type(number), number))
     try:
         # turns out decimal has the length of the decimal part built in
