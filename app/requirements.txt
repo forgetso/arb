@@ -2,3 +2,5 @@ python-bittrex
 pymongo
 requests
 python-binance
+poloniex
+p2pb2bapi
