@@ -7,7 +7,7 @@ from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates
-from app.lib.common import round_decimal_number
+from app.lib.common import round_decimal_number, get_fiat_symbol
 
 
 def compare(cur_x, cur_y, markets):
@@ -18,7 +18,7 @@ def compare(cur_x, cur_y, markets):
     replenish_jobs = []
     fiat_rates = get_fiat_rates()
     try:
-        fiat_rate = round_decimal_number(fiat_rates[cur_y], 2)
+        fiat_rate = round_decimal_number(fiat_rates[cur_y][FIAT_DEFAULT_SYMBOL], 2)
         logging.debug('Fiat rate is {}'.format(fiat_rate))
     except:
         raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
@@ -274,8 +274,6 @@ def setup():
         exit()
 
     markets = load_currency_pairs()
-
-    fiat_rates = get_fiat_rates()
 
     output = compare(args.curr_x, args.curr_y, markets)
     return output

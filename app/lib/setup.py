@@ -1,11 +1,11 @@
 from app.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex, wrap_p2pb2b
 import json
 import os
-from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES
+from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES, TRADE_PAIRS
 from pymongo import MongoClient, version_tuple as pymongo_version_tuple
 from pymongo.errors import CollectionInvalid
 from app.lib.jobqueue import JOB_COLLECTION
-from app.lib.common import get_coingecko_meta, get_current_fiat_rate, dynamically_import_exchange
+from app.lib.common import get_coingecko_meta, get_current_fiat_rates, dynamically_import_exchange
 from app.lib.db import store_fiat_rates
 import random
 
@@ -103,9 +103,15 @@ def setup_environment():
 
 
 def update_fiat_rates():
-    btc_rate = get_current_fiat_rate('BTC')
-    eth_rate = get_current_fiat_rate('ETH')
-    fiat_rates = {'BTC': btc_rate, 'ETH': eth_rate}
+    currencies = []
+    fiat_rates = {}
+    for trade_pair in TRADE_PAIRS:
+        cur_x, cur_y = trade_pair.split('-')
+        currencies.append(cur_x)
+        currencies.append(cur_y)
+    currencies_set = set(currencies)
+    fiat_rates = get_current_fiat_rates(currencies_set)
+
     store_fiat_rates(fiat_rates)
 
 
