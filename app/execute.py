@@ -91,7 +91,6 @@ class JobQueueExecutor:
             job['job_startat'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             job['job_status'] = STATUS_RUNNING
             job['job_lock'] = True
-            job.pop('_id')
             self.jq.update_job(job)
             self.runningjobs.append(jobthread)
 
