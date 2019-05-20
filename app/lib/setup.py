@@ -22,7 +22,7 @@ def setup_database():
     except CollectionInvalid:
         pass
     # list database names does not exist in pymongo3.4, which we're using on raspberry pi
-    if pymongo_version_tuple[0] < 3 and pymongo_version_tuple[1] < 6:
+    if pymongo_version_tuple[0] <= 3 and pymongo_version_tuple[1] < 6:
         assert (DB_NAME_JOBQUEUE in dbclient.database_names())
     else:
         assert (DB_NAME_JOBQUEUE in dbclient.list_database_names())
