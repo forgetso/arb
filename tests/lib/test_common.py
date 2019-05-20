@@ -11,8 +11,7 @@ def test_get_number_of_decimal_places():
     assert get_number_of_decimal_places(Decimal('0.000000000000010')) == 15
     assert get_number_of_decimal_places(Decimal('1.12')) == 2
     assert get_number_of_decimal_places(Decimal('0.12')) == 2
-    with raises(TypeError):
-        get_number_of_decimal_places(0.001)
+    assert get_number_of_decimal_places(0.001) == 3
 
 
 def test_get_replenish_quantity():

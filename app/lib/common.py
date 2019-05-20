@@ -23,8 +23,11 @@ def get_number_of_decimal_places(number):
     if not isinstance(number, Decimal) and not isinstance(number, str) and not isinstance(number, float):
         raise TypeError('number must be of type Decimal or str or float not {} {}'.format(type(number), number))
     try:
-        # turns out decimal has the length of the decimal part built in
-        decimal_places = Decimal(number).as_tuple()[2] * -1
+        if isinstance(number, float):
+            decimal_places = Decimal(str(number)).as_tuple()[2] * -1
+        else:
+            # turns out decimal has the length of the decimal part built in
+            decimal_places = Decimal(number).as_tuple()[2] * -1
     except Exception as e:
         raise CommonError('Error getting decimal places {}'.format(e))
     return decimal_places
