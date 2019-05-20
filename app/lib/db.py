@@ -100,8 +100,9 @@ def store_api_access_time(exchange, method, access_time):
 # retrieve last accessed time of API method on exchange
 def get_api_access_time(exchange, method):
     db = exchange_db()
-    # if there is no record of last accessed time then we return a very early date
-    access_dtime = datetime.datetime(datetime.MINYEAR, 1, 1, 0, 0)
+    # if there is no record of last accessed time then we return a date before today
+    # note: datetime.MINYEAR causes this to fail on raspbian stretch (C mktime may not support dates earlier than 1970)
+    access_dtime = datetime.datetime(1970, 1, 1, 0, 0)
     access_time = time.mktime(access_dtime.timetuple()) + access_dtime.microsecond
     query = {'exchange': exchange, 'method': method}
     access_time_list = [x for x in db.access_time.find(query).sort([('datetime', -1)]).limit(1)]
