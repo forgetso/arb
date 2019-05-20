@@ -91,7 +91,7 @@ def get_current_fiat_rate(crypto_symbol, fiat_symbol=None):
             ids = get_coingecko_id(crypto_symbol)
             uri = 'https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies={}'.format(ids, fiat_symbol)
             req = requests.get(uri)
-            rate_data = json.loads(req.content)
+            rate_data = req.json()
             crypto_rate_in_fiat = rate_data.get(ids).get(fiat_symbol)
             result = crypto_rate_in_fiat
     except Exception as e:
