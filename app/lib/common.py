@@ -95,7 +95,7 @@ def get_current_fiat_rate(crypto_symbol, fiat_symbol=None):
             crypto_rate_in_fiat = rate_data.get(ids).get(fiat_symbol)
             result = crypto_rate_in_fiat
     except Exception as e:
-        raise Exception('Error getting current fiat rate of {} {}'.format(crypto_symbol, e))
+        raise Exception('Error getting current fiat rate of {} {} {}'.format(crypto_symbol, e, req.content))
 
     return result
 
