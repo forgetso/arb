@@ -2,7 +2,7 @@ from app.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex, wr
 import json
 import os
 from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES
-from pymongo import MongoClient, version as pymongo_version
+from pymongo import MongoClient, version_tuple as pymongo_version_tuple
 from pymongo.errors import CollectionInvalid
 from app.lib.jobqueue import JOB_COLLECTION
 from app.lib.common import get_coingecko_meta, get_current_fiat_rate, dynamically_import_exchange
@@ -22,7 +22,7 @@ def setup_database():
     except CollectionInvalid:
         pass
     # list database names does not exist in pymongo3.4, which we're using on raspberry pi
-    if pymongo_version < 3.6:
+    if pymongo_version_tuple[0] < 3 and pymongo_version_tuple[1] < 6:
         assert (DB_NAME_JOBQUEUE in dbclient.database_names())
     else:
         assert (DB_NAME_JOBQUEUE in dbclient.list_database_names())
