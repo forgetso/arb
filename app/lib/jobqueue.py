@@ -89,8 +89,10 @@ class Jobqueue:
         return valid_job
 
     def update_job(self, job):
+        job_copy = job.copy()
+        job_copy.pop('_id')
         if isinstance(job, dict):
-            _id = self.db[JOB_COLLECTION].update_one({'_id': ObjectId(job['_id'])}, {'$set': job})
+            _id = self.db[JOB_COLLECTION].update_one({'_id': ObjectId(job['_id'])}, {'$set': job_copy})
 
     def get_job(self, _id):
         job = self.db[JOB_COLLECTION].find_one({'_id': ObjectId(_id)})
