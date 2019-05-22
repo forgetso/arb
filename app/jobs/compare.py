@@ -1,7 +1,8 @@
 import argparse
 import logging
 import itertools
-from app.lib.setup import setup_environment, load_currency_pairs, choose_two_random_exchanges
+from app.lib.setup import setup_environment, load_currency_pairs, choose_two_random_exchanges, \
+    dynamically_import_exchange
 from app.lib.errors import ErrorTradePairDoesNotExist
 from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
 from app.lib.jobqueue import return_value_to_stdout
@@ -11,36 +12,24 @@ from app.lib.common import round_decimal_number, get_fiat_symbol
 
 
 def compare(cur_x, cur_y, markets):
-    exchanges = choose_two_random_exchanges()
-    apis_trade_pair_valid = []
     arbitrages = []
     viable_arbitrages = []
     replenish_jobs = []
+    result = {'downstream_jobs': []}
+
+    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets)
+
+    if len(apis_trade_pair_valid) < 2:
+        # return early as there will be no arbitrage possibility with only one or zero exchanges
+        return_value_to_stdout(result)
+        return
+
     fiat_rates = get_fiat_rates()
     try:
         fiat_rate = round_decimal_number(fiat_rates[cur_y][FIAT_DEFAULT_SYMBOL], 2)
         logging.debug('Fiat rate is {}'.format(fiat_rate))
     except:
         raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
-    result = {'downstream_jobs': []}
-
-    # make our trade pair equal to a list [ETH, USD]
-    trade_pair_list = [cur_x, cur_y]
-    trade_pair = check_trade_pair(trade_pair_list)
-
-    # set the trade pair for each api
-    for exchange in exchanges:
-        try:
-            exchange.set_trade_pair(trade_pair, markets)
-        except ErrorTradePairDoesNotExist:
-            logging.info('{} does not trade {}'.format(exchange.name, trade_pair))
-            continue
-        apis_trade_pair_valid.append(exchange)
-
-    if len(exchanges) < 2:
-        # return early as there will be no arbitrage possibility with only one exchange
-        return_value_to_stdout(result)
-        return
 
     # get the order book from each api
     for exchange in apis_trade_pair_valid:
@@ -65,8 +54,7 @@ def compare(cur_x, cur_y, markets):
 
         if profit_audit:
             # store details of potential profits to work out if all of this is worthwhile
-            for profit_audit_record in profit_audit:
-                store_audit(profit_audit_record)
+            store_audit(profit_audit)
 
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
@@ -80,14 +68,16 @@ def compare(cur_x, cur_y, markets):
 
 def determine_arbitrage_viability(arbitrages):
     viable_arbitrages = []
-    profit_audit = []
+    profit_audit = {}
     replenish_jobs = []
     currency = None
     sell_volume = None
     exchange_names = set()
+    store_profit_audit = False
     for arbitrage in arbitrages:
         if arbitrage['profit'] > FIAT_ARBITRAGE_MINIMUM:
             logging.info('Viable arbitrage found')
+            profit = arbitrage['profit']
 
             for buy_type in ['buy', 'sell']:
                 exchange = arbitrage[buy_type]
@@ -95,9 +85,10 @@ def determine_arbitrage_viability(arbitrages):
                 if buy_type == 'buy':
                     price = exchange.lowest_ask['price']
                     volume = exchange.lowest_ask['volume']
-                    if volume * price > exchange.balances.get(exchange.quote_currency):
-                        volume = exchange.balances.get(exchange.quote_currency)
-                        currency = exchange.quote_currency
+                    exchange_balance = exchange.balances.get(exchange.quote_currency, 0)
+                    logging.debug(exchange_balance)
+                    if 0 < exchange_balance < volume * price:
+                        volume = exchange_balance
                     # buy is always first in the loop so this is ok
                     sell_volume = volume
                 else:
@@ -106,11 +97,16 @@ def determine_arbitrage_viability(arbitrages):
                     volume = sell_volume
                     currency = exchange.base_currency
 
-                    if volume > exchange.balances.get(exchange.base_currency):
-                        volume = exchange.balances.get(exchange.base_currency)
+                    logging.debug('Exchange {} currency balance {}'.format(exchange.name,
+                                                                           exchange.balances.get(
+                                                                               exchange.base_currency)))
+                    exchange_balance = exchange.balances.get(exchange.base_currency, 0)
+                    if Decimal(0) < exchange_balance < volume * price:
+                        volume = exchange_balance
                         # therefore we also only want to buy this much
                         viable_arbitrages[0]['job_args']['volume'] = decimal_as_string(volume)
 
+                logging.debug('Confirming validity of price {}  volume {} buy_type {}'.format(price, volume, buy_type))
                 trade_valid, price, volume = exchange.trade_validity(price=price, volume=volume)
 
                 if not trade_valid:
@@ -118,17 +114,22 @@ def determine_arbitrage_viability(arbitrages):
                     viable_arbitrages = []
                     break
 
+                # store a record of this trade so that we can analyse later
+                store_profit_audit = True
+
                 # the account has none of this currency, need to replenish
-                if volume == 0 or volume < exchange.min_trade_size:
-                    replenish_jobs.append({
-                        'job_type': 'REPLENISH',
-                        'job_args': {
-                            'exchange': exchange.name,
-                            'currency': currency
-                        }
-                    })
-                    viable_arbitrages = []
-                    break
+                # this only matters when we're trying to SELL a currency
+                if buy_type == 'sell':
+                    if volume == 0 or volume < exchange.min_trade_size:
+                        replenish_jobs.append({
+                            'job_type': 'REPLENISH',
+                            'job_args': {
+                                'exchange': exchange.name,
+                                'currency': currency
+                            }
+                        })
+                        viable_arbitrages = []
+                        break
 
                 job = {
                     'job_type': 'TRANSACT',
@@ -142,13 +143,13 @@ def determine_arbitrage_viability(arbitrages):
                     },
                     'job_info': {'profit': str(arbitrage['profit']), 'currency': FIAT_DEFAULT_SYMBOL}}
                 viable_arbitrages.append(job)
-                profit_audit.append(
-                    {
-                        'profit': str(arbitrage['profit']),
-                        'currency': FIAT_DEFAULT_SYMBOL,
-                        'exchange_names': list(exchange_names),
-                    }
-                )
+
+    if store_profit_audit:
+        profit_audit = {
+            'profit': str(profit),
+            'currency': FIAT_DEFAULT_SYMBOL,
+            'exchange_names': list(exchange_names),
+        }
 
     return viable_arbitrages, replenish_jobs, profit_audit
 
@@ -253,6 +254,52 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
     #     raise Exception(e)
 
     return profit
+
+
+# randomly select the names of two exchanges and then check if the trade pair exists in both exchanges
+# if the trade pair is not in both exchanges, repeat until we have a pair, up to 10 times
+# TODO construct the cross sections of trade pairs and exchanges and randomly select from it instead
+def exchange_selection(cur_x, cur_y, markets):
+    trade_pair = '{}-{}'.format(cur_x, cur_y)
+    potential_exchanges = []
+    apis_trade_pair_valid = []
+
+    for exchange in markets:
+        if trade_pair in markets[exchange]:
+            potential_exchanges.append(exchange)
+
+    if len(potential_exchanges) < 2:
+        # there are not enough exchanges that trade this pair
+        return apis_trade_pair_valid
+    if len(potential_exchanges) == 2:
+        random_exchanges = potential_exchanges
+    else:
+
+        random_exchanges = choose_two_random_exchanges(potential_exchanges)
+
+    logging.debug('exchanges chosen {}'.format(random_exchanges))
+
+    imported_exchanges = []
+    for exchange in random_exchanges:
+        imported_exchanges.append(dynamically_import_exchange(exchange)())
+
+    apis_trade_pair_valid = []
+
+    # make our trade pair equal to a list [ETH, USD]
+    trade_pair_list = [cur_x, cur_y]
+    trade_pair = check_trade_pair(trade_pair_list)
+
+    # set the trade pair for each api
+    # this error should technically not be reached
+    for exchange in imported_exchanges:
+        try:
+            exchange.set_trade_pair(trade_pair, markets)
+        except ErrorTradePairDoesNotExist:
+            logging.info('{} does not trade {}'.format(exchange.name, trade_pair))
+            continue
+        apis_trade_pair_valid.append(exchange)
+
+    return apis_trade_pair_valid
 
 
 def setup():

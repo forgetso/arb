@@ -198,7 +198,7 @@ class p2pb2b():
         # fingers crossed they are correct !
         # TODO check that the balances were last retrieved within a reasonable timeframe (TBC)
         logging.debug('Last accessed time {}'.format(last_accessed_time))
-        if self.balances_time and time.time() - self.balances_time < 30 or time.time() - last_accessed_time < 30:
+        if self.balances_time and time.time() - self.balances_time < 60 or time.time() - last_accessed_time < 60:
             balances = get_balances(self.name)
             self.balances = balances
             logging.debug('p2pb2b balances already retrieved')

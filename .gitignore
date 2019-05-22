@@ -45,5 +45,6 @@ apikeys.py
 
 # Test files #
 __pycache__*
-__pycache__/
+*__pycache__/
 .pytest_cache/
+*.pyc

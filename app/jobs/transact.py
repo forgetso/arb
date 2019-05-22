@@ -7,15 +7,14 @@ if sys.version_info < (3, 0):
 
 import argparse
 from app.settings import LOGLEVEL
-from app.lib.db import jobqueue_db, trades_db
+from app.lib.db import jobqueue_db
 from app.lib.jobqueue import JOB_COLLECTION
 import logging
 from app.lib.setup import load_currency_pairs
-import importlib
 import os
 import uuid
 from app.lib.jobqueue import return_value_to_stdout
-from decimal import Decimal, Context, setcontext
+from decimal import Decimal
 from app.lib.db import store_trade
 from app.lib.common import dynamically_import_exchange
 

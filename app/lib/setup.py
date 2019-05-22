@@ -79,17 +79,19 @@ def get_exchanges():
 
 
 # take all of the exchanges and choose two of them
-def choose_two_random_exchanges():
+def choose_two_random_exchanges(potential_exchanges=None):
+    if not potential_exchanges:
+        potential_exchanges = EXCHANGES
     try:
         exchanges = []
-        total_exchanges = len(EXCHANGES)
+        total_exchanges = len(potential_exchanges)
         random_indexes = []
         while len(exchanges) != 2:
             random_index = random.randint(0, total_exchanges - 1)
             if random_index not in random_indexes:
                 random_indexes.append(random_index)
                 # add the instantiated exchange client to a list of clients, e.g. wrap_binance.binance()
-                exchanges.append(dynamically_import_exchange(EXCHANGES[random_index])())
+                exchanges.append(potential_exchanges[random_index])
     except Exception as e:
         raise SetupError('Error randomly selecting exchanges for comparison: {}'.format(e))
     return exchanges

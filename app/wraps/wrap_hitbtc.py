@@ -141,14 +141,17 @@ class hitbtc:
         if not self.trade_pair:
             raise WrapHitBtcError('Trade pair must be set')
         result = False
+        volume_corrected = 0
 
-        # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
-        logging.debug('Min Trade Size HitBtc {}'.format(self.min_trade_size))
-        allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
-        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+        if volume > 0:
 
-        if volume_corrected > self.min_trade_size:
-            result = True
+            # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
+            logging.debug('Min Trade Size HitBtc {}'.format(self.min_trade_size))
+            allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
+            volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+
+            if volume_corrected > self.min_trade_size:
+                result = True
 
         return result, price, volume_corrected
 
