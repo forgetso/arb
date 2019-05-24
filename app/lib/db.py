@@ -3,7 +3,8 @@ import app.settings as settings
 import datetime
 import time
 from decimal import Decimal
-
+from bson import ObjectId
+import os
 
 # TODO make this a service shared by the job queue so that we're not always connecting to the database?
 
@@ -113,27 +114,52 @@ def get_api_access_time(exchange, method):
 
 
 # lock an API method whilst the request is carried out
-def lock_api_method(exchange, method):
+def lock_api_method(exchange, method, jobqueue_id):
     db = exchange_db()
-    db.method_lock.insert_one({'exchange': exchange, 'method': method})
+
+    db.method_lock.insert_one({'exchange': exchange, 'method': method, 'jobqueue_id': ObjectId(jobqueue_id)})
 
 
 # unlock an API method after the request has finished
-def unlock_api_method(exchange, method):
+def unlock_api_method(exchange, method, jobqueue_id):
     db = exchange_db()
-    db.method_lock.remove({'exchange': exchange, 'method': method})
+    db.method_lock.remove({'exchange': exchange, 'method': method, 'jobqueue_id': ObjectId(jobqueue_id)})
 
 
 # check if an API method is locked
-def get_api_method_lock(exchange, method):
+def get_api_method_lock(exchange, method, jobqueue_id):
     result = False
     db = exchange_db()
-    record = db.method_lock.find_one({'exchange': exchange, 'method': method})
+    record = db.method_lock.find_one({'exchange': exchange, 'method': method, 'jobqueue_id': ObjectId(jobqueue_id)})
     if record:
         result = True
     return result
 
 
 def remove_api_method_locks():
+    db = jobqueue_db()
+
+    jobqueues_ended = []
+    # first check to see if the jobqueues listed in the db are actually running
+    # TODO a more thorough check than PID only, although it is fairly unique
+    for jobqueue_status_doc in db.status.find({'running': True}):
+        # if there is no pid field the use a PID that is too large to be running
+        if not check_pid(jobqueue_status_doc.get('pid', 9999999999999)):
+            jobqueues_ended.append(jobqueue_status_doc['_id'])
+
+    # remove the jobqueue statuses for jobqueues that are not running
+    db.status.remove({'_id': {'$in': jobqueues_ended}})
     db = exchange_db()
-    db.method_lock.remove({})
+    # remove any method locks associated with jobqueues that are not running
+    db.method_lock.remove({'_id': {'$in': jobqueues_ended}})
+
+
+# TODO move this somewhere more sensible
+def check_pid(pid):
+    """ Check For the existence of a unix pid. """
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True

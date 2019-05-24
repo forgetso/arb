@@ -1,12 +1,9 @@
 from app.lib.db import jobqueue_db
-import app.settings as settings
 from datetime import timedelta
-import threading
 import subprocess
 import logging
 import os
 from bson import ObjectId, json_util
-import traceback
 import datetime
 import json
 import sys
@@ -30,6 +27,7 @@ JOB_DEFINITIONS = {'TRANSACT':
                    'COMPARE':
                        {'curr_x': {'type': str},
                         'curr_y': {'type': str},
+                        'jobqueue_id': {'type': ObjectId},
                         },
                    'REPLENISH':
                        {'exchange': {'type': str},

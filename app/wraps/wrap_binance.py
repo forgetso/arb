@@ -17,12 +17,13 @@ BITTREX_ERROR_CODES = [
 
 
 class binance():
-    def __init__(self):
+    def __init__(self, jobqueue_id):
 
         self.api = Client(BINANCE_PUBLIC_KEY, BINANCE_SECRET_KEY)
         self.lowest_ask = None
         self.highest_bid = None
         self.name = 'binance'
+        self.jobqueue_id = jobqueue_id
 
     def set_trade_pair(self, trade_pair, markets):
         try:

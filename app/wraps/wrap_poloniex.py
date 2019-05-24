@@ -13,12 +13,13 @@ POLONIEX_ERROR_CODES = []
 
 
 class poloniex():
-    def __init__(self):
+    def __init__(self, jobqueue_id):
 
         self.api = Poloniex(POLONIEX_PUBLIC_KEY, POLONIEX_SECRET_KEY)
         self.lowest_ask = None
         self.highest_bid = None
         self.name = 'poloniex'
+        self.jobqueue_id = jobqueue_id
 
     def set_trade_pair(self, trade_pair, markets):
         try:

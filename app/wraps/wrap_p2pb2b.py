@@ -36,7 +36,7 @@ P2PB2B_ADDRESSES = {
 
 
 class p2pb2b():
-    def __init__(self):
+    def __init__(self, jobqueue_id):
 
         self.api = P2PB2B(P2PB2B_PUBLIC_KEY, P2PB2B_SECRET_KEY)
         self.lowest_ask = None
@@ -44,6 +44,7 @@ class p2pb2b():
         self.name = 'p2pb2b'
         self.balances = None
         self.balances_time = None
+        self.jobqueue_id = jobqueue_id
 
     def set_trade_pair(self, trade_pair, markets):
         try:
@@ -205,7 +206,7 @@ class p2pb2b():
             return
 
         wait_count = 0
-        while get_api_method_lock(self.name, 'get_balances'):
+        while get_api_method_lock(self.name, 'get_balances', self.jobqueue_id):
             time.sleep(5)
             wait_count += 1
             if wait_count > 4:
@@ -214,11 +215,11 @@ class p2pb2b():
 
         try:
 
-            lock_api_method(self.name, 'get_balances')
+            lock_api_method(self.name, 'get_balances', self.jobqueue_id)
             balances_response = self.api.getBalances()
             if not balances_response.get('success'):
                 raise Exception(balances_response.get('message'))
-            unlock_api_method(self.name, 'get_balances')
+            unlock_api_method(self.name, 'get_balances', self.jobqueue_id)
             self.balances_time = time.time()
             store_api_access_time(self.name, 'get_balances', self.balances_time)
             balances = {symbol: Decimal(balances.get('available')) for symbol, balances in

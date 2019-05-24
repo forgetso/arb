@@ -18,7 +18,7 @@ BITTREX_ERROR_CODES = [
 
 
 class bittrex():
-    def __init__(self):
+    def __init__(self, jobqueue_id):
         api_version = API_V1_1
         self.api = BittrexAPI(BITTREX_PUBLIC_KEY, BITTREX_PRIVATE_KEY, api_version=api_version)
         self.lowest_ask = None
@@ -27,6 +27,7 @@ class bittrex():
         self.min_trade_size_btc = Decimal(0.0005)
         self.balances = None
         self.pending_balances = None
+        self.jobqueue_id = jobqueue_id
 
     def set_trade_pair(self, trade_pair, markets):
         try:

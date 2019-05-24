@@ -19,13 +19,14 @@ HITBTC_ERROR_CODES = {
 
 
 class hitbtc:
-    def __init__(self):
+    def __init__(self, jobqueue_id):
         self.api = HitBTCClient(public_key=HITBTC_PUBLIC_KEY, secret=HITBTC_SECRET_KEY, url=URL)
         self.lowest_ask = None
         self.highest_bid = None
         self.name = 'hitbtc'
         self.balances = {}
         self.pending_balances = {}
+        self.jobqueue_id = jobqueue_id
         # self.min_trade_size_btc = Decimal(0.0001)
         logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 

@@ -11,13 +11,13 @@ from app.lib.db import store_audit, get_fiat_rates
 from app.lib.common import round_decimal_number, get_fiat_symbol
 
 
-def compare(cur_x, cur_y, markets):
+def compare(cur_x, cur_y, markets, jobqueue_id):
     arbitrages = []
     viable_arbitrages = []
     replenish_jobs = []
     result = {'downstream_jobs': []}
 
-    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets)
+    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets, jobqueue_id)
 
     if len(apis_trade_pair_valid) < 2:
         # return early as there will be no arbitrage possibility with only one or zero exchanges
@@ -36,6 +36,7 @@ def compare(cur_x, cur_y, markets):
         exchange.order_book()
 
     # generate a unique list of pairs for comparison
+    # TODO this is now invalid as we only pass 2 exchanges. Remove?
     exchange_combinations = itertools.combinations(apis_trade_pair_valid, 2)
 
     for exchange_combination in exchange_combinations:
@@ -74,6 +75,8 @@ def determine_arbitrage_viability(arbitrages):
     sell_volume = None
     exchange_names = set()
     store_profit_audit = False
+    trade_pair = ''
+    profit = None
     for arbitrage in arbitrages:
         if arbitrage['profit'] > FIAT_ARBITRAGE_MINIMUM:
             logging.info('Viable arbitrage found')
@@ -116,6 +119,7 @@ def determine_arbitrage_viability(arbitrages):
 
                 # store a record of this trade so that we can analyse later
                 store_profit_audit = True
+                trade_pair = exchange.trade_pair_common
 
                 # the account has none of this currency, need to replenish
                 # this only matters when we're trying to SELL a currency
@@ -141,14 +145,15 @@ def determine_arbitrage_viability(arbitrages):
                         'type': buy_type,
 
                     },
-                    'job_info': {'profit': str(arbitrage['profit']), 'currency': FIAT_DEFAULT_SYMBOL}}
+                    'job_info': {'profit': float(round(arbitrage['profit'], 2)), 'currency': FIAT_DEFAULT_SYMBOL}}
                 viable_arbitrages.append(job)
 
     if store_profit_audit:
         profit_audit = {
-            'profit': str(profit),
+            'profit': float(round(profit, 2)),
             'currency': FIAT_DEFAULT_SYMBOL,
             'exchange_names': list(exchange_names),
+            'trade_pair': trade_pair
         }
 
     return viable_arbitrages, replenish_jobs, profit_audit
@@ -259,7 +264,7 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
 # randomly select the names of two exchanges and then check if the trade pair exists in both exchanges
 # if the trade pair is not in both exchanges, repeat until we have a pair, up to 10 times
 # TODO construct the cross sections of trade pairs and exchanges and randomly select from it instead
-def exchange_selection(cur_x, cur_y, markets):
+def exchange_selection(cur_x, cur_y, markets, jobqueue_id):
     trade_pair = '{}-{}'.format(cur_x, cur_y)
     potential_exchanges = []
     apis_trade_pair_valid = []
@@ -281,7 +286,7 @@ def exchange_selection(cur_x, cur_y, markets):
 
     imported_exchanges = []
     for exchange in random_exchanges:
-        imported_exchanges.append(dynamically_import_exchange(exchange)())
+        imported_exchanges.append(dynamically_import_exchange(exchange)(jobqueue_id))
 
     apis_trade_pair_valid = []
 
@@ -306,6 +311,7 @@ def setup():
     parser = argparse.ArgumentParser(description='Process some currencies.')
     parser.add_argument('curr_x', type=str, help='Currency to compare')
     parser.add_argument('curr_y', type=str, help='Currency to compare')
+    parser.add_argument('jobqueue_id', type=str, help='Jobqueue Id')
     parser.add_argument('--setup', action='store_true')
     parser.add_argument('--setuponly', action='store_true',
                         help='Only run the setup process, not the comparison process')
@@ -322,7 +328,7 @@ def setup():
 
     markets = load_currency_pairs()
 
-    output = compare(args.curr_x, args.curr_y, markets)
+    output = compare(args.curr_x, args.curr_y, markets, args.jobqueue_id)
     return output
 
 

@@ -7,6 +7,7 @@ import traceback
 import datetime
 from app.lib.setup import update_fiat_rates
 from app.lib.db import remove_api_method_locks
+from os import getpid, kill
 
 
 # Create an instance of the app! Execute a job queue. Begin scraping prices of crypto. Look for jobs to start based on
@@ -29,10 +30,9 @@ class JobQueueExecutor:
 
         self.jq.db[JOB_STATUS_COLLECTION].remove()
 
-        self._id = self.jq.db[JOB_STATUS_COLLECTION].insert({'running': True})
+        self._id = self.jq.db[JOB_STATUS_COLLECTION].insert({'running': True, 'pid': getpid()})
 
         # remove any api locks that were stored previously
-        # TODO tie these locks to the jobqueue ID
         remove_api_method_locks()
 
         # we are going to constantly check apis for arbitrage opportunities
@@ -59,7 +59,7 @@ class JobQueueExecutor:
 
         # TODO job to convert BTC (TODO set this as a master currency) to all live currencies in MASTER EXCHANGE (set in settings)
 
-        # TODO jobs to move crypto into fiat periodically to protect against large price fluctuations
+        # TODO jobs to move crypto into fiat periodically to protect against price fluctuations
 
         return
 
@@ -91,6 +91,7 @@ class JobQueueExecutor:
             job['job_startat'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             job['job_status'] = STATUS_RUNNING
             job['job_lock'] = True
+            job['jobqueue_id'] = self._id
             self.jq.update_job(job)
             self.runningjobs.append(jobthread)
 
@@ -135,6 +136,7 @@ class JobQueueExecutor:
         existing_job = self.jq.db[JOB_COLLECTION].find_one({'job_type': 'COMPARE',
                                                             'job_args.curr_x': curr_x,
                                                             'job_args.curr_y': curr_y,
+                                                            'job_args.jobqueue_id': self._id,
                                                             'job_status':
                                                                 {'$in': [STATUS_CREATING,
                                                                          STATUS_RUNNING]
@@ -147,7 +149,7 @@ class JobQueueExecutor:
             self.jq.add_job(
                 {
                     'job_type': 'COMPARE',
-                    'job_args': {'curr_x': curr_x, 'curr_y': curr_y},
+                    'job_args': {'curr_x': curr_x, 'curr_y': curr_y, 'jobqueue_id': self._id},
                     'jobqueue_id': self._id
                 },
                 self._id)
@@ -228,3 +230,4 @@ def call_repeatedly(interval, func, *args):
 
     threading.Thread(target=loop).start()
     return stopped.set
+
