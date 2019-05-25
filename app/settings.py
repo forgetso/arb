@@ -3,7 +3,7 @@ from app.apikeys import *
 
 FIAT_DEFAULT_SYMBOL = 'GBP'
 # This should be set to a value based in the fiat default symol above. e.g. 1 = 1 GBP
-FIAT_ARBITRAGE_MINIMUM = 0.00
+FIAT_ARBITRAGE_MINIMUM = 0.50
 
 BASE_CURRENCY = 'BTC'
 DB_HOST_JOBQUEUE = 'localhost'
@@ -14,21 +14,22 @@ DB_NAME_AUDIT = 'audit'
 DB_NAME_COMMON = 'common'
 DB_NAME_EXCHANGE = 'exchange'
 
-EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'p2pb2b', 'poloniex']
+EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex', 'p2pb2b']
+# EXCHANGES = ['binance', 'bittrex']
 
 TRADE_PAIRS = [
-    '1ST-BTC',
-    'ADX-BTC',
-    'ADX-ETH',
-    'AMB-BTC',
+    # '1ST-BTC',
+    # 'ADX-BTC',
+    # 'ADX-ETH',
+    # 'AMB-BTC',
     'AMB-ETH',
-    'AVT-ETH',
+    # 'AVT-ETH',
     # 'BCH-BTC',
     # 'BTC-USD',
-    'CDT-BTC',
-    'CDT-ETH',
-    'CLN-BTC',
-    'CLN-ETH',
+    # 'CDT-BTC',
+    # 'CDT-ETH',
+    # 'CLN-BTC',
+    # 'CLN-ETH',
     'ETH-BTC',
     # 'ETH-DAI',
     # 'ETH-USD',
@@ -42,7 +43,7 @@ TRADE_PAIRS = [
     # 'LOC-BTC',
     # 'LOC-ETH',
     'LTC-BTC',
-    'LTC-ETH',
+    # 'LTC-ETH',
     # 'LTC-USD',
     # 'MAN-BTC',
     # 'MAN-ETH',
@@ -52,15 +53,16 @@ TRADE_PAIRS = [
     # 'PIX-ETH',
     # 'REP-BTC',
     # 'RLC-BTC',
-    'SNT-BTC',
-    'SNT-ETH',
+    # 'SNT-BTC',
+    # 'SNT-ETH',
     # 'XTZ-BTC',
     # 'XTZ-USD',
-    'ZRX-BTC',
+    # 'ZRX-BTC',
     'ZRX-ETH'
 ]
 LOGLEVEL = 'DEBUG'
-JOBS_NOT_RUNNING = ['TRANSACT', 'REPLENISH']
+JOBS_NOT_RUNNING = []
+# JOBS_NOT_RUNNING = ['TRANSACT', ]
 
 INTERVAL_COMPARE = int(10)
 INTERVAL_NEWJOBS = int(1)

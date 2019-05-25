@@ -6,7 +6,7 @@ from app.lib.common import round_decimal_number, get_number_of_decimal_places
 from app.lib.db import store_balances, get_balances, store_api_access_time, get_api_access_time, lock_api_method, \
     unlock_api_method, get_api_method_lock
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 
 P2PB2B_TAKER_FEE = 0.0020
@@ -16,22 +16,8 @@ P2PB2B__ERROR_CODES = []
 
 # TODO work out a way of automatically importing addresses
 P2PB2B_ADDRESSES = {
-    'BTC': '3MBYPQNeAL9L6dSEFkG6AfmyMycoMjsJYV',
+    'BTC': '36KYvtDUaqFkqmogT1EuHQdhbwML8Ahs9H',
     'ETH': '0x6cA28a73b125b3F1C3760673AacE15A1EF9c3C90',
-    # 'BNB': '0x1c6FEF78ccd5FEDaf580e09695322ea699377b87',
-    'ETC': '0xAF58C3C4383611Ab84581D7A59B4Bf84C07D58Dd',
-    'LTC': 'MRbqHQmaf1zhKUZ3MRkxQ5yQqKjSgyfYuF',
-    # 'WAVES': '3PNr7xxDCUcaLZ6yrfd9DJs6AbQYQzeeXSM',
-    # 'BTG': 'GYi8938gZXjeXJmeDwP9rY7ofm51gLjq49',
-    # 'XLM': 'GB347U2XAKGGGUVJMWMVW5YVXPF66RNQISPJAFWUIZKV3PNJL75WXCF7',
-    # 'BCH': 'bitcoincash:qrugdfq28f03upz7uadga04skzah3zet7qxqcwsayk',
-    # 'DOGE': 'DT9QUoJ2Zbd91USWrPuUzijF3SDEhR9w3y',
-    # 'TUSD': '0xCD470e2c03E3DB140aB22e89244dA600a6Cb0c88',
-    # 'PAX': '0x54763C9c531192Ea53E66b51c71E9b02fbb0d838',
-    # 'NEO': 'AMmm8hg3xR8BGpp1WZvs8Zu6rG2Xqxz1M7',
-    # 'DASH': 'Xej5dEvap2iVeCXShGy9iri7T3mQkEN6Ku',
-    # 'GAS': 'AGaef46GedPJV7uBTFEfgvUN68Evxr9b6T',
-
 }
 
 
@@ -63,6 +49,8 @@ class p2pb2b():
             raise ErrorTradePairDoesNotExist
 
     def order_book(self):
+        # TODO put rate limiting in for this wrapper at the very beginning. Store the number of API hits that have occurred in the current minute and second
+        # limit is 5 per second or 100 per minute
         order_book_dict = {}
         ticker_buy_response = None
         ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
@@ -93,6 +81,8 @@ class p2pb2b():
         self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
                      order_book_dict['sell']['orders']]
         self.highest_bid = self.bids[0]
+        logging.debug(
+            'p2pb2b {} lowest {} highest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
         return order_book_dict
 
     def get_currency_pairs(self):
@@ -199,7 +189,8 @@ class p2pb2b():
         # fingers crossed they are correct !
         # TODO check that the balances were last retrieved within a reasonable timeframe (TBC)
         logging.debug('Last accessed time {}'.format(last_accessed_time))
-        if self.balances_time and time.time() - self.balances_time < 60 or time.time() - last_accessed_time < 60:
+        if self.balances_time and datetime.utcnow() - self.balances_time < timedelta(
+                seconds=60) or time.time() - last_accessed_time.timestamp() < 60:
             balances = get_balances(self.name)
             self.balances = balances
             logging.debug('p2pb2b balances already retrieved')
@@ -220,14 +211,13 @@ class p2pb2b():
             if not balances_response.get('success'):
                 raise Exception(balances_response.get('message'))
             unlock_api_method(self.name, 'get_balances', self.jobqueue_id)
-            self.balances_time = time.time()
+            self.balances_time = datetime.utcnow()
             store_api_access_time(self.name, 'get_balances', self.balances_time)
             balances = {symbol: Decimal(balances.get('available')) for symbol, balances in
                         balances_response.get('result').items()}
         except Exception as e:
             raise WrapP2PB2BError('Error getting trading balances {} Last Accessed {} Time Now {}'.format(e,
-                                                                                                          datetime.fromtimestamp(
-                                                                                                              last_accessed_time),
+                                                                                                          last_accessed_time,
                                                                                                           datetime.utcnow()))
         self.balances = balances
 
@@ -236,10 +226,12 @@ class p2pb2b():
 
     def get_address(self, symbol):
         try:
-            address_json = P2PB2B_ADDRESSES[symbol]
+            address = P2PB2B_ADDRESSES[symbol]
+        except KeyError as e:
+            raise Exception('Address not known for P2PB2B: {}'.format(symbol))
         except Exception as e:
-            raise Exception('Error getting currency address in P2P {}'.format(e))
-        return address_json.get('address')
+            raise WrapP2PB2BError('Error getting address in P2PB2B: {}'.format(e))
+        return address
 
     def calculate_fees(self, trades_itemised, price):
         total_commission = 0
@@ -261,6 +253,8 @@ class p2pb2b():
         allowed_decimal_places = self.decimal_places
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
         result = False
+        if volume > 0:
+            result = True
 
         return result, price, volume_corrected
 

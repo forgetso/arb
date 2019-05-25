@@ -87,7 +87,7 @@ class poloniex():
         if result.get('status').upper() == 'FILLED':
             raw_trade = result
         else:
-            raw_trade = self.get_order_status(result.get('symbol'), result.get('orderId'))
+            raw_trade = self.get_order_status(result.get('orderId'))
 
         if not raw_trade.get('status').upper() == 'FILLED':
             raise WrapPoloniexError('{}'.format(result.get('message')))

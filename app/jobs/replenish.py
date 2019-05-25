@@ -5,6 +5,7 @@ from app.lib.setup import get_exchanges
 from app.lib.jobqueue import return_value_to_stdout
 from app.lib.common import get_replenish_quantity, get_current_fiat_rate
 
+
 def replenish(exchange, currency):
     # *exchange* has zero quanity of *currency*
     # we need to replenish the stocks from MASTER_EXCHANGE
@@ -43,9 +44,6 @@ def replenish(exchange, currency):
             result['success'] = True
 
     return_value_to_stdout(result)
-
-
-
 
 
 def setup():

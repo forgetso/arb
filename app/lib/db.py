@@ -1,7 +1,7 @@
 import pymongo
 import app.settings as settings
 import datetime
-import time
+import uuid
 from decimal import Decimal
 from bson import ObjectId
 import os
@@ -95,9 +95,9 @@ def get_balances(exchange):
 
 
 # store access times of API methods in case of limits placed on exchanges
-def store_api_access_time(exchange, method, access_time):
+def store_api_access_time(exchange, method, access_datetime):
     db = exchange_db()
-    db.access_time.insert_one({'datetime': access_time, 'exchange': exchange, 'method': method})
+    db.access_time.insert_one({'datetime': access_datetime, 'exchange': exchange, 'method': method})
 
 
 # retrieve last accessed time of API method on exchange
@@ -105,8 +105,7 @@ def get_api_access_time(exchange, method):
     db = exchange_db()
     # if there is no record of last accessed time then we return a date before today
     # note: datetime.MINYEAR causes this to fail on raspbian stretch (C mktime may not support dates earlier than 1970)
-    access_dtime = datetime.datetime(1970, 1, 1, 0, 0)
-    access_time = time.mktime(access_dtime.timetuple()) + access_dtime.microsecond
+    access_time = datetime.datetime(1970, 1, 1, 0, 0)
     query = {'exchange': exchange, 'method': method}
     access_time_list = [x for x in db.access_time.find(query).sort([('datetime', -1)]).limit(1)]
     if access_time_list:
@@ -155,3 +154,15 @@ def remove_api_method_locks():
     db = exchange_db()
     # remove any method locks associated with jobqueues that are not running
     db.method_lock.remove({'_id': {'$in': jobqueues_ended}})
+
+
+def get_trade_id():
+    job_pid = os.getpid()
+    db = jobqueue_db()
+    this_job = db.jobs.find_one({'job_pid': job_pid})
+    if this_job:
+        trade_id = this_job.get('_id')
+    else:
+        # we may be running the job outside of the job queue
+        trade_id = uuid.uuid4().hex.replace('-', '')[0:23]
+    return str(trade_id)

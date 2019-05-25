@@ -7,19 +7,15 @@ if sys.version_info < (3, 0):
 
 import argparse
 from app.settings import LOGLEVEL
-from app.lib.db import jobqueue_db
-from app.lib.jobqueue import JOB_COLLECTION
 import logging
 from app.lib.setup import load_currency_pairs
-import os
-import uuid
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
-from app.lib.db import store_trade
+from app.lib.db import store_trade, get_trade_id
 from app.lib.common import dynamically_import_exchange
 
 
-def transact(exchange, trade_pair_common, volume, price, type, markets, test_transaction=False):
+def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue_id, test_transaction=False):
     logging.info(
         'Instructed to *{}* trade pair {} volume {} at price {} on {}'.format(type, trade_pair_common, volume, price,
                                                                               exchange))
@@ -28,7 +24,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
     trade = {}
     trade_id = get_trade_id()
 
-    exchange_obj = dynamically_import_exchange(exchange)()
+    exchange_obj = dynamically_import_exchange(exchange)(jobqueue_id)
     exchange_obj.set_trade_pair(trade_pair_common, markets)
 
     # just check that we can actually transact by placing the minimum transaction
@@ -61,18 +57,6 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, test_tra
     return trade
 
 
-def get_trade_id():
-    job_pid = os.getpid()
-    db = jobqueue_db()
-    this_job = db[JOB_COLLECTION].find_one({'job_pid': job_pid})
-    if this_job:
-        trade_id = this_job.get('_id')
-    else:
-        # we may be running the job outside of the job queue
-        trade_id = uuid.uuid4().hex.replace('-', '')[0:23]
-    return str(trade_id)
-
-
 def setup():
     parser = argparse.ArgumentParser(description='Buy or sell a trade pair')
 
@@ -81,6 +65,7 @@ def setup():
     parser.add_argument('volume', type=str, help='Volume to buy')
     parser.add_argument('price', type=str, help='Price to buy at')
     parser.add_argument('type', type=str, help='Buy or sell')
+    parser.add_argument('jobqueue_id', type=str, help='Jobqueue Id')
     parser.add_argument('--test_transaction', default=False, action='store_true',
                         help='Try a transaction for the minimum amount')
     args = parser.parse_args()
@@ -89,7 +74,8 @@ def setup():
     price = Decimal(args.price).normalize()
     volume = Decimal(args.volume).normalize()
 
-    transact(args.exchange, args.trade_pair_common, volume, price, args.type, markets, args.test_transaction)
+    transact(args.exchange, args.trade_pair_common, volume, price, args.type, markets, args.jobqueue_id,
+             args.test_transaction)
 
 
 class TransactionError(Exception):

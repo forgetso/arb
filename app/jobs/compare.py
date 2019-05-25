@@ -22,7 +22,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     if len(apis_trade_pair_valid) < 2:
         # return early as there will be no arbitrage possibility with only one or zero exchanges
         return_value_to_stdout(result)
-        return
+        return result
 
     fiat_rates = get_fiat_rates()
     try:
@@ -195,7 +195,9 @@ def check_trade_pair(trade_pair):
 
 def find_arbitrage(exchange_x, exchange_y, fiat_rate):
     result = {}
-    # TODO ensure that volume is above minimum threshold for exchange
+
+    # print('lowest ask {} {} highest bid {} {}'.format(exchange_x.name, exchange_x.lowest_ask, exchange_y.name,
+    #                                                   exchange_y.highest_bid))
     # try:
     if exchange_x.lowest_ask and exchange_y.highest_bid:
         if exchange_x.lowest_ask['price'] < exchange_y.highest_bid['price']:
@@ -212,6 +214,8 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate):
                         profit,
                         FIAT_DEFAULT_SYMBOL))
 
+    # print('lowest ask {}  {} highest bid {} {}'.format(exchange_y.name, exchange_y.lowest_ask, exchange_x.name,
+    #                                                    exchange_x.highest_bid))
     if exchange_y.lowest_ask and exchange_x.highest_bid:
         if exchange_y.lowest_ask['price'] < exchange_x.highest_bid['price']:
 
@@ -249,7 +253,10 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
         raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee),
                         type(exchange_sell.fee))
 
-    if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['price']:
+    # Example
+    # lowest ask: we can get 4 BTC (volume) at 99 ETH (price) per BTC
+    # highest bid: but we can only sell 3 BTC (volume) at 100 ETH (price) per BTC
+    if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['volume']:
         volume = exchange_sell.highest_bid['volume']
 
     # TODO what about fees when buying? Right now we just use the taker fee for calculating but need to switch between taker and maker
@@ -287,8 +294,6 @@ def exchange_selection(cur_x, cur_y, markets, jobqueue_id):
     imported_exchanges = []
     for exchange in random_exchanges:
         imported_exchanges.append(dynamically_import_exchange(exchange)(jobqueue_id))
-
-    apis_trade_pair_valid = []
 
     # make our trade pair equal to a list [ETH, USD]
     trade_pair_list = [cur_x, cur_y]
