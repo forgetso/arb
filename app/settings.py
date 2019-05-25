@@ -14,8 +14,7 @@ DB_NAME_AUDIT = 'audit'
 DB_NAME_COMMON = 'common'
 DB_NAME_EXCHANGE = 'exchange'
 
-# EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'p2pb2b', 'poloniex']
-EXCHANGES = ['bittrex', 'hitbtc', 'p2pb2b', 'poloniex']
+EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'p2pb2b', 'poloniex']
 
 TRADE_PAIRS = [
     '1ST-BTC',

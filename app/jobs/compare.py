@@ -4,7 +4,7 @@ import itertools
 from app.lib.setup import setup_environment, load_currency_pairs, choose_two_random_exchanges, \
     dynamically_import_exchange
 from app.lib.errors import ErrorTradePairDoesNotExist
-from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL
+from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates
@@ -270,7 +270,7 @@ def exchange_selection(cur_x, cur_y, markets, jobqueue_id):
     apis_trade_pair_valid = []
 
     for exchange in markets:
-        if trade_pair in markets[exchange]:
+        if trade_pair in markets[exchange] and exchange in EXCHANGES:
             potential_exchanges.append(exchange)
 
     if len(potential_exchanges) < 2:

@@ -5,6 +5,8 @@ import time
 from decimal import Decimal
 from bson import ObjectId
 import os
+from app.lib.common import check_pid
+
 
 # TODO make this a service shared by the job queue so that we're not always connecting to the database?
 
@@ -136,6 +138,7 @@ def get_api_method_lock(exchange, method, jobqueue_id):
     return result
 
 
+# Remove any locks on api methods that are not owned by a running jobqueue
 def remove_api_method_locks():
     db = jobqueue_db()
 
@@ -152,14 +155,3 @@ def remove_api_method_locks():
     db = exchange_db()
     # remove any method locks associated with jobqueues that are not running
     db.method_lock.remove({'_id': {'$in': jobqueues_ended}})
-
-
-# TODO move this somewhere more sensible
-def check_pid(pid):
-    """ Check For the existence of a unix pid. """
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return False
-    else:
-        return True
