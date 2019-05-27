@@ -17,6 +17,8 @@ HITBTC_ERROR_CODES = {
     ]
 }
 
+MINIMUM_DEPOSIT = {}
+
 
 class hitbtc:
     def __init__(self, jobqueue_id):
@@ -155,6 +157,10 @@ class hitbtc:
                 result = True
 
         return result, price, volume_corrected
+
+    def get_minimum_deposit_volume(self, currency):
+        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
+        return minimum_deposit_volume
 
 
 class WrapHitBtcError(Exception):

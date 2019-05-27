@@ -5,7 +5,7 @@ FIAT_DEFAULT_SYMBOL = 'GBP'
 # This should be set to a value based in the fiat default symol above. e.g. 1 = 1 GBP
 FIAT_ARBITRAGE_MINIMUM = 0.50
 
-BASE_CURRENCY = 'BTC'
+BASE_CURRENCY = 'ETH'
 DB_HOST_JOBQUEUE = 'localhost'
 DB_PORT_JOBQUEUE = 27017
 DB_NAME_JOBQUEUE = 'jobqueue'
@@ -14,15 +14,15 @@ DB_NAME_AUDIT = 'audit'
 DB_NAME_COMMON = 'common'
 DB_NAME_EXCHANGE = 'exchange'
 
-EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex', 'p2pb2b']
-# EXCHANGES = ['binance', 'bittrex']
+# EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex', 'p2pb2b']
+EXCHANGES = ['bittrex', 'p2pb2b']
 
 TRADE_PAIRS = [
     # '1ST-BTC',
     # 'ADX-BTC',
     # 'ADX-ETH',
     # 'AMB-BTC',
-    'AMB-ETH',
+    # 'AMB-ETH',
     # 'AVT-ETH',
     # 'BCH-BTC',
     # 'BTC-USD',
@@ -42,7 +42,7 @@ TRADE_PAIRS = [
     # 'IND-ETH',
     # 'LOC-BTC',
     # 'LOC-ETH',
-    'LTC-BTC',
+    # 'LTC-BTC',
     # 'LTC-ETH',
     # 'LTC-USD',
     # 'MAN-BTC',
@@ -58,7 +58,7 @@ TRADE_PAIRS = [
     # 'XTZ-BTC',
     # 'XTZ-USD',
     # 'ZRX-BTC',
-    'ZRX-ETH'
+    # 'ZRX-ETH'
 ]
 LOGLEVEL = 'DEBUG'
 JOBS_NOT_RUNNING = []
@@ -71,4 +71,4 @@ INTERVAL_RUNNINGJOBS = int(3)
 INTERVAL_FIAT_RATE = int(600)
 
 MASTER_EXCHANGE = 'bittrex'
-FIAT_REPLENISH_AMOUNT = 10
+FIAT_REPLENISH_AMOUNT = 100

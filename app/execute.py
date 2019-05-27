@@ -136,7 +136,7 @@ class JobQueueExecutor:
         existing_job = self.jq.db[JOB_COLLECTION].find_one({'job_type': 'COMPARE',
                                                             'job_args.curr_x': curr_x,
                                                             'job_args.curr_y': curr_y,
-                                                            'job_args.jobqueue_id': self._id,
+                                                            'job_args.jobqueue_id': str(self._id),
                                                             'job_status':
                                                                 {'$in': [STATUS_CREATING,
                                                                          STATUS_RUNNING]
@@ -149,8 +149,7 @@ class JobQueueExecutor:
             self.jq.add_job(
                 {
                     'job_type': 'COMPARE',
-                    'job_args': {'curr_x': curr_x, 'curr_y': curr_y, 'jobqueue_id': self._id},
-                    'jobqueue_id': self._id
+                    'job_args': {'curr_x': curr_x, 'curr_y': curr_y, 'jobqueue_id': str(self._id)},
                 },
                 self._id)
         else:

@@ -4,11 +4,14 @@ import itertools
 from app.lib.setup import setup_environment, load_currency_pairs, choose_two_random_exchanges, \
     dynamically_import_exchange
 from app.lib.errors import ErrorTradePairDoesNotExist
-from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES
+from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES, FIAT_REPLENISH_AMOUNT
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates
-from app.lib.common import round_decimal_number, get_fiat_symbol
+from app.lib.common import round_decimal_number
+
+from bson import json_util
+import json
 
 
 def compare(cur_x, cur_y, markets, jobqueue_id):
@@ -59,6 +62,9 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
+    for job in result['downstream_jobs']:
+        job['job_args']['jobqueue_id'] = jobqueue_id
+
     logging.debug('Returning {}'.format(result))
 
     # make sure the job queue executor can access the result by writing to stdout
@@ -261,6 +267,11 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
 
     # TODO what about fees when buying? Right now we just use the taker fee for calculating but need to switch between taker and maker
     fees = price_sell * volume_sell * fee
+
+    # 3 ETH at 0.1 BTC * 8000 GBP = 2400 GBP > 100 GBP => 3 * (100 / 2400) is the volume
+    if volume * price_buy * fiat_rate > FIAT_REPLENISH_AMOUNT:
+        volume = FIAT_REPLENISH_AMOUNT / fiat_rate * volume
+
     profit = ((price_sell - price_buy) * volume - fees) * fiat_rate
     # except Exception as e:
     #     raise Exception(e)

@@ -13,7 +13,8 @@ from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_trade, get_trade_id
 from app.lib.common import dynamically_import_exchange
-
+import json
+from bson import json_util
 
 def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue_id, test_transaction=False):
     logging.info(
@@ -52,7 +53,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue
             trade['_id'] = trade_id
             logging.debug(trade)
             store_trade(trade)
-            return_value_to_stdout(trade)
+            return_value_to_stdout(json.dumps(trade, default=json_util.default))
 
     return trade
 

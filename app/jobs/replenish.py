@@ -16,6 +16,8 @@ def replenish(exchange, currency):
     child_exchange = [e for e in exchanges if e.name == exchange][0]
     fiat_rate = get_current_fiat_rate(crypto_symbol=currency, fiat_symbol=FIAT_DEFAULT_SYMBOL)
     quantity = get_replenish_quantity(fiat_rate)
+    if quantity < child_exchange.get_minimum_deposit_volume(currency):
+        quantity = child_exchange.get_minimum_deposit_volume(currency)
     to_address = child_exchange.get_address(currency)
     result = {'success': False}
 

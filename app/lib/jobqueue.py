@@ -8,6 +8,7 @@ import datetime
 import json
 import sys
 import calendar
+from bson import json_util
 
 POLL_INTERVAL = timedelta(seconds=2)
 STATUS_CREATING = 'CREATING'
@@ -23,11 +24,12 @@ JOB_DEFINITIONS = {'TRANSACT':
                         'trade_pair_common': {'type': str},
                         'volume': {'type': str},
                         'price': {'type': str},
+                        'jobqueue_id': {'type': str},
                         },
                    'COMPARE':
                        {'curr_x': {'type': str},
                         'curr_y': {'type': str},
-                        'jobqueue_id': {'type': ObjectId},
+                        'jobqueue_id': {'type': str},
                         },
                    'REPLENISH':
                        {'exchange': {'type': str},
@@ -117,7 +119,7 @@ class Jobqueue:
             print(stdout.strip().decode('ascii'))
             job['job_status'] = STATUS_COMPLETE
             stdout_str = stdout.strip().decode('ascii')
-            job['job_result'] = json.loads(stdout_str)
+            job['job_result'] = json.loads(stdout_str, object_hook=json_util.object_hook)
             if len(job['job_result'].get('downstream_jobs', [])):
                 self.add_jobs(job['job_result']['downstream_jobs'])
         else:

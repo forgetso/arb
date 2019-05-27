@@ -100,6 +100,8 @@ def store_api_access_time(exchange, method, access_datetime):
     db.access_time.insert_one({'datetime': access_datetime, 'exchange': exchange, 'method': method})
 
 
+##################################### API Access Rate Functions ########################################################
+
 # retrieve last accessed time of API method on exchange
 def get_api_access_time(exchange, method):
     db = exchange_db()
@@ -113,6 +115,44 @@ def get_api_access_time(exchange, method):
 
     return access_time
 
+
+def get_minutely_api_requests(exchange):
+    db = exchange_db()
+    current_time = datetime.datetime.utcnow()
+    current_minute = current_time.replace(second=0, microsecond=0)
+    following_minute = current_minute + datetime.timedelta(minutes=1)
+    query = {'datetime': {'$gte': current_minute, '$lt': following_minute}, 'exchange': exchange}
+    project = {'minutes': {'$minute': "$datetime"}}
+    access_cursor = db.access_time.aggregate(
+        [{'$match': query}, {'$project': project}, {'$group': {'_id': '$minutes', 'count': {'$sum': 1}}},
+         {'$limit': 1}])
+    access_per_minute = {doc.get('minutes'): doc.get('count') for doc in access_cursor}
+    try:
+        access_count = access_per_minute[str(current_minute.minute)]
+    except KeyError:
+        access_count = 0
+    return access_count
+
+
+def get_secondly_api_requests(exchange):
+    db = exchange_db()
+    current_time = datetime.datetime.utcnow()
+    current_second = current_time.replace(microsecond=0)
+    following_second = current_second + datetime.timedelta(seconds=1)
+    query = {'datetime': {'$gte': current_second, '$lt': following_second}, 'exchange': exchange}
+    project = {'seconds': {'$second': "$datetime"}}
+    access_cursor = [doc for doc in db.access_time.aggregate(
+        [{'$match': query}, {'$project': project}, {'$group': {'_id': '$seconds', 'count': {'$sum': 1}}},
+         {'$limit': 1}])]
+    access_per_second = {doc.get('seconds'): doc.get('count') for doc in access_cursor}
+    try:
+        access_count = access_per_second[str(current_second.minute)]
+    except KeyError:
+        access_count = 0
+    return access_count
+
+
+##################################### API Method Lock Functions ########################################################
 
 # lock an API method whilst the request is carried out
 def lock_api_method(exchange, method, jobqueue_id):

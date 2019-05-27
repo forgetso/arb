@@ -11,6 +11,8 @@ POLONIEX_MAKER_FEE = 0.0008
 
 POLONIEX_ERROR_CODES = []
 
+MINIMUM_DEPOSIT = {}
+
 
 class poloniex():
     def __init__(self, jobqueue_id):
@@ -97,7 +99,7 @@ class poloniex():
         return trade
 
     def get_order_status(self, order_id):
-        #TODO work out how these responses works
+        # TODO work out how these responses works
         order_completed = False
         order_result = {}
         while not order_completed:
@@ -186,6 +188,10 @@ class poloniex():
         if price * volume_corrected > self.min_notional:
             result = True
         return result, price, volume_corrected
+
+    def get_minimum_deposit_volume(self, currency):
+        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
+        return minimum_deposit_volume
 
 
 class WrapPoloniexError(Exception):

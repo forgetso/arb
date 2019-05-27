@@ -6,6 +6,7 @@ from decimal import Decimal, Context, setcontext
 from app.lib.common import get_number_of_decimal_places, round_decimal_number
 from app.settings import BASE_CURRENCY
 import logging
+
 BITTREX_TAKER_FEE = 0.0025
 
 BITTREX_ERROR_CODES = [
@@ -15,6 +16,10 @@ BITTREX_ERROR_CODES = [
     {'success': False, 'message': 'UUID_INVALID', 'result': None},
     {'success': False, 'message': 'CURRENCY_NOT_PROVIDED', 'result': None}
 ]
+
+MINIMUM_DEPOSIT = {}
+
+WITHDRAWAL_FEE = {'BTC': 0.0005, 'ETH': 0.01}
 
 
 class bittrex():
@@ -204,11 +209,15 @@ class bittrex():
 
         # TODO work out if non BASE CURRENCY trades are above the BASE_CURRENCY threshold, for example ETH-LTC
         if self.quote_currency != BASE_CURRENCY:
-            #raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
+            # raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
             logging.warning('Cannot determine if trade meets minimum BTC trade requirements')
             result = True
 
         return result, price, volume_corrected
+
+    def get_minimum_deposit_volume(self, currency):
+        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
+        return minimum_deposit_volume
 
 
 class WrapBittrexError(Exception):

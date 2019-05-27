@@ -2,17 +2,20 @@ from p2pb2bapi import P2PB2B
 from app.settings import P2PB2B_SECRET_KEY, P2PB2B_PUBLIC_KEY
 from app.lib.errors import ErrorTradePairDoesNotExist
 from decimal import Decimal, Context, setcontext
-from app.lib.common import round_decimal_number, get_number_of_decimal_places
+from app.lib.common import round_decimal_number
 from app.lib.db import store_balances, get_balances, store_api_access_time, get_api_access_time, lock_api_method, \
-    unlock_api_method, get_api_method_lock
+    unlock_api_method, get_api_method_lock, get_minutely_api_requests, get_secondly_api_requests
 import logging
 from datetime import datetime, timedelta
 import time
 
 P2PB2B_TAKER_FEE = 0.0020
 P2PB2B_MAKER_FEE = 0.0020
+P2PB2B_API_RATE_LIMIT_MINUTELY = 100
+P2PB2B_API_RATE_LIMIT_SECONDLY = 5
+P2PB2B_ERROR_CODES = []
 
-P2PB2B__ERROR_CODES = []
+MINIMUM_DEPOSIT = {'BTC': 0.002, 'ETH': 0.05}
 
 # TODO work out a way of automatically importing addresses
 P2PB2B_ADDRESSES = {
@@ -53,36 +56,41 @@ class p2pb2b():
         # limit is 5 per second or 100 per minute
         order_book_dict = {}
         ticker_buy_response = None
-        ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
-        if not ticker_buy_response.get('success'):
-            raise WrapP2PB2BError(
-                'Error getting order book for {} : {}, {}'.format(self.trade_pair, ticker_buy_response.get('message'),
-                                                                  ticker_buy_response))
-        order_book_dict['buy'] = ticker_buy_response.get('result')
-        ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
-        if not ticker_sell_response.get('success'):
-            raise WrapP2PB2BError(
-                'Error getting order book for {} : {}'.format(self.trade_pair, ticker_sell_response.get('message')))
-        order_book_dict['sell'] = ticker_sell_response.get('result')
-        # print(order_books)
-        # {'buy': {'offset': 0, 'limit': 1, 'total': 362, 'orders': [
-        #     {'id': 14835298, 'left': '1.375', 'market': 'ETH_BTC', 'amount': '2.909', 'type': 'limit',
-        #      'price': '0.029842', 'timestamp': 1556176474.980993, 'side': 'buy', 'dealFee': '0', 'takerFee': '0',
-        #      'makerFee': '0', 'dealStock': '1.534', 'dealMoney': '0.045777628'}]},
-        #  'sell': {'offset': 0, 'limit': 1, 'total': 408, 'orders': [
-        #      {'id': 14855016, 'left': '60.222', 'market': 'ETH_BTC', 'amount': '60.222', 'type': 'limit',
-        #       'price': '0.02985', 'timestamp': 1556192089.28709, 'side': 'sell', 'dealFee': '0', 'takerFee': '0.002',
-        #       'makerFee': '0.002', 'dealStock': '0', 'dealMoney': '0'}]}}
+        if get_minutely_api_requests(self.name) < P2PB2B_API_RATE_LIMIT_MINUTELY and get_secondly_api_requests(
+                self.name) < P2PB2B_API_RATE_LIMIT_SECONDLY:
+            ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
+            store_api_access_time(self.name, 'order_book', datetime.utcnow())
+            if not ticker_buy_response.get('success'):
+                raise WrapP2PB2BError(
+                    'Error getting order book for {} : {}, {}'.format(self.trade_pair,
+                                                                      ticker_buy_response.get('message'),
+                                                                      ticker_buy_response))
+            order_book_dict['buy'] = ticker_buy_response.get('result')
+            ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
+            store_api_access_time(self.name, 'order_book', datetime.utcnow())
+            if not ticker_sell_response.get('success'):
+                raise WrapP2PB2BError(
+                    'Error getting order book for {} : {}'.format(self.trade_pair, ticker_sell_response.get('message')))
+            order_book_dict['sell'] = ticker_sell_response.get('result')
+            # print(order_books)
+            # {'buy': {'offset': 0, 'limit': 1, 'total': 362, 'orders': [
+            #     {'id': 14835298, 'left': '1.375', 'market': 'ETH_BTC', 'amount': '2.909', 'type': 'limit',
+            #      'price': '0.029842', 'timestamp': 1556176474.980993, 'side': 'buy', 'dealFee': '0', 'takerFee': '0',
+            #      'makerFee': '0', 'dealStock': '1.534', 'dealMoney': '0.045777628'}]},
+            #  'sell': {'offset': 0, 'limit': 1, 'total': 408, 'orders': [
+            #      {'id': 14855016, 'left': '60.222', 'market': 'ETH_BTC', 'amount': '60.222', 'type': 'limit',
+            #       'price': '0.02985', 'timestamp': 1556192089.28709, 'side': 'sell', 'dealFee': '0', 'takerFee': '0.002',
+            #       'makerFee': '0.002', 'dealStock': '0', 'dealMoney': '0'}]}}
 
-        # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
-        self.asks = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
-                     order_book_dict['buy']['orders']]
-        self.lowest_ask = self.asks[0]
-        self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
-                     order_book_dict['sell']['orders']]
-        self.highest_bid = self.bids[0]
-        logging.debug(
-            'p2pb2b {} lowest {} highest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
+            # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
+            self.asks = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
+                         order_book_dict['buy']['orders']]
+            self.lowest_ask = self.asks[0]
+            self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
+                         order_book_dict['sell']['orders']]
+            self.highest_bid = self.bids[0]
+            logging.debug(
+                'p2pb2b {} lowest {} highest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
         return order_book_dict
 
     def get_currency_pairs(self):
@@ -115,39 +123,55 @@ class p2pb2b():
 
     def trade(self, trade_type, volume, price, trade_id=None):
         result = None
-        if trade_type == 'buy':
-            result = self.api.order_limit_buy(symbol=self.trade_pair, quantity=volume, price=price)
-        elif trade_type == 'sell':
-            result = self.api.order_limit_sell(symbol=self.trade_pair, quantity=volume, price=price)
-
-        if not result.get('status'):
+        response = self.api.newOrder(market=self.trade_pair, side=trade_type, amount=volume, price=price)
+        # {
+        #     "success": true,
+        #     "message": "",
+        #     "result": {
+        #         "orderId": 25749,
+        #         "market": "ETH_BTC",
+        #         "price": "0.1",
+        #         "side": "sell",
+        #         "type": "limit",
+        #         "timestamp": 1537535284.828868,
+        #         "dealMoney": "0",
+        #         "dealStock": "0",
+        #         "amount": "0.1",
+        #         "takerFee": "0.002",
+        #         "makerFee": "0.002",
+        #         "left": "0.1",
+        #         "dealFee": "0"
+        #     }
+        # }
+        if not response.get('success'):
             raise WrapP2PB2BError('{}'.format(result.get('message')))
 
-        if result.get('status').upper() == 'FILLED':
+        result = response.get('result')
+        if result.get('left') == 0:
             raw_trade = result
         else:
-            raw_trade = self.get_order_status(result.get('symbol'), result.get('orderId'))
+            raw_trade = self.get_order_status(result.get('orderId'))
 
-        if not raw_trade.get('status').upper() == 'FILLED':
+        if not raw_trade.get('left') == 0:
             raise WrapP2PB2BError('{}'.format(result.get('message')))
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 
         return trade
 
-    def get_order_status(self, symbol, order_id):
+    def get_order_status(self, order_id):
         order_completed = False
         order_result = {}
         while not order_completed:
-            order_result = self.get_order(symbol=symbol, order_id=order_id)
-            if order_result['status'].upper() == 'FILLED':
+            order_response = self.get_order(order_id=order_id)
+            if order_response['result']['left'] == 0:
+                order_result = order_response['result']
                 break
             time.sleep(5)
-
         return order_result
 
-    def get_order(self, symbol, order_id):
-        return self.api.get_order(symbol=symbol, orderId=order_id)
+    def get_order(self, order_id):
+        return self.api.getOrder(orderId=order_id)
 
     def format_trade(self, raw_trade, trade_type, trade_id):
 
@@ -187,7 +211,6 @@ class p2pb2b():
         last_accessed_time = get_api_access_time(self.name, 'get_balances')
         # this api has limits so we've stored the balances in the database in case of querying too frequently
         # fingers crossed they are correct !
-        # TODO check that the balances were last retrieved within a reasonable timeframe (TBC)
         logging.debug('Last accessed time {}'.format(last_accessed_time))
         if self.balances_time and datetime.utcnow() - self.balances_time < timedelta(
                 seconds=60) or time.time() - last_accessed_time.timestamp() < 60:
@@ -257,6 +280,10 @@ class p2pb2b():
             result = True
 
         return result, price, volume_corrected
+
+    def get_minimum_deposit_volume(self, currency):
+        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
+        return minimum_deposit_volume
 
 
 def Decimal_to_string(number, precision=20):

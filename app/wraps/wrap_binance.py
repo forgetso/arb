@@ -5,6 +5,7 @@ import time
 from decimal import Decimal, Context, setcontext
 import math
 from app.lib.common import round_decimal_number
+import logging
 
 BITTREX_TAKER_FEE = 0.0025
 
@@ -15,6 +16,7 @@ BITTREX_ERROR_CODES = [
     {'success': False, 'message': 'UUID_INVALID', 'result': None}
 ]
 
+MINIMUM_DEPOSIT = {}
 
 class binance():
     def __init__(self, jobqueue_id):
@@ -195,15 +197,17 @@ class binance():
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
         result = False
         # finally, check if the volume we're attempting to trade is above the minimum notional trade size
+        # logging.debug('price {} volume_Corrected {} min_notional (price * volume) {} min_notional {}'.format(price,
+        #                                                                                                      volume_corrected,
+        #                                                                                                      price * volume_corrected,
+        #                                                                                                      self.min_notional))
         if price * volume_corrected > self.min_notional:
             result = True
         return result, price, volume_corrected
 
-
-def Decimal_to_string(number, precision=20):
-    return '{0:.{prec}f}'.format(
-        number, prec=precision,
-    ).rstrip('0').rstrip('.') or '0'
+    def get_minimum_deposit_volume(self, currency):
+        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
+        return minimum_deposit_volume
 
 
 class WrapBinanceError(Exception):
