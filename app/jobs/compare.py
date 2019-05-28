@@ -202,9 +202,6 @@ def check_trade_pair(trade_pair):
 def find_arbitrage(exchange_x, exchange_y, fiat_rate):
     result = {}
 
-    # print('lowest ask {} {} highest bid {} {}'.format(exchange_x.name, exchange_x.lowest_ask, exchange_y.name,
-    #                                                   exchange_y.highest_bid))
-    # try:
     if exchange_x.lowest_ask and exchange_y.highest_bid:
         if exchange_x.lowest_ask['price'] < exchange_y.highest_bid['price']:
 
@@ -220,8 +217,6 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate):
                         profit,
                         FIAT_DEFAULT_SYMBOL))
 
-    # print('lowest ask {}  {} highest bid {} {}'.format(exchange_y.name, exchange_y.lowest_ask, exchange_x.name,
-    #                                                    exchange_x.highest_bid))
     if exchange_y.lowest_ask and exchange_x.highest_bid:
         if exchange_y.lowest_ask['price'] < exchange_x.highest_bid['price']:
 
@@ -236,9 +231,6 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate):
                         exchange_x.name,
                         profit,
                         FIAT_DEFAULT_SYMBOL))
-    # except TypeError:
-    #     logging.debug('One of the exchanges had either no bids or no asks')
-    #     pass
 
     return result
 
@@ -250,7 +242,6 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
         price_buy = exchange_buy.lowest_ask['price']
     except KeyError as e:
         raise CompareError('Error retrieving volume/price data from exchange object: {}'.format(e))
-
 
     trade_valid_sell, price_sell, volume_sell = exchange_sell.trade_validity(price=price_sell, volume=volume)
     trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(price=price_buy, volume=volume)

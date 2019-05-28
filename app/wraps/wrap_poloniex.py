@@ -62,7 +62,7 @@ class poloniex():
             if c['isFrozen'] == 0:
                 currency_pairs_list.append({
                     # poloniex names things the opposite way round to other exchanges BTC_ETH instead of ETH_BTC
-                    'name': '{}_{}'.format(symbol_split[1], symbol_split[0]),
+                    'name': '{}-{}'.format(symbol_split[1], symbol_split[0]),
                     'trading_code': symbol,
                     'base_currency': symbol_split[0],
                     'quote_currency': symbol_split[1],

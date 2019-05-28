@@ -1,4 +1,4 @@
-from app.jobs.compare import calculate_profit, CompareError
+from app.jobs.compare import calculate_profit, CompareError, check_trade_pair, exchange_selection
 from decimal import Decimal
 from pytest import raises
 
@@ -57,6 +57,45 @@ def test_calculate_profit():
     exchange_buy.lowest_ask = {'price': 'blahblah', 'volume': 'blahlah'}
     profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
     assert profit == Decimal('0')
+
+
+def test_check_trade_pair():
+    assert check_trade_pair(['ETH', 'BTC'])
+    with raises(ValueError):
+        check_trade_pair(['ETH'])
+    with raises(TypeError):
+        check_trade_pair([Decimal('1212'), True])
+
+
+def test_exchange_selection():
+    markets = {'bittrex':
+        {"ETH-BTC": {
+            "name": "ETH-BTC",
+            "trading_code": "BTC-ETH",
+            "base_currency": "ETH",
+            "quote_currency": "BTC",
+            "min_trade_size": 0.00740642,
+            "fee": 0.0025
+        }},
+        'p2pb2b':
+            {"ETH-BTC": {
+                "name": "ETH-BTC",
+                "trading_code": "ETHBTC",
+                "base_currency": "ETH",
+                "quote_currency": "BTC",
+                "decimal_places": 3,
+                "min_trade_size": 0.001,
+                "min_notional": 0.001,
+                "taker_fee": 0.001,
+                "maker_fee": 0.001,
+                "fee": 0.001
+            }, }
+    }
+    jobqueue_id = '507f1f77bcf86cd799439011'
+    cur_x = 'ETH'
+    cur_y = 'BTC'
+    # print(exchange_selection(cur_x, cur_y, markets, jobqueue_id))
+    assert [x.name for x in exchange_selection(cur_x, cur_y, markets, jobqueue_id)] == ['bittrex', 'p2pb2b']
 
 
 class exchange():
