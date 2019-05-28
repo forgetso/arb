@@ -252,12 +252,6 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
     trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(price=price_buy, volume=volume)
     if not trade_valid_buy or not trade_valid_sell:
         return 0
-    try:
-
-        fee = exchange_sell.fee * volume_sell * price_sell + exchange_buy.fee * volume_buy * price_buy
-    except:
-        raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee),
-                        type(exchange_sell.fee))
 
     # Example
     # lowest ask: we can get 4 BTC (volume) at 99 ETH (price) per BTC
@@ -265,14 +259,18 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
     if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['volume']:
         volume = exchange_sell.highest_bid['volume']
 
-    # TODO what about fees when buying? Right now we just use the taker fee for calculating but need to switch between taker and maker
-    fees = price_sell * volume_sell * fee
-
     # 3 ETH at 0.1 BTC * 8000 GBP = 2400 GBP > 100 GBP => 3 * (100 / 2400) is the volume
     if volume * price_buy * fiat_rate > FIAT_REPLENISH_AMOUNT:
         volume = FIAT_REPLENISH_AMOUNT / fiat_rate * volume
 
-    profit = ((price_sell - price_buy) * volume - fees) * fiat_rate
+    try:
+
+        fee = exchange_sell.fee * volume * price_sell + exchange_buy.fee * volume * price_buy
+    except:
+        raise Exception(type(volume), type(price_sell), type(price_buy), type(exchange_buy.fee),
+                        type(exchange_sell.fee))
+
+    profit = ((price_sell - price_buy) * volume - fee) * fiat_rate
     # except Exception as e:
     #     raise Exception(e)
 
