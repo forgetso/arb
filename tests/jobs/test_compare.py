@@ -94,10 +94,10 @@ def test_exchange_selection():
     jobqueue_id = '507f1f77bcf86cd799439011'
     cur_x = 'ETH'
     cur_y = 'BTC'
-    # print(exchange_selection(cur_x, cur_y, markets, jobqueue_id))
     assert [x.name for x in exchange_selection(cur_x, cur_y, markets, jobqueue_id)] == ['bittrex', 'p2pb2b']
 
 
+# TODO extract the generic parts of all exchanges and make a generic base class for all exchanges to inherit properties from
 class exchange():
 
     def __init__(self):
