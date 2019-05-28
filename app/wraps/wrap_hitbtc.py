@@ -143,6 +143,10 @@ class hitbtc:
     def trade_validity(self, price, volume):
         if not self.trade_pair:
             raise WrapHitBtcError('Trade pair must be set')
+
+        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
+            return False, price, volume
+
         result = False
         volume_corrected = 0
 

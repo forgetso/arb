@@ -1,5 +1,6 @@
-from app.jobs.compare import calculate_profit
+from app.jobs.compare import calculate_profit, CompareError
 from decimal import Decimal
+from pytest import raises
 
 
 def test_calculate_profit():
@@ -44,8 +45,18 @@ def test_calculate_profit():
     fee = (Decimal('0.01') * Decimal('1') * Decimal('1') + Decimal('0.01') * Decimal('1.1') * Decimal('1'))
     # we can only buy a tenth of the volume available due to the FIAT_REPLENISH_AMOUNT limit
     # therefore profit should just be the same as the last result minus the fees
-    profit_test = (Decimal('0.1') - fee)/10 * Decimal('1000')
+    profit_test = (Decimal('0.1') - fee) / 10 * Decimal('1000')
     assert profit == profit_test
+
+    # the lowest_ask fields are empty resulting in an error in the function
+    exchange_buy.lowest_ask = {}
+    with raises(CompareError):
+        calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+
+    # the following will result in an invalid trade and the profit is assumed to be 0
+    exchange_buy.lowest_ask = {'price': 'blahblah', 'volume': 'blahlah'}
+    profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+    assert profit == Decimal('0')
 
 
 class exchange():
@@ -56,4 +67,9 @@ class exchange():
         self.fee = Decimal(0)
 
     def trade_validity(self, price, volume):
-        return True, price, volume
+        # this function differs per exchange and involves rounding volumes and prices to the required precisions
+        # this is a very simple test implementation to allow for valid and invalid trades
+        valid = False
+        if isinstance(price, Decimal) and isinstance(volume, Decimal):
+            valid = True
+        return valid, price, volume

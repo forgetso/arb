@@ -244,14 +244,18 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate):
 
 
 def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
-    # try:
-    volume = exchange_buy.lowest_ask['volume']
-    price_sell = exchange_sell.highest_bid['price']
-    price_buy = exchange_buy.lowest_ask['price']
+    try:
+        volume = exchange_buy.lowest_ask['volume']
+        price_sell = exchange_sell.highest_bid['price']
+        price_buy = exchange_buy.lowest_ask['price']
+    except KeyError as e:
+        raise CompareError('Error retrieving volume/price data from exchange object: {}'.format(e))
+
+
     trade_valid_sell, price_sell, volume_sell = exchange_sell.trade_validity(price=price_sell, volume=volume)
     trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(price=price_buy, volume=volume)
     if not trade_valid_buy or not trade_valid_sell:
-        return 0
+        return Decimal('0')
 
     # Example
     # lowest ask: we can get 4 BTC (volume) at 99 ETH (price) per BTC

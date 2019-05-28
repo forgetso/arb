@@ -193,6 +193,10 @@ class binance():
     def trade_validity(self, price, volume):
         if not self.trade_pair:
             raise WrapBinanceError('Trade pair must be set')
+
+        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
+            return False, price, volume
+
         allowed_decimal_places = self.decimal_places
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
         result = False
