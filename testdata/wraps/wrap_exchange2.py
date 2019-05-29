@@ -1,26 +1,11 @@
 from app.lib.exchange import exchange
-from decimal import Decimal, setcontext, Context
 
 
 class exchange2(exchange):
 
     def __init__(self, jobqueue_id):
         self.name = 'exchange2'
-        exchange.__init__(self, jobqueue_id=jobqueue_id)
-        return
-
-    def set_trade_pair(self, trade_pair, markets):
-        self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
-        if self.decimal_places:
-            self.decimal_places = int(self.decimal_places)
-            decimal_rounding_context = Context(prec=self.decimal_places)
-            setcontext(decimal_rounding_context)
-        self.trade_pair_common = trade_pair
-        self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
-        self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-        self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-        self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
-        self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
+        exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
         return
 
     def order_book(self):
