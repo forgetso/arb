@@ -1,6 +1,6 @@
 from app.jobs.compare import calculate_profit, CompareError, check_trade_pair, exchange_selection
 from decimal import Decimal
-from pytest import raises
+from pytest import raises, fixture
 
 
 def test_calculate_profit():
@@ -68,7 +68,7 @@ def test_check_trade_pair():
 
 
 def test_exchange_selection():
-    markets = {'bittrex':
+    markets = {'exchange1':
         {"ETH-BTC": {
             "name": "ETH-BTC",
             "trading_code": "BTC-ETH",
@@ -77,7 +77,7 @@ def test_exchange_selection():
             "min_trade_size": 0.00740642,
             "fee": 0.0025
         }},
-        'p2pb2b':
+        'exchange2':
             {"ETH-BTC": {
                 "name": "ETH-BTC",
                 "trading_code": "ETHBTC",
@@ -89,15 +89,33 @@ def test_exchange_selection():
                 "taker_fee": 0.001,
                 "maker_fee": 0.001,
                 "fee": 0.001
-            }, }
+            }},
+        # this exchange will be ignored as it doesn't exist in our allowed list of EXCHANGES
+        'exchange3':
+            {"ETH-BTC": {
+                "name": "ETH-BTC",
+                "trading_code": "ETHBTC",
+                "base_currency": "ETH",
+                "quote_currency": "BTC",
+                "decimal_places": 3,
+                "min_trade_size": 0.001,
+                "min_notional": 0.001,
+                "taker_fee": 0.001,
+                "maker_fee": 0.001,
+                "fee": 0.001
+            }}
     }
     jobqueue_id = '507f1f77bcf86cd799439011'
     cur_x = 'ETH'
     cur_y = 'BTC'
-    assert [x.name for x in exchange_selection(cur_x, cur_y, markets, jobqueue_id)] == ['bittrex', 'p2pb2b']
+    exchange_list = ['exchange1', 'exchange2']
+    exchanges_selected = exchange_selection(cur_x, cur_y, markets, exchange_list, jobqueue_id,
+                                            directory='testdata.wraps.wrap')
+    assert [x.name for x in exchanges_selected] == ['exchange1', 'exchange2']
+
+    # TODO extract the generic parts of all exchanges and make a generic base class for all exchanges to inherit properties from
 
 
-# TODO extract the generic parts of all exchanges and make a generic base class for all exchanges to inherit properties from
 class exchange():
 
     def __init__(self):

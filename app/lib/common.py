@@ -1,4 +1,4 @@
-from app.settings import FIAT_REPLENISH_AMOUNT, FIAT_DEFAULT_SYMBOL
+from app.settings import FIAT_REPLENISH_AMOUNT, FIAT_DEFAULT_SYMBOL, EXCHANGES
 from math import log10, log2, modf, floor
 from decimal import Decimal, Context, setcontext
 import os, json, requests
@@ -156,17 +156,20 @@ def write_coingecko_meta(data):
         json.dump(data, outfile, indent=2)
 
 
-def dynamically_import_exchange(exchange):
+def dynamically_import_exchange(exchange, directory=None):
     try:
-        module_name = 'app.wraps.wrap_{}'.format(exchange)
+        if not directory:
+            directory = 'app.wraps.wrap'
+        module_name = '{}_{}'.format(directory, exchange)
         exchange_module = importlib.import_module(module_name)
         if hasattr(exchange_module, exchange):
             exchange_class = getattr(exchange_module, exchange)
             return exchange_class
         else:
             raise Exception('exchange module does not have class {}'.format(exchange))
-    except ImportError:
-        raise Exception('Could not import {}'.format(exchange))
+    except ImportError as e:
+        raise Exception('Could not import {}: {}'.format(exchange, e))
+
 
 def check_pid(pid):
     """ Check For the existence of a unix pid. """
@@ -176,6 +179,29 @@ def check_pid(pid):
         return False
     else:
         return True
+
+
+def decimal_as_string(number):
+    # float returns stupid strings like 4.5e-05
+    # float also contains rounding errors
+    # so we make things into Decimals
+    # Decimals automatically round to 20 places or something, even if this includes loads of trailing zeroes
+    # so we use normalize to strip the trailing zeroes
+    try:
+        if isinstance(number, Decimal):
+            result = str(number)
+        else:
+            result = str(Decimal(number).normalize())
+    except:
+        raise CommonError(
+            'Decimal as string expects a numeric values to be converted to a decimal. You passed {} {}'.format(
+                number,
+                type(number)))
+    return result
+
+
+def get_exchanges():
+    return EXCHANGES
 
 
 class CommonError(Exception):

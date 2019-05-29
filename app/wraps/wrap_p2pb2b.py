@@ -290,11 +290,5 @@ class p2pb2b():
         return minimum_deposit_volume
 
 
-def Decimal_to_string(number, precision=20):
-    return '{0:.{prec}f}'.format(
-        number, prec=precision,
-    ).rstrip('0').rstrip('.') or '0'
-
-
 class WrapP2PB2BError(Exception):
     pass

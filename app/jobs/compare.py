@@ -8,7 +8,7 @@ from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, 
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates
-from app.lib.common import round_decimal_number
+from app.lib.common import round_decimal_number, decimal_as_string, get_exchanges
 
 from bson import json_util
 import json
@@ -20,7 +20,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     replenish_jobs = []
     result = {'downstream_jobs': []}
 
-    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets, jobqueue_id)
+    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets, EXCHANGES, jobqueue_id)
 
     if len(apis_trade_pair_valid) < 2:
         # return early as there will be no arbitrage possibility with only one or zero exchanges
@@ -165,22 +165,6 @@ def determine_arbitrage_viability(arbitrages):
     return viable_arbitrages, replenish_jobs, profit_audit
 
 
-def decimal_as_string(number):
-    # float returns stupid strings like 4.5e-05
-    # float also contains rounding errors
-    # so we make things into Decimals
-    # Decimals automatically round to 20 places or something, even if this includes loads of trailing zeroes
-    # so we use normalize to strip the trailing zeroes
-    try:
-        result = str(Decimal(number).normalize())
-    except:
-        raise TypeError(
-            'Decimal as string expects a numeric values to be converted to a decimal. You passed {} {}'.format(
-                number,
-                type(number)))
-    return result
-
-
 def check_trade_pair(trade_pair):
     result = None
     # trade pair is a list of two currencies e.g. [ETH, USD]
@@ -275,13 +259,13 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
 # randomly select the names of two exchanges and then check if the trade pair exists in both exchanges
 # if the trade pair is not in both exchanges, repeat until we have a pair, up to 10 times
 # TODO construct the cross sections of trade pairs and exchanges and randomly select from it instead
-def exchange_selection(cur_x, cur_y, markets, jobqueue_id):
+def exchange_selection(cur_x, cur_y, markets, exchanges, jobqueue_id, directory=None):
     trade_pair = '{}-{}'.format(cur_x, cur_y)
     potential_exchanges = []
     apis_trade_pair_valid = []
 
     for exchange in markets:
-        if trade_pair in markets[exchange] and exchange in EXCHANGES:
+        if trade_pair in markets[exchange] and exchange in exchanges:
             potential_exchanges.append(exchange)
 
     if len(potential_exchanges) < 2:
@@ -297,7 +281,7 @@ def exchange_selection(cur_x, cur_y, markets, jobqueue_id):
 
     imported_exchanges = []
     for exchange in random_exchanges:
-        imported_exchanges.append(dynamically_import_exchange(exchange)(jobqueue_id))
+        imported_exchanges.append(dynamically_import_exchange(exchange, directory)(jobqueue_id))
 
     # make our trade pair equal to a list [ETH, USD]
     trade_pair_list = [cur_x, cur_y]
