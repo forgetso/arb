@@ -1,10 +1,11 @@
-from app.jobs.compare import calculate_profit, CompareError, check_trade_pair, exchange_selection
+from app.jobs.compare import calculate_profit, CompareError, check_trade_pair, exchange_selection, find_arbitrage
 from decimal import Decimal
 from pytest import raises, fixture
 from app.lib import exchange
 from testdata.wraps import wrap_exchange1, wrap_exchange2
 
-markets = {'exchange1':
+# this would usually be loaded from a json file
+MARKETS = {'exchange1':
     {"ETH-BTC": {
         "name": "ETH-BTC",
         "trading_code": "BTC-ETH",
@@ -42,16 +43,40 @@ markets = {'exchange1':
         }}
 }
 
+JOBQUEUE_ID = '507f191e810c19729de860ea'
+
+def test_determine_arbitrage_viability():
+
+
+def test_find_arbitrage():
+    exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange2 = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchange1.set_trade_pair('ETH-BTC', MARKETS)
+    exchange2.set_trade_pair('ETH-BTC', MARKETS)
+    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=100)
+    # at this stage the exchange objects have no ask/bid data attached
+    assert result == {}
+    exchange1.order_book()
+    exchange2.order_book()
+    # now we should have order book data in each exchange
+    assert exchange1.lowest_ask is not None
+    assert exchange2.lowest_ask is not None
+    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=100)
+    # an arbitrage should have been found
+    assert result != {}
+    assert result['buy'].name == 'exchange1'
+    assert result['profit'] == Decimal('0.983')
+
 
 def test_calculate_profit():
     # Should be able to buy for 1 from exchange_buy
-    exchange_buy = wrap_exchange1.exchange1('507f191e810c19729de860ea')
-    exchange_buy.set_trade_pair('ETH-BTC', markets)
+    exchange_buy = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange_buy.set_trade_pair('ETH-BTC', MARKETS)
     exchange_buy.lowest_ask = {'price': Decimal('1'), 'volume': Decimal('50')}
     exchange_buy.highest_bid = {'price': Decimal('0.9'), 'volume': Decimal('3')}
     # And sell for 1.1 at exchange_sell
-    exchange_sell = wrap_exchange2.exchange2('507f191e810c19729de860ea')
-    exchange_sell.set_trade_pair('ETH-BTC', markets)
+    exchange_sell = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchange_sell.set_trade_pair('ETH-BTC', MARKETS)
     exchange_sell.lowest_ask = {'price': Decimal('1.2'), 'volume': Decimal('4')}
     exchange_sell.highest_bid = {'price': Decimal('1.1'), 'volume': Decimal('1')}
 
@@ -112,13 +137,13 @@ def test_check_trade_pair():
 
 
 def test_exchange_selection():
-    jobqueue_id = '507f1f77bcf86cd799439011'
+    jobqueue_id = JOBQUEUE_ID
     cur_x = 'ETH'
     cur_y = 'BTC'
     exchange_list = ['exchange1', 'exchange2']
-    exchanges_selected = exchange_selection(cur_x, cur_y, markets, exchange_list, jobqueue_id,
+    exchanges_selected = exchange_selection(cur_x, cur_y, MARKETS, exchange_list, jobqueue_id,
                                             directory='testdata.wraps.wrap')
     assert [x.name for x in exchanges_selected] == ['exchange1', 'exchange2']
 
     with raises(ImportError):
-        exchange_selection(cur_x, cur_y, markets, exchange_list, jobqueue_id, directory='blah.blah')
+        exchange_selection(cur_x, cur_y, MARKETS, exchange_list, jobqueue_id, directory='blah.blah')

@@ -83,11 +83,11 @@ class exchange(ABC):
             raise ExchangeError('Trade pair must be set')
 
         if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
+            logging.warning('{} trade_validity: Price and Volume must be type Decimal'.format(self.name))
             return False, price, volume
 
         allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-
         # if price * volume < self.min_trade_size_btc:
         #     volume = self.min_trade_size_btc / price
         result = False
