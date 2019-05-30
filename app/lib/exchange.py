@@ -86,8 +86,12 @@ class exchange(ABC):
             logging.warning('{} trade_validity: Price and Volume must be type Decimal'.format(self.name))
             return False, price, volume
 
+        # this is the min trade size in the quote currency, so BTC
+        # but we're trying to buy 1 ETH so the volume is 1
         allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
+        logging.debug('Allowed decimal places {} Volume {}'.format(allowed_decimal_places, volume))
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+        logging.debug('Volume Corrected {} Min Trade Size {}'.format(volume_corrected, self.min_trade_size))
         # if price * volume < self.min_trade_size_btc:
         #     volume = self.min_trade_size_btc / price
         result = False

@@ -8,10 +8,11 @@ from app.lib.db import store_trade
 from app.lib.common import get_number_of_decimal_places
 from decimal import Decimal, Context, setcontext
 
-def convert(exchange, currency_from, currency_to, markets):
+
+def convert(exchange, currency_from, currency_to, markets, jobqueue_id):
     # we need to add to the stocks in MASTER_EXCHANGE so that we can replenish other exchanges
     # TODO make a method to get one exchange
-    exchanges = get_exchanges()
+    exchanges = get_exchanges(jobqueue_id)
     master_exchange = [e for e in exchanges if e.name == exchange][0]
     quantity = get_replenish_quantity(currency_to)
     master_exchange.set_trade_pair('{}-{}'.format(currency_to, currency_from), markets)
@@ -35,7 +36,6 @@ def convert(exchange, currency_from, currency_to, markets):
             master_exchange.order_book()
             trade = master_exchange.trade('buy', volume=quantity, price=master_exchange.lowest_ask['price'])
             if trade:
-
                 trade['type'] = 'CONVERT'
                 store_trade(trade)
                 result['trade'] = trade
@@ -56,6 +56,7 @@ def setup():
     parser.add_argument('exchange', type=str, help='Exchange name')
     parser.add_argument('currency_from', type=str, help='Currency to convert from')
     parser.add_argument('currency_to', type=str, help='Currency to convert to')
+    parser.add_argument('jobqueue_id', type=str, help='Jobqueue Id')
     args = parser.parse_args()
     logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 

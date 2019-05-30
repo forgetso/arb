@@ -33,7 +33,8 @@ JOB_DEFINITIONS = {'TRANSACT':
                         },
                    'REPLENISH':
                        {'exchange': {'type': str},
-                        'currency': {'type': str}
+                        'currency': {'type': str},
+                        'jobqueue_id': {'type': str},
                         }
                    }
 

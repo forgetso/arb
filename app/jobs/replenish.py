@@ -6,12 +6,12 @@ from app.lib.jobqueue import return_value_to_stdout
 from app.lib.common import get_replenish_quantity, get_current_fiat_rate
 
 
-def replenish(exchange, currency):
+def replenish(exchange, currency, jobqueue_id):
     # *exchange* has zero quanity of *currency*
     # we need to replenish the stocks from MASTER_EXCHANGE
     # TODO make a method to get one exchange
     downstream_jobs = []
-    exchanges = get_exchanges()
+    exchanges = get_exchanges(jobqueue_id)
     master_exchange = [e for e in exchanges if e.name == MASTER_EXCHANGE][0]
     child_exchange = [e for e in exchanges if e.name == exchange][0]
     fiat_rate = get_current_fiat_rate(crypto_symbol=currency, fiat_symbol=FIAT_DEFAULT_SYMBOL)
@@ -37,7 +37,8 @@ def replenish(exchange, currency):
                 'job_args': {
                     'exchange': exchange.name,
                     'currency_from': BASE_CURRENCY,
-                    'currency_to': currency
+                    'currency_to': currency,
+                    'jobqueue_id': jobqueue_id
                 }
             })
             # we will retry this job in 20 seconds time
@@ -52,6 +53,7 @@ def setup():
     parser = argparse.ArgumentParser(description='Process some currencies.')
     parser.add_argument('exchange', type=str, help='Currency to compare')
     parser.add_argument('currency', type=str, help='Currency to compare')
+    parser.add_argument('jobqueue_id', type=str, help='Jobqueue Id')
     args = parser.parse_args()
     logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 

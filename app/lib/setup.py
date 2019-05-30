@@ -68,12 +68,12 @@ def load_currency_pairs():
     return result
 
 
-def get_exchanges():
+def get_exchanges(jobqueue_id):
     # instantiate each of the api wrappers
     exchanges = []
     for exchange in EXCHANGES:
         # add the instantiated exchange client to a list of clients, e.g. wrap_binance.binance()
-        exchanges.append(dynamically_import_exchange(exchange)())
+        exchanges.append(dynamically_import_exchange(exchange)(jobqueue_id))
 
     return exchanges
 

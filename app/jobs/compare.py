@@ -96,7 +96,13 @@ def determine_arbitrage_viability(arbitrages):
                     volume = exchange.lowest_ask['volume']
                     exchange_balance = exchange.balances.get(exchange.quote_currency, 0)
                     logging.debug(exchange_balance)
-                    if 0 < exchange_balance < volume * price:
+                    if Decimal(0) < exchange_balance < volume * price:
+                        logging.debug(
+                            'Exchange {} does not have enough {} ({}) to buy {} {}'.format(exchange.name,
+                                                                                           exchange.quote_currency,
+                                                                                           exchange_balance,
+                                                                                           volume,
+                                                                                           exchange.base_currency))
                         volume = exchange_balance
                     # buy is always first in the loop so this is ok
                     sell_volume = volume
@@ -111,6 +117,8 @@ def determine_arbitrage_viability(arbitrages):
                                                                                exchange.base_currency)))
                     exchange_balance = exchange.balances.get(exchange.base_currency, 0)
                     if Decimal(0) < exchange_balance < volume * price:
+                        logging.debug(
+                            'Exchange {} does not have enough {}'.format(exchange.name, exchange.base_currency))
                         volume = exchange_balance
                         # therefore we also only want to buy this much
                         viable_arbitrages[0]['job_args']['volume'] = decimal_as_string(volume)
@@ -135,7 +143,7 @@ def determine_arbitrage_viability(arbitrages):
                             'job_type': 'REPLENISH',
                             'job_args': {
                                 'exchange': exchange.name,
-                                'currency': currency
+                                'currency': currency,
                             }
                         })
                         viable_arbitrages = []

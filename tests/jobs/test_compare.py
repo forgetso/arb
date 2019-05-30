@@ -1,4 +1,5 @@
-from app.jobs.compare import calculate_profit, CompareError, check_trade_pair, exchange_selection, find_arbitrage
+from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calculate_profit, check_trade_pair, \
+    exchange_selection, CompareError
 from decimal import Decimal
 from pytest import raises, fixture
 from app.lib import exchange
@@ -45,8 +46,25 @@ MARKETS = {'exchange1':
 
 JOBQUEUE_ID = '507f191e810c19729de860ea'
 
+
 def test_determine_arbitrage_viability():
+    exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange2 = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange1.set_trade_pair('ETH-BTC', MARKETS)
+    exchange2.set_trade_pair('ETH-BTC', MARKETS)
+    exchange1.order_book()
+    exchange2.order_book()
+    exchange1.get_balances()
+    exchange2.get_balances()
+    arbitrages = [find_arbitrage(exchange1, exchange2, fiat_rate=100)]
+    viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
+    print(arbitrages)
+    print(replenish_jobs)
+    print(viable_arbitrages)
+    print(profit_audit)
+    assert len(replenish_jobs)
     return
+
 
 def test_find_arbitrage():
     exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)

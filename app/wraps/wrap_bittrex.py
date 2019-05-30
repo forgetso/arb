@@ -74,10 +74,15 @@ class bittrex():
                 currency_pairs_list.append({
                     'name': '-'.join([c['MarketCurrency'], c['BaseCurrency']]),
                     'trading_code': c['MarketName'],
+                    #TODO work out what the fuck is going on here
+                    # Min Trade Size is PROBABLY in the MarketCurrency
+                    # Need to polish up on definitions of Base Currency and Quote Currency across exchanges
+                    # Quote Currency Def: ...
+                    # Base Currency Def: ...
                     'base_currency': c['MarketCurrency'],
                     'quote_currency': c['BaseCurrency'],
-                    'min_trade_size': float(c['MinTradeSize']),
-                    'fee': float(BITTREX_TAKER_FEE)
+                    'min_trade_size': Decimal(c['MinTradeSize']),
+                    'fee': Decimal(BITTREX_TAKER_FEE)
                 })
         return currency_pairs_list
 

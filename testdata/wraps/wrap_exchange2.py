@@ -41,6 +41,7 @@ class exchange2(exchange):
         return
 
     def get_balances(self):
+        self.balances = {'ETH': Decimal('1'), 'BTC': Decimal('0.01')}
         return
 
     def get_address(self):

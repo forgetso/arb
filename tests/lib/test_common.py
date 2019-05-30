@@ -16,7 +16,8 @@ def test_get_number_of_decimal_places():
 
 def test_get_replenish_quantity():
     fiat_rate = 1
-    assert get_replenish_quantity(fiat_rate) == FIAT_REPLENISH_AMOUNT * fiat_rate
+    assert get_replenish_quantity(fiat_rate) == FIAT_REPLENISH_AMOUNT / fiat_rate
+    assert get_replenish_quantity(Decimal('100.1')) == FIAT_REPLENISH_AMOUNT / Decimal('100.1')
     with raises(CommonError):
         get_replenish_quantity('a')
     assert get_replenish_quantity(Decimal(fiat_rate)) == FIAT_REPLENISH_AMOUNT * fiat_rate
@@ -48,4 +49,4 @@ def test_decimal_as_string():
     with raises(CommonError):
         decimal_as_string(float)
 
-#TODO coingecko API tests
+# TODO coingecko API tests
