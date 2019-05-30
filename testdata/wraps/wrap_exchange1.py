@@ -38,8 +38,5 @@ class exchange1(exchange):
     def get_pending_balances(self):
         return
 
-    def trade_validity(self):
-        return
-
     def get_minimum_deposit_volume(self):
         return

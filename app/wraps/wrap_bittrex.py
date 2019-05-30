@@ -29,6 +29,7 @@ class bittrex():
         self.lowest_ask = None
         self.highest_bid = None
         self.name = 'bittrex'
+        # TODO change this to the min trade size for ETH as it is now our base currency
         self.min_trade_size_btc = Decimal(0.0005)
         self.balances = None
         self.pending_balances = None

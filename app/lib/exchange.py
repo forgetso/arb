@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from app.lib.errors import ErrorTradePairDoesNotExist
 from decimal import Decimal, setcontext, Context
+from app.lib.common import get_number_of_decimal_places, round_decimal_number
+import logging
+from app.settings import BASE_CURRENCY
 
 
 # this abstract class contains all of the methods that an exchange wrap must implement
@@ -14,6 +17,7 @@ class exchange(ABC):
         self.balances_time = None
         self.jobqueue_id = jobqueue_id
         self.name = name  # this is set by the inheriting class
+        self.min_trade_size_base_currency = None
         super().__init__()
 
     def set_trade_pair(self, trade_pair, markets):
@@ -74,10 +78,43 @@ class exchange(ABC):
     def get_pending_balances(self):
         pass
 
-    @abstractmethod
-    def trade_validity(self):
-        pass
+    def trade_validity(self, price, volume):
+        if not self.trade_pair:
+            raise ExchangeError('Trade pair must be set')
+
+        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
+            return False, price, volume
+
+        allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
+        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
+
+        # if price * volume < self.min_trade_size_btc:
+        #     volume = self.min_trade_size_btc / price
+        result = False
+        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
+        if volume_corrected > self.min_trade_size:
+            result = True
+
+        # this is an extra check to make sure that the trade size is bigger than the smallest trade size allowed in BTC
+        if self.quote_currency == BASE_CURRENCY and self.min_trade_size_base_currency is not None:
+            if price * volume_corrected > self.min_trade_size_base_currency:
+                result = True
+            else:
+                result = False
+
+        # # TODO work out if non BASE CURRENCY trades are above the BASE_CURRENCY threshold, for example ETH-LTC
+        # if self.quote_currency != BASE_CURRENCY:
+        #     # raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
+        #     logging.warning(
+        #         'Cannot determine if trade meets minimum BTC trade requirements: base {} quote {}'.format(BASE_CURRENCY,
+        #                                                                                                   self.quote_currency))
+        #     result = True
+        return result, price, volume_corrected
 
     @abstractmethod
     def get_minimum_deposit_volume(self):
         pass
+
+
+class ExchangeError(Exception):
+    pass

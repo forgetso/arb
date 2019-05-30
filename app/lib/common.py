@@ -168,7 +168,7 @@ def dynamically_import_exchange(exchange, directory=None):
         else:
             raise Exception('exchange module does not have class {}'.format(exchange))
     except ImportError as e:
-        raise Exception('Could not import {}: {}'.format(exchange, e))
+        raise ImportError('Could not import {}: {}'.format(exchange, e))
 
 
 def check_pid(pid):
