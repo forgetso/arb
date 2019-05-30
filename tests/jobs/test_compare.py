@@ -46,7 +46,7 @@ MARKETS = {'exchange1':
 JOBQUEUE_ID = '507f191e810c19729de860ea'
 
 def test_determine_arbitrage_viability():
-
+    return
 
 def test_find_arbitrage():
     exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
