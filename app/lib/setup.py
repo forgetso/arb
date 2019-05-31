@@ -28,8 +28,8 @@ def setup_database():
         assert (DB_NAME_JOBQUEUE in dbclient.list_database_names())
 
 
-def setup_currency_pairs():
-    apis = get_exchanges()
+def setup_currency_pairs(jobqueue_id):
+    apis = get_exchanges(jobqueue_id)
     currency_pair_symbols = set()
     currency_pairs_result = {}
     for api in apis:
@@ -97,8 +97,8 @@ def choose_two_random_exchanges(potential_exchanges=None):
     return exchanges
 
 
-def setup_environment():
-    setup_currency_pairs()
+def setup_environment(jobqueue_id):
+    setup_currency_pairs(jobqueue_id=jobqueue_id)
     setup_database()
     get_coingecko_meta()
     update_fiat_rates()

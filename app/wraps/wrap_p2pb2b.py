@@ -108,11 +108,13 @@ class p2pb2b():
                 currency_pairs_list.append({
                     'name': symbol.replace('_', '-'),
                     'trading_code': symbol,
+                    # TODO better method of identifying base and quote currency
                     'base_currency': symbol_split[0],
                     'quote_currency': symbol_split[1],
-                    'decimal_places': c.get('stockPrec'),
-                    'decimal_places_base': c.get('moneyPrec'),
-                    'min_trade_size': c.get('minAmount'),
+                    'decimal_places': int(c.get('stockPrec')),
+                    'decimal_places_base': int(c.get('moneyPrec')),
+                    'min_trade_size': float(c.get('minAmount')),
+                    'min_trade_size_currency': symbol_split[0],
                     'maker_fee': P2PB2B_MAKER_FEE,
                     'taker_fee': P2PB2B_TAKER_FEE,
                     # just use taker for now as it will always be more than maker. so we will under estimate profit

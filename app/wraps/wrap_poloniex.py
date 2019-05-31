@@ -67,7 +67,9 @@ class poloniex():
                     'base_currency': symbol_split[0],
                     'quote_currency': symbol_split[1],
                     'decimal_places': get_number_of_decimal_places(str(c['highestBid'])),
+                    # this seems to be the minimum trade size for all currencies on their site
                     'min_trade_size': float(0.0001),
+                    'min_trade_size_currency': symbol_split[1],
                     'maker_fee': POLONIEX_MAKER_FEE,
                     'taker_fee': POLONIEX_TAKER_FEE,
                     # just use taker for now as it will always be more than maker. so we will under estimate profit

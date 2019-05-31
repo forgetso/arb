@@ -321,10 +321,10 @@ def setup():
 
     # configure a bunch of stuff for running like currency pairs, database, ... TODO make this a class?
     if args.setup and not args.setuponly:
-        setup_environment()
+        setup_environment(args.jobqueue_id)
 
     if args.setuponly:
-        setup_environment()
+        setup_environment(args.jobqueue_id)
         exit()
 
     markets = load_currency_pairs()

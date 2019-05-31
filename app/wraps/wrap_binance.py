@@ -18,6 +18,7 @@ BITTREX_ERROR_CODES = [
 
 MINIMUM_DEPOSIT = {}
 
+
 class binance():
     def __init__(self, jobqueue_id):
 
@@ -71,10 +72,11 @@ class binance():
                     'quote_currency': c['quoteAsset'],
                     'decimal_places': -int(math.log10(
                         Decimal([x.get('stepSize') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]))),
-                    'min_trade_size': float(
-                        [x.get('minQty') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]),
-                    'min_notional': float(
-                        [x.get('minNotional') for x in c['filters'] if x['filterType'] == 'MIN_NOTIONAL'][0]),
+                    'min_trade_size':
+                        [float(x.get('minQty')) for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0],
+                    'min_trade_size_currency': c['baseAsset'],
+                    'min_notional':
+                        [float(x.get('minNotional')) for x in c['filters'] if x['filterType'] == 'MIN_NOTIONAL'][0],
                     'taker_fee': float(fees_dict.get(c.get('symbol')).get('taker_fee')),
                     'maker_fee': float(fees_dict.get(c.get('symbol')).get('maker_fee')),
                     # just use taker for now as it will always be more than maker. so we will under estimate profit

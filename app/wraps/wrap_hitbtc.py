@@ -72,6 +72,7 @@ class hitbtc:
                 'quote_currency': c['quoteCurrency'],
                 'decimal_places': -Decimal(c['tickSize']).as_tuple().exponent,
                 'min_trade_size': float(c['quantityIncrement']),
+                'min_trade_size_currency': c['baseCurrency'],
                 'fee': float(c['takeLiquidityRate'])
             })
         return currency_pairs_list
