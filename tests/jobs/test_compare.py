@@ -13,6 +13,7 @@ MARKETS = {'exchange1':
         "base_currency": "ETH",
         "quote_currency": "BTC",
         "min_trade_size": 0.00740642,
+        "min_trade_size_currency": "ETH",
         "fee": 0.001
     }},
     'exchange2':
@@ -23,6 +24,7 @@ MARKETS = {'exchange1':
             "quote_currency": "BTC",
             "decimal_places": 3,
             "min_trade_size": 0.001,
+            "min_trade_size_currency": "ETH",
             "min_notional": 0.001,
             "taker_fee": 0.001,
             "maker_fee": 0.001,
@@ -37,6 +39,7 @@ MARKETS = {'exchange1':
             "quote_currency": "BTC",
             "decimal_places": 3,
             "min_trade_size": 0.001,
+            "min_trade_size_currency": "ETH",
             "min_notional": 0.001,
             "taker_fee": 0.001,
             "maker_fee": 0.001,
@@ -58,12 +61,8 @@ def test_determine_arbitrage_viability():
     exchange2.get_balances()
     arbitrages = [find_arbitrage(exchange1, exchange2, fiat_rate=100)]
     viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
-    print(arbitrages)
-    print(replenish_jobs)
-    print(viable_arbitrages)
-    print(profit_audit)
-    assert len(replenish_jobs)
-    return
+    assert len(viable_arbitrages)
+    assert not len(replenish_jobs)
 
 
 def test_find_arbitrage():
@@ -71,7 +70,7 @@ def test_find_arbitrage():
     exchange2 = wrap_exchange2.exchange2(JOBQUEUE_ID)
     exchange1.set_trade_pair('ETH-BTC', MARKETS)
     exchange2.set_trade_pair('ETH-BTC', MARKETS)
-    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=100)
+    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100))
     # at this stage the exchange objects have no ask/bid data attached
     assert result == {}
     exchange1.order_book()
@@ -79,7 +78,7 @@ def test_find_arbitrage():
     # now we should have order book data in each exchange
     assert exchange1.lowest_ask is not None
     assert exchange2.lowest_ask is not None
-    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=100)
+    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100))
     # an arbitrage should have been found
     assert result != {}
     assert result['buy'].name == 'exchange1'
@@ -142,8 +141,8 @@ def test_calculate_profit():
 
     # the following will result in an invalid trade and the profit is assumed to be 0
     exchange_buy.lowest_ask = {'price': 'blahblah', 'volume': 'blahlah'}
-    profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
-    assert profit == Decimal('0')
+    with raises(TypeError):
+        calculate_profit(exchange_buy, exchange_sell, fiat_rate)
 
 
 def test_check_trade_pair():

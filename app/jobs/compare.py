@@ -74,6 +74,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
 
 def determine_arbitrage_viability(arbitrages):
+    #TODO big refactor of this function
     viable_arbitrages = []
     profit_audit = {}
     replenish_jobs = []
@@ -90,27 +91,34 @@ def determine_arbitrage_viability(arbitrages):
 
             for buy_type in ['buy', 'sell']:
                 exchange = arbitrage[buy_type]
+                currency = exchange.base_currency
                 exchange_names |= set((exchange.name,))
                 if buy_type == 'buy':
                     price = exchange.lowest_ask['price']
                     volume = exchange.lowest_ask['volume']
                     exchange_balance = exchange.balances.get(exchange.quote_currency, 0)
-                    logging.debug(exchange_balance)
                     if Decimal(0) < exchange_balance < volume * price:
                         logging.debug(
-                            'Exchange {} does not have enough {} ({}) to buy {} {}'.format(exchange.name,
-                                                                                           exchange.quote_currency,
-                                                                                           exchange_balance,
-                                                                                           volume,
-                                                                                           exchange.base_currency))
-                        volume = exchange_balance
+                            'Exchange {} does not have enough {} ({}) to buy {} {} at {}'.format(exchange.name,
+                                                                                                 exchange.quote_currency,
+                                                                                                 exchange_balance,
+                                                                                                 volume,
+                                                                                                 exchange.base_currency,
+                                                                                                 price))
+                        # will try and use the btc we have instead
+                        volume = exchange_balance / price * volume
+                        logging.debug(
+                            'Will try to buy {} {} using balance {} {} instead'.format(volume,
+                                                                                       exchange.base_currency,
+                                                                                       exchange_balance,
+                                                                                       exchange.quote_currency))
+
                     # buy is always first in the loop so this is ok
                     sell_volume = volume
                 else:
                     price = exchange.highest_bid['price']
                     # we only want to sell the amount we managed to buy
                     volume = sell_volume
-                    currency = exchange.base_currency
 
                     logging.debug('Exchange {} currency balance {}'.format(exchange.name,
                                                                            exchange.balances.get(
@@ -118,36 +126,30 @@ def determine_arbitrage_viability(arbitrages):
                     exchange_balance = exchange.balances.get(exchange.base_currency, 0)
                     if Decimal(0) < exchange_balance < volume * price:
                         logging.debug(
-                            'Exchange {} does not have enough {}'.format(exchange.name, exchange.base_currency))
+                            'Exchange {} does not have enough {} ({}) to buy {} {} at {}'.format(exchange.name,
+                                                                                                 exchange.quote_currency,
+                                                                                                 exchange_balance,
+                                                                                                 volume,
+                                                                                                 exchange.base_currency,
+                                                                                                 price))
                         volume = exchange_balance
                         # therefore we also only want to buy this much
                         viable_arbitrages[0]['job_args']['volume'] = decimal_as_string(volume)
 
                 logging.debug('Confirming validity of price {}  volume {} buy_type {}'.format(price, volume, buy_type))
-                trade_valid, price, volume = exchange.trade_validity(price=price, volume=volume)
+                trade_valid, price, volume = exchange.trade_validity(currency=currency, price=price, volume=volume)
 
-                if not trade_valid:
+                if not trade_valid or volume == 0:
                     logging.debug('INVALID TRADE! {} {} {}'.format(exchange.name, price, volume))
+                    # the trade is not valid when volumes are too small. Therefore we need to replenish volumes of the currency at exchange
+                    replenish_jobs.append(replenish_job(exchange, currency))
                     viable_arbitrages = []
+                    # no point in running the other part of the loop
                     break
 
                 # store a record of this trade so that we can analyse later
                 store_profit_audit = True
                 trade_pair = exchange.trade_pair_common
-
-                # the account has none of this currency, need to replenish
-                # this only matters when we're trying to SELL a currency
-                if buy_type == 'sell':
-                    if volume == 0 or volume < exchange.min_trade_size:
-                        replenish_jobs.append({
-                            'job_type': 'REPLENISH',
-                            'job_args': {
-                                'exchange': exchange.name,
-                                'currency': currency,
-                            }
-                        })
-                        viable_arbitrages = []
-                        break
 
                 job = {
                     'job_type': 'TRANSACT',
@@ -171,6 +173,16 @@ def determine_arbitrage_viability(arbitrages):
         }
 
     return viable_arbitrages, replenish_jobs, profit_audit
+
+
+def replenish_job(exchange, currency):
+    return {
+        'job_type': 'REPLENISH',
+        'job_args': {
+            'exchange': exchange.name,
+            'currency': currency,
+        }
+    }
 
 
 def check_trade_pair(trade_pair):
@@ -235,8 +247,10 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
     except KeyError as e:
         raise CompareError('Error retrieving volume/price data from exchange object: {}'.format(e))
 
-    trade_valid_sell, price_sell, volume_sell = exchange_sell.trade_validity(price=price_sell, volume=volume)
-    trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(price=price_buy, volume=volume)
+    trade_valid_sell, price_sell, volume_sell = exchange_sell.trade_validity(currency=exchange_sell.base_currency,
+                                                                             price=price_sell, volume=volume)
+    trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(currency=exchange_buy.base_currency,
+                                                                         price=price_buy, volume=volume)
     if not trade_valid_buy or not trade_valid_sell:
         return Decimal('0')
 

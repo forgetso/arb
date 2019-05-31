@@ -35,7 +35,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue
         exchange_obj.order_book()
         price = exchange_obj.lowest_ask['price']
 
-    trade_valid, price, volume = exchange_obj.trade_validity(price=price, volume=volume)
+    trade_valid, price, volume = exchange_obj.trade_validity(currency=exchange_obj.base_currency, price=price, volume=volume)
 
     if trade_valid:
         # we convert Decimal objects to str for the API requests

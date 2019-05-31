@@ -4,7 +4,7 @@ from app.lib.errors import ErrorTradePairDoesNotExist
 import time
 from decimal import Decimal, Context, setcontext
 from app.lib.common import get_number_of_decimal_places, round_decimal_number
-from app.settings import BASE_CURRENCY
+from app.settings import DEFAULT_CURRENCY
 import logging
 
 BITTREX_TAKER_FEE = 0.0025
@@ -208,14 +208,14 @@ class bittrex():
             result = True
 
         # this is an extra check to make sure that the trade size is bigger than the smallest trade size allowed in BTC
-        if self.quote_currency == BASE_CURRENCY:
+        if self.quote_currency == DEFAULT_CURRENCY:
             if price * volume_corrected > self.min_trade_size_btc:
                 result = True
             else:
                 result = False
 
         # TODO work out if non BASE CURRENCY trades are above the BASE_CURRENCY threshold, for example ETH-LTC
-        if self.quote_currency != BASE_CURRENCY:
+        if self.quote_currency != DEFAULT_CURRENCY:
             # raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
             logging.warning('Cannot determine if trade meets minimum BTC trade requirements')
             result = True

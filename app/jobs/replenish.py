@@ -1,6 +1,6 @@
 import argparse
 import logging
-from app.settings import LOGLEVEL, MASTER_EXCHANGE, BASE_CURRENCY, FIAT_DEFAULT_SYMBOL
+from app.settings import LOGLEVEL, MASTER_EXCHANGE, DEFAULT_CURRENCY, FIAT_DEFAULT_SYMBOL
 from app.lib.setup import get_exchanges
 from app.lib.jobqueue import return_value_to_stdout
 from app.lib.common import get_replenish_quantity, get_current_fiat_rate
@@ -36,7 +36,7 @@ def replenish(exchange, currency, jobqueue_id):
                 'job_type': 'CONVERT',
                 'job_args': {
                     'exchange': exchange.name,
-                    'currency_from': BASE_CURRENCY,
+                    'currency_from': DEFAULT_CURRENCY,
                     'currency_to': currency,
                     'jobqueue_id': jobqueue_id
                 }
