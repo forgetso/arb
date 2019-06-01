@@ -6,6 +6,7 @@ from decimal import Decimal, Context, setcontext
 from app.lib.common import get_number_of_decimal_places, round_decimal_number
 from app.settings import DEFAULT_CURRENCY
 import logging
+from app.lib.exchange import exchange
 
 BITTREX_TAKER_FEE = 0.0025
 
@@ -22,7 +23,7 @@ MINIMUM_DEPOSIT = {}
 WITHDRAWAL_FEE = {'BTC': 0.0005, 'ETH': 0.01}
 
 
-class bittrex():
+class bittrex(exchange):
     def __init__(self, jobqueue_id):
         api_version = API_V1_1
         self.api = BittrexAPI(BITTREX_PUBLIC_KEY, BITTREX_PRIVATE_KEY, api_version=api_version)
@@ -34,22 +35,7 @@ class bittrex():
         self.balances = None
         self.pending_balances = None
         self.jobqueue_id = jobqueue_id
-
-    def set_trade_pair(self, trade_pair, markets):
-        try:
-            self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
-            if self.decimal_places:
-                self.decimal_places = Decimal(self.decimal_places)
-                decimal_rounding_context = Context(prec=int(self.decimal_places))
-                setcontext(decimal_rounding_context)
-            self.trade_pair_common = trade_pair
-            self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
-            self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-            self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
-            self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
-        except AttributeError:
-            raise ErrorTradePairDoesNotExist
+        exchange.__init__(self, name=self.name, jobqueue_id=self.jobqueue_id)
 
     def order_book(self):
         order_book_dict = self.api.get_orderbook(market=self.trade_pair)
@@ -78,6 +64,7 @@ class bittrex():
                     'quote_currency': c['BaseCurrency'],
                     # keep these as floats because Decimal breaks json.dumps
                     'min_trade_size': float(c['MinTradeSize']),
+                    'decimal_places': get_number_of_decimal_places(c['MinTradeSize']),
                     'min_trade_size_currency': c['MarketCurrency'],
                     'fee': float(BITTREX_TAKER_FEE)
                 })
@@ -190,41 +177,15 @@ class bittrex():
             withdrawn = True
         return withdrawn
 
-    def trade_validity(self, price, volume):
-        if not self.trade_pair:
-            raise WrapBittrexError('Trade pair must be set')
-
-        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
-            return False, price, volume
-
-        allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
-        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-
-        # if price * volume < self.min_trade_size_btc:
-        #     volume = self.min_trade_size_btc / price
-        result = False
-        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
-        if volume_corrected > self.min_trade_size:
-            result = True
-
-        # this is an extra check to make sure that the trade size is bigger than the smallest trade size allowed in BTC
-        if self.quote_currency == DEFAULT_CURRENCY:
-            if price * volume_corrected > self.min_trade_size_btc:
-                result = True
-            else:
-                result = False
-
-        # TODO work out if non BASE CURRENCY trades are above the BASE_CURRENCY threshold, for example ETH-LTC
-        if self.quote_currency != DEFAULT_CURRENCY:
-            # raise NotImplementedError('Cannot check if {} trade meets minimum requirements'.format(self.name))
-            logging.warning('Cannot determine if trade meets minimum BTC trade requirements')
-            result = True
-
-        return result, price, volume_corrected
-
     def get_minimum_deposit_volume(self, currency):
         minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
         return minimum_deposit_volume
+
+    def calculate_fees(self, trades_itemised, price):
+        raise (NotImplementedError('Calculate Fees not implemented in Bittrex wrapper'))
+
+    def get_orders(self, order_id):
+        raise (NotImplementedError('Get Orders not implemented in Bittrex wrapper'))
 
 
 class WrapBittrexError(Exception):

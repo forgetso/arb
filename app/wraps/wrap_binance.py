@@ -6,6 +6,7 @@ from decimal import Decimal, Context, setcontext
 import math
 from app.lib.common import round_decimal_number
 import logging
+from app.lib.exchange import exchange
 
 BITTREX_TAKER_FEE = 0.0025
 
@@ -19,7 +20,7 @@ BITTREX_ERROR_CODES = [
 MINIMUM_DEPOSIT = {}
 
 
-class binance():
+class binance(exchange):
     def __init__(self, jobqueue_id):
 
         self.api = Client(BINANCE_PUBLIC_KEY, BINANCE_SECRET_KEY)
@@ -27,23 +28,7 @@ class binance():
         self.highest_bid = None
         self.name = 'binance'
         self.jobqueue_id = jobqueue_id
-
-    def set_trade_pair(self, trade_pair, markets):
-        try:
-            self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
-            if self.decimal_places:
-                self.decimal_places = int(self.decimal_places)
-                decimal_rounding_context = Context(prec=self.decimal_places)
-                setcontext(decimal_rounding_context)
-            self.trade_pair_common = trade_pair
-            self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
-            self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-            self.min_notional = Decimal(str((markets.get(self.name).get(trade_pair).get('min_notional'))))
-            self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
-            self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
-        except AttributeError:
-            raise ErrorTradePairDoesNotExist
+        exchange.__init__(self, name=self.name, jobqueue_id=self.jobqueue_id)
 
     def order_book(self):
         order_book_dict = self.api.get_order_book(symbol=self.trade_pair)
@@ -113,19 +98,22 @@ class binance():
 
         return trade
 
-    def get_order_status(self, symbol, order_id):
+    def get_order_status(self, order_id):
         order_completed = False
         order_result = {}
         while not order_completed:
-            order_result = self.get_order(symbol=symbol, order_id=order_id)
+            order_result = self.get_order(order_id=order_id)
             if order_result['status'].upper() == 'FILLED':
                 break
             time.sleep(5)
 
         return order_result
 
-    def get_order(self, symbol, order_id):
-        return self.api.get_order(symbol=symbol, orderId=order_id)
+    def get_order(self, order_id):
+        return self.api.get_order(symbol=self.trade_pair, orderId=order_id)
+
+    def get_orders(self, order_id):
+        return
 
     def format_trade(self, raw_trade, trade_type, trade_id):
 
@@ -191,25 +179,6 @@ class binance():
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
         self.pending_balances = pending_balances
-
-    def trade_validity(self, price, volume):
-        if not self.trade_pair:
-            raise WrapBinanceError('Trade pair must be set')
-
-        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
-            return False, price, volume
-
-        allowed_decimal_places = self.decimal_places
-        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-        result = False
-        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
-        # logging.debug('price {} volume_Corrected {} min_notional (price * volume) {} min_notional {}'.format(price,
-        #                                                                                                      volume_corrected,
-        #                                                                                                      price * volume_corrected,
-        #                                                                                                      self.min_notional))
-        if price * volume_corrected > self.min_notional:
-            result = True
-        return result, price, volume_corrected
 
     def get_minimum_deposit_volume(self, currency):
         minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)

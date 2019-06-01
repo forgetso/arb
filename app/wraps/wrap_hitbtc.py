@@ -6,6 +6,7 @@ import uuid
 import logging
 from app.settings import LOGLEVEL
 from app.lib.common import get_number_of_decimal_places, round_decimal_number
+from app.lib.exchange import exchange
 
 URL = 'https://api.hitbtc.com'
 
@@ -20,7 +21,7 @@ HITBTC_ERROR_CODES = {
 MINIMUM_DEPOSIT = {}
 
 
-class hitbtc:
+class hitbtc(exchange):
     def __init__(self, jobqueue_id):
         self.api = HitBTCClient(public_key=HITBTC_PUBLIC_KEY, secret=HITBTC_SECRET_KEY, url=URL)
         self.lowest_ask = None
@@ -31,24 +32,7 @@ class hitbtc:
         self.jobqueue_id = jobqueue_id
         # self.min_trade_size_btc = Decimal(0.0001)
         logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
-
-    def set_trade_pair(self, trade_pair, markets):
-        try:
-            self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
-            if self.decimal_places:
-                # denominator_str = '1e{}'.format(self.decimal_places)
-                self.decimal_places = Decimal(self.decimal_places)
-                decimal_rounding_context = Context(prec=int(self.decimal_places))
-                setcontext(decimal_rounding_context)
-            self.trade_pair_common = trade_pair
-            self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
-            self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-
-            self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
-            self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
-        except AttributeError:
-            raise ErrorTradePairDoesNotExist
+        exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
 
     def order_book(self):
         order_book_dict = self.api.get_orderbook(self.trade_pair)
@@ -141,31 +125,21 @@ class hitbtc:
             raise Exception('Error getting pending balances in HitBtc {}'.format(e))
         self.pending_balances = pending_balances
 
-    def trade_validity(self, price, volume):
-        if not self.trade_pair:
-            raise WrapHitBtcError('Trade pair must be set')
-
-        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
-            return False, price, volume
-
-        result = False
-        volume_corrected = 0
-
-        if volume > 0:
-
-            # takes the decimal part of the minimum trade size and inverts it, giving the number of decimal places
-            logging.debug('Min Trade Size HitBtc {}'.format(self.min_trade_size))
-            allowed_decimal_places = get_number_of_decimal_places(self.min_trade_size)
-            volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-
-            if volume_corrected > self.min_trade_size:
-                result = True
-
-        return result, price, volume_corrected
-
     def get_minimum_deposit_volume(self, currency):
         minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
         return minimum_deposit_volume
+
+    def get_orders(self, order_id):
+        raise NotImplementedError('Get Orders not implemented in HitBTC Wrapper')
+
+    def get_order(self, order_id):
+        raise NotImplementedError('Get Order not implemented in HitBTC Wrapper')
+
+    def calculate_fees(self, trades_itemised, price):
+        raise NotImplementedError('Calculate Fees not implemented in HitBTC Wrapper')
+
+    def get_order_status(self, order_id):
+        raise NotImplementedError('Get Order Status not implemented in HitBTC Wrapper')
 
 
 class WrapHitBtcError(Exception):

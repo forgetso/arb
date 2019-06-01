@@ -37,6 +37,9 @@ class exchange2(exchange):
     def get_order(self):
         return
 
+    def get_orders(self, order_id):
+        return
+
     def format_trade(self):
         return
 

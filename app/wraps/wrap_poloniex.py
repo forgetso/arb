@@ -5,6 +5,7 @@ import time
 from decimal import Decimal, Context, setcontext
 import math
 from app.lib.common import round_decimal_number, get_number_of_decimal_places
+from app.lib.exchange import exchange
 
 POLONIEX_TAKER_FEE = 0.002
 POLONIEX_MAKER_FEE = 0.0008
@@ -14,42 +15,23 @@ POLONIEX_ERROR_CODES = []
 MINIMUM_DEPOSIT = {}
 
 
-class poloniex():
+class poloniex(exchange):
     def __init__(self, jobqueue_id):
 
         self.api = Poloniex(POLONIEX_PUBLIC_KEY, POLONIEX_SECRET_KEY)
-        self.lowest_ask = None
-        self.highest_bid = None
         self.name = 'poloniex'
-        self.jobqueue_id = jobqueue_id
-
-    def set_trade_pair(self, trade_pair, markets):
-        try:
-            self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
-            if self.decimal_places:
-                self.decimal_places = int(self.decimal_places)
-                decimal_rounding_context = Context(prec=self.decimal_places)
-                setcontext(decimal_rounding_context)
-            self.trade_pair_common = trade_pair
-            self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
-            self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-            self.min_notional = Decimal(str((markets.get(self.name).get(trade_pair).get('min_notional'))))
-            self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
-            self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
-        except AttributeError:
-            raise ErrorTradePairDoesNotExist
+        exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
 
     def order_book(self):
-        ticker = self.api.returnTicker()
+        ticker = self.api.returnOrderBook()
         order_book_dict = ticker[self.trade_pair]
         if order_book_dict.get('error'):
             raise (WrapPoloniexError(order_book_dict.get('error')))
         # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
-        self.asks = [order_book_dict.get('lowestAsk')]
-        self.lowest_ask = self.asks[0]
-        self.bids = [order_book_dict.get('highestBid')]
-        self.highest_bid = self.bids[0]
+        self.asks = [order_book_dict.get('asks')]
+        self.lowest_ask = {'price': Decimal(self.asks[0][0][0]), 'volume': Decimal(self.asks[0][0][1])}
+        self.bids = [order_book_dict.get('bids')]
+        self.highest_bid = {'price': Decimal(self.bids[0][0][0]), 'volume': Decimal(self.bids[0][0][1])}
         return order_book_dict
 
     def get_currency_pairs(self):
@@ -112,8 +94,12 @@ class poloniex():
 
         return order_result
 
-    def get_orders(self):
+    # TODO why would you need to put an order ID for get orders?
+    def get_orders(self, order_id):
         return self.api.returnOpenOrders(currencyPair=self.trade_pair)
+
+    def get_order(self, order_id):
+        raise NotImplementedError('Get Order not implemented in Poloniex Wrapper')
 
     def format_trade(self, raw_trade, trade_type, trade_id):
 
@@ -179,21 +165,6 @@ class poloniex():
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
         self.pending_balances = pending_balances
-
-    def trade_validity(self, price, volume):
-        if not self.trade_pair:
-            raise WrapPoloniexError('Trade pair must be set')
-
-        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
-            return False, price, volume
-
-        allowed_decimal_places = self.decimal_places
-        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-        result = False
-        # finally, check if the volume we're attempting to trade is above the minimum notional trade size
-        if price * volume_corrected > self.min_notional:
-            result = True
-        return result, price, volume_corrected
 
     def get_minimum_deposit_volume(self, currency):
         minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)

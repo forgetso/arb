@@ -13,6 +13,7 @@ MARKETS = {'exchange1':
         "base_currency": "ETH",
         "quote_currency": "BTC",
         "min_trade_size": 0.00740642,
+        "decimal_places": 8,
         "min_trade_size_currency": "ETH",
         "fee": 0.001
     }},

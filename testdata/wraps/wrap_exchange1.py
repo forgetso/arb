@@ -34,7 +34,7 @@ class exchange1(exchange):
     def get_order_status(self):
         return
 
-    def get_order(self):
+    def get_order(self, order_id):
         return
 
     def format_trade(self):
@@ -54,4 +54,7 @@ class exchange1(exchange):
         return
 
     def get_minimum_deposit_volume(self):
+        return
+
+    def get_orders(self, order_id):
         return

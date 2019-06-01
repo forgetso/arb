@@ -8,6 +8,7 @@ from app.lib.db import store_balances, get_balances, store_api_access_time, get_
 import logging
 from datetime import datetime, timedelta
 import time
+from app.lib.exchange import exchange
 
 P2PB2B_TAKER_FEE = 0.0020
 P2PB2B_MAKER_FEE = 0.0020
@@ -24,7 +25,7 @@ P2PB2B_ADDRESSES = {
 }
 
 
-class p2pb2b():
+class p2pb2b(exchange):
     def __init__(self, jobqueue_id):
 
         self.api = P2PB2B(P2PB2B_PUBLIC_KEY, P2PB2B_SECRET_KEY)
@@ -34,22 +35,7 @@ class p2pb2b():
         self.balances = None
         self.balances_time = None
         self.jobqueue_id = jobqueue_id
-
-    def set_trade_pair(self, trade_pair, markets):
-        try:
-            self.decimal_places = markets.get(self.name).get(trade_pair).get('decimal_places')
-            if self.decimal_places:
-                self.decimal_places = int(self.decimal_places)
-                decimal_rounding_context = Context(prec=self.decimal_places)
-                setcontext(decimal_rounding_context)
-            self.trade_pair_common = trade_pair
-            self.trade_pair = markets.get(self.name).get(trade_pair).get('trading_code')
-            self.fee = Decimal(markets.get(self.name).get(trade_pair).get('fee'))
-            self.min_trade_size = Decimal(str(markets.get(self.name).get(trade_pair).get('min_trade_size')))
-            self.base_currency = markets.get(self.name).get(trade_pair).get('base_currency')
-            self.quote_currency = markets.get(self.name).get(trade_pair).get('quote_currency')
-        except AttributeError:
-            raise ErrorTradePairDoesNotExist
+        exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
 
     def order_book(self):
         # TODO put rate limiting in for this wrapper at the very beginning. Store the number of API hits that have occurred in the current minute and second
@@ -175,6 +161,9 @@ class p2pb2b():
     def get_order(self, order_id):
         return self.api.getOrder(orderId=order_id)
 
+    def get_orders(self, order_id):
+        raise NotImplementedError('Get Orders not implemented in P2PB2B Wrapper')
+
     def format_trade(self, raw_trade, trade_type, trade_id):
 
         # {'symbol': 'ADXBTC', 'orderId': 26852121, 'clientOrderId': 'CCEUFAceue5R2wksYE3FYo',
@@ -271,21 +260,6 @@ class p2pb2b():
             raise NotImplementedError('')
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
-
-    def trade_validity(self, price, volume):
-        if not self.trade_pair:
-            raise WrapP2PB2BError('Trade pair must be set')
-
-        if not isinstance(price, Decimal) or not isinstance(volume, Decimal):
-            return False, price, volume
-
-        allowed_decimal_places = self.decimal_places
-        volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-        result = False
-        if volume > 0:
-            result = True
-
-        return result, price, volume_corrected
 
     def get_minimum_deposit_volume(self, currency):
         minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)

@@ -1,4 +1,3 @@
-from app.wraps import wrap_hitbtc, wrap_bittrex, wrap_binance, wrap_poloniex, wrap_p2pb2b
 import json
 import os
 from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES, TRADE_PAIRS
@@ -8,8 +7,9 @@ from app.lib.jobqueue import JOB_COLLECTION
 from app.lib.common import get_coingecko_meta, get_current_fiat_rates, dynamically_import_exchange
 from app.lib.db import store_fiat_rates
 import random
+from pathlib import Path
 
-MARKETS_JSON = "/app/markets.json"
+MARKETS_JSON = "/markets.json"
 FIAT_RATES_JSON = "/app/fiat_rates.json"
 
 
@@ -53,13 +53,15 @@ def setup_currency_pairs(jobqueue_id):
 
 
 def write_currency_pairs(data):
-    markets_location = ''.join([os.getcwd(), MARKETS_JSON])
+    path = Path(__file__).parent.parent
+    markets_location = ''.join([str(path), MARKETS_JSON])
     with open(markets_location, 'w') as outfile:
         json.dump(data, outfile, indent=2)
 
 
 def load_currency_pairs():
-    markets_location = ''.join([os.getcwd(), MARKETS_JSON])
+    path = Path(__file__).parent.parent
+    markets_location = ''.join([str(path), MARKETS_JSON])
     if not os.path.isfile(markets_location):
         raise FileExistsError(
             'Run the command again and specify --setup to create the list of markets at {}'.format(markets_location))
