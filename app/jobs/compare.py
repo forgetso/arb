@@ -45,8 +45,8 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
     # determine whether buying and selling across each permutation will result in a profit > FIAT_ARBITRAGE_MINIMUM
     for exchange_permutation in exchange_permutations_fixed:
-        print(exchange_permutation)
-        arbitrage = find_arbitrage(exchange_permutation, fiat_rate)
+        exchange_buy, exchange_sell = exchange_permutation
+        arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
         if arbitrage:
             arbitrages.append(arbitrage)
             exchange_names = [arbitrage['buy'].name, arbitrage['sell'].name]
@@ -103,17 +103,21 @@ def equalise_buy_and_sell_volumes(exchange_permutation):
     # highest bid: but we can only sell 3 BTC (volume) at 100 ETH (price) per BTC
     exchange_buy, exchange_sell = exchange_permutation
     volume_equal = exchange_buy.lowest_ask['volume']
-    volume_sell = exchange_buy.lowest_ask['volume']
+    volume_sell = exchange_sell.highest_bid['volume']
     volume_buy = exchange_buy.lowest_ask['volume']
     if volume_sell < volume_buy:
         volume_equal = volume_sell
-    return volume_equal
+    exchange_buy.lowest_ask['volume'] = volume_equal
+    exchange_sell.highest_bid['volume'] = volume_equal
+
+    return (exchange_buy, exchange_sell)
 
 
 def set_maximum_trade_volume(volume, price, fiat_rate):
     # We don't want to make trades more than 100 GBP at a time
     # 3 ETH at 0.1 BTC * 8000 GBP = 2400 GBP > 100 GBP => 3 * (100 / 2400) is the volume
     total_cost_fiat = volume * price * fiat_rate
+    print(volume, price, fiat_rate, total_cost_fiat)
     if total_cost_fiat > FIAT_REPLENISH_AMOUNT:
         volume = FIAT_REPLENISH_AMOUNT / total_cost_fiat * volume
         logging.debug('Changing volume to {} '.format(volume))
@@ -288,11 +292,11 @@ def exchange_selection(cur_x, cur_y, markets, exchanges, jobqueue_id, directory=
     return apis_trade_pair_valid
 
 
-def replenish_job(exchange, currency):
+def replenish_job(exchange_name, currency):
     return {
         'job_type': 'REPLENISH',
         'job_args': {
-            'exchange': exchange.name,
+            'exchange': exchange_name,
             'currency': currency,
         }
     }

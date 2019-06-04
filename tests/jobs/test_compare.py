@@ -1,6 +1,5 @@
 from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calculate_profit_and_volume, \
-    check_trade_pair, \
-    exchange_selection, CompareError, equalise_buy_and_sell_volumes
+    check_trade_pair, exchange_selection, CompareError, equalise_buy_and_sell_volumes, set_maximum_trade_volume
 from decimal import Decimal
 from pytest import raises, fixture
 from app.lib import exchange
@@ -175,3 +174,35 @@ def test_exchange_selection():
 
     with raises(ImportError):
         exchange_selection(cur_x, cur_y, MARKETS, exchange_list, jobqueue_id, directory='blah.blah')
+
+
+def test_equalise_buy_and_sell_volumes():
+    # Should be able to buy for 1 from exchange_buy
+    exchange_buy = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange_buy.set_trade_pair('ETH-BTC', MARKETS)
+    exchange_buy.lowest_ask = {'price': Decimal('1'), 'volume': Decimal('50')}
+    exchange_buy.highest_bid = {'price': Decimal('0.9'), 'volume': Decimal('3')}
+    # And sell for 1.1 at exchange_sell
+    exchange_sell = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchange_sell.set_trade_pair('ETH-BTC', MARKETS)
+    exchange_sell.lowest_ask = {'price': Decimal('1.2'), 'volume': Decimal('4')}
+    exchange_sell.highest_bid = {'price': Decimal('1.1'), 'volume': Decimal('1')}
+    # Volume should come out as 1 as we can only sell 1 at price 1.1
+    exchange_permutation = equalise_buy_and_sell_volumes((exchange_buy, exchange_sell))
+    assert exchange_permutation[0].lowest_ask['volume'] == Decimal('1')
+    assert exchange_permutation[1].highest_bid['volume'] == Decimal('1')
+
+
+def test_set_maximum_trade_volume():
+    # this will come out at 200 GBP but our max is 100 GBP
+    volume = 100
+    price = 1
+    fiat_rate = 2
+    volume = set_maximum_trade_volume(volume, price, fiat_rate)
+    assert volume == 50
+
+    # this will come out at 50 GBP so volume does not need to be reduced
+    volume = 100
+    fiat_rate = 0.5
+    volume = set_maximum_trade_volume(volume, price, fiat_rate)
+    assert volume == 100
