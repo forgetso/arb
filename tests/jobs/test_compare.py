@@ -1,5 +1,6 @@
-from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calculate_profit, check_trade_pair, \
-    exchange_selection, CompareError
+from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calculate_profit_and_volume, \
+    check_trade_pair, \
+    exchange_selection, CompareError, equalise_buy_and_sell_volumes
 from decimal import Decimal
 from pytest import raises, fixture
 from app.lib import exchange
@@ -52,18 +53,26 @@ JOBQUEUE_ID = '507f191e810c19729de860ea'
 
 
 def test_determine_arbitrage_viability():
+    # TODO better testing of this function
     exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
     exchange2 = wrap_exchange1.exchange1(JOBQUEUE_ID)
     exchange1.set_trade_pair('ETH-BTC', MARKETS)
     exchange2.set_trade_pair('ETH-BTC', MARKETS)
     exchange1.order_book()
     exchange2.order_book()
+    # balances are hard coded into the exchange wrappers
     exchange1.get_balances()
     exchange2.get_balances()
     arbitrages = [find_arbitrage(exchange1, exchange2, fiat_rate=100)]
-    viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
+    viable_arbitrages = []
+    for arbitrage in arbitrages:
+        viable_arbitrages = determine_arbitrage_viability(arbitrage, fiat_rate=100)
     assert len(viable_arbitrages)
-    assert not len(replenish_jobs)
+
+
+def test_replenish_jobs():
+    # TODO test replenish function in compare
+    pass
 
 
 def test_find_arbitrage():
@@ -90,19 +99,20 @@ def test_calculate_profit():
     # Should be able to buy for 1 from exchange_buy
     exchange_buy = wrap_exchange1.exchange1(JOBQUEUE_ID)
     exchange_buy.set_trade_pair('ETH-BTC', MARKETS)
-    exchange_buy.lowest_ask = {'price': Decimal('1'), 'volume': Decimal('50')}
+    exchange_buy.lowest_ask = {'price': Decimal('1'), 'volume': Decimal('1')}
     exchange_buy.highest_bid = {'price': Decimal('0.9'), 'volume': Decimal('3')}
     # And sell for 1.1 at exchange_sell
     exchange_sell = wrap_exchange2.exchange2(JOBQUEUE_ID)
     exchange_sell.set_trade_pair('ETH-BTC', MARKETS)
     exchange_sell.lowest_ask = {'price': Decimal('1.2'), 'volume': Decimal('4')}
     exchange_sell.highest_bid = {'price': Decimal('1.1'), 'volume': Decimal('1')}
+    # TODO just hard code this
 
     fiat_rate = Decimal('10')
 
-    profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+    _, _, profit = calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate)
 
-    # the profit is 1 as we can buy 50 at 1 but sell only 1 at 1.1
+    # the profit is .1 as we can buy 1 at 1 and sell 1 at 1.1
     # therefore we take the volume from the amount we can sell
     # 1.1 - 1 = 0.1. 0.1 at 10 GBP = 1 GBP profit - fee
     # fee = 1.1 * 0.01 + 1 * 0.01 = 0.021
@@ -111,14 +121,14 @@ def test_calculate_profit():
 
     fiat_rate = Decimal('100')
 
-    profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+    _, _, profit = calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate)
 
     # this just scales up to 10 times the last result
     assert profit == Decimal('9.79')
 
     fiat_rate = Decimal('1000')
 
-    profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+    _, _, profit = calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate)
 
     # max size of trade we will so is FIAT_REPLENISH_AMOUNT, set to 100 GBP in settings
     # therefore buying 1 for 1000 GBP is not possible. We will again buy 100 GBPs worth
@@ -128,7 +138,7 @@ def test_calculate_profit():
     exchange_buy.fee = Decimal('0.01')
     exchange_sell.fee = Decimal('0.01')
 
-    profit = calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+    _, _, profit = calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate)
     fee = (Decimal('0.01') * Decimal('1') * Decimal('1') + Decimal('0.01') * Decimal('1.1') * Decimal('1'))
     # we can only buy a tenth of the volume available due to the FIAT_REPLENISH_AMOUNT limit
     # therefore profit should just be the same as the last result minus the fees
@@ -138,12 +148,12 @@ def test_calculate_profit():
     # the lowest_ask fields are empty resulting in an error in the function
     exchange_buy.lowest_ask = {}
     with raises(CompareError):
-        calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+        calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate)
 
     # the following will result in an invalid trade and the profit is assumed to be 0
     exchange_buy.lowest_ask = {'price': 'blahblah', 'volume': 'blahlah'}
     with raises(TypeError):
-        calculate_profit(exchange_buy, exchange_sell, fiat_rate)
+        calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate)
 
 
 def test_check_trade_pair():

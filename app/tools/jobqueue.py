@@ -15,7 +15,7 @@ def main(action):
 
     if action == 'show':
         jq_db = jobqueue_db()
-        jobs = jq_db.JOB_COLLECTION.find()
+        jobs = jq_db.jobs.find({}).sort([('_id', -1)]).limit(10)
         import pprint
         for job in jobs:
             pprint.pprint(job)

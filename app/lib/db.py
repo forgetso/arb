@@ -94,10 +94,12 @@ def get_balances(exchange):
     return balances
 
 
-# store access times of API methods in case of limits placed on exchanges
-def store_api_access_time(exchange, method, access_datetime):
-    db = exchange_db()
-    db.access_time.insert_one({'datetime': access_datetime, 'exchange': exchange, 'method': method})
+def get_replenish_jobs(exchange, currency):
+    db = jobqueue_db()
+    recent_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
+    replenish_jobs = [x for x in db.jobs.find(
+        {'job_args.exchange': exchange, 'job_args.currency': currency, 'datetime': {'$gt': recent_time}})]
+    return replenish_jobs
 
 
 ##################################### API Access Rate Functions ########################################################
@@ -114,6 +116,12 @@ def get_api_access_time(exchange, method):
         access_time = access_time_list[0].get('datetime')
 
     return access_time
+
+
+# store access times of API methods in case of limits placed on exchanges
+def store_api_access_time(exchange, method, access_datetime):
+    db = exchange_db()
+    db.access_time.insert_one({'datetime': access_datetime, 'exchange': exchange, 'method': method})
 
 
 def get_minutely_api_requests(exchange):

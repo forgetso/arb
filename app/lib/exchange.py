@@ -23,6 +23,8 @@ class exchange(ABC):
         self.min_trade_size_currency = None
         self.base_currency = None
         self.quote_currency = None
+        self.decimal_places = None
+        self.balances = None
 
         super().__init__()
 
@@ -31,7 +33,7 @@ class exchange(ABC):
             if not self.name:
                 raise ValueError('Exchange must have name attribute set')
             trade_pair_details = markets.get(self.name).get(trade_pair)
-            self.decimal_places = int(self.decimal_places)
+            self.decimal_places = trade_pair_details.get('decimal_places')
             decimal_rounding_context = Context(prec=self.decimal_places)
             setcontext(decimal_rounding_context)
             self.trade_pair_common = trade_pair
@@ -41,8 +43,8 @@ class exchange(ABC):
             self.min_trade_size_currency = trade_pair_details.get('min_trade_size_currency')
             self.base_currency = trade_pair_details.get('base_currency')
             self.quote_currency = trade_pair_details.get('quote_currency')
-        except AttributeError:
-            raise ErrorTradePairDoesNotExist
+        except AttributeError as e:
+            raise ErrorTradePairDoesNotExist(e)
 
     @abstractmethod
     def order_book(self):
@@ -110,12 +112,15 @@ class exchange(ABC):
         if self.min_trade_size_currency == currency:
             if volume_corrected > self.min_trade_size:
                 result = True
+        elif price * volume_corrected > self.min_trade_size:
+            result = True
 
         # this would be the trade size in BTC if the trade pair was ETHBTC
         if hasattr(self, 'min_notional'):
             if price * volume_corrected > self.min_notional:
                 result = True
             else:
+                logging.debug('Trade is below min notional {}'.format(self.min_notional))
                 result = False
 
         return result, price, volume_corrected

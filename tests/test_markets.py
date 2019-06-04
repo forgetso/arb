@@ -1,6 +1,7 @@
 from app.lib.setup import load_currency_pairs
 
 
+# this is technically a functional test unless we create a copy of markets.json in the testdata folder
 def test_markets():
     markets = load_currency_pairs()
     for exchange in markets:

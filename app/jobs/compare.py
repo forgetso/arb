@@ -8,10 +8,7 @@ from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, 
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates
-from app.lib.common import round_decimal_number, decimal_as_string, get_exchanges
-
-from bson import json_util
-import json
+from app.lib.common import round_decimal_number, decimal_as_string
 
 
 def compare(cur_x, cur_y, markets, jobqueue_id):
@@ -38,27 +35,34 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     for exchange in apis_trade_pair_valid:
         exchange.order_book()
 
-    # generate a unique list of pairs for comparison
-    # TODO this is now invalid as we only pass 2 exchanges. Remove?
-    exchange_combinations = itertools.combinations(apis_trade_pair_valid, 2)
+    # generate a unique list of permutations for comparison [[buy, sell], [buy, sell], ...]
+    exchange_permutations = list(itertools.permutations(apis_trade_pair_valid, 2))
 
-    for exchange_combination in exchange_combinations:
-        arbitrage = find_arbitrage(exchange_combination[0], exchange_combination[1], fiat_rate)
+    # first sort out the volumes in each exchange object
+    exchange_permutations_fixed = []
+    for exchange_permutation in exchange_permutations:
+        exchange_permutations_fixed.append(equalise_buy_and_sell_volumes(exchange_permutation))
+
+    # determine whether buying and selling across each permutation will result in a profit > FIAT_ARBITRAGE_MINIMUM
+    for exchange_permutation in exchange_permutations_fixed:
+        print(exchange_permutation)
+        arbitrage = find_arbitrage(exchange_permutation, fiat_rate)
         if arbitrage:
             arbitrages.append(arbitrage)
+            exchange_names = [arbitrage['buy'].name, arbitrage['sell'].name]
+            profit_audit_record = profit_audit(arbitrage['profit'],
+                                               arbitrage['buy'].trade_pair_common,
+                                               exchange_names)
+            store_audit(profit_audit_record)
 
-    if arbitrages:
-        for arbitrage in arbitrages:
-            arbitrage['buy'].get_balances()
-            # logging.debug('BUY balances {}'.format(arbitrage['buy'].balances))
-            arbitrage['sell'].get_balances()
-            # logging.debug('SELL balances {}'.format(arbitrage['sell'].balances))
-
-        viable_arbitrages, replenish_jobs, profit_audit = determine_arbitrage_viability(arbitrages)
-
-        if profit_audit:
-            # store details of potential profits to work out if all of this is worthwhile
-            store_audit(profit_audit)
+    for arbitrage in arbitrages:
+        arbitrage['buy'].get_balances()
+        arbitrage['sell'].get_balances()
+        # first, make sure we do not have zero of the currency we're trying to sell
+        # send more of the currency to that exchange if there is a zero balance
+        replenish_jobs = check_zero_balances(arbitrage)
+        if not replenish_jobs:
+            viable_arbitrages = determine_arbitrage_viability(arbitrage, fiat_rate)
 
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
@@ -73,116 +77,100 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     return result
 
 
-def determine_arbitrage_viability(arbitrages):
-    #TODO big refactor of this function
-    viable_arbitrages = []
-    profit_audit = {}
+def check_zero_balances(arbitrage):
     replenish_jobs = []
-    currency = None
-    sell_volume = None
-    exchange_names = set()
-    store_profit_audit = False
-    trade_pair = ''
-    profit = None
-    for arbitrage in arbitrages:
-        if arbitrage['profit'] > FIAT_ARBITRAGE_MINIMUM:
-            logging.info('Viable arbitrage found')
-            profit = arbitrage['profit']
+    exchange_buy = arbitrage['buy']
+    exchange_sell = arbitrage['sell']
+    exchange_balance = exchange_buy.balances.get(exchange_buy.quote_currency, 0)
 
-            for buy_type in ['buy', 'sell']:
-                exchange = arbitrage[buy_type]
-                currency = exchange.base_currency
-                exchange_names |= set((exchange.name,))
-                if buy_type == 'buy':
-                    price = exchange.lowest_ask['price']
-                    volume = exchange.lowest_ask['volume']
-                    exchange_balance = exchange.balances.get(exchange.quote_currency, 0)
-                    if Decimal(0) < exchange_balance < volume * price:
-                        logging.debug(
-                            'Exchange {} does not have enough {} ({}) to buy {} {} at {}'.format(exchange.name,
-                                                                                                 exchange.quote_currency,
-                                                                                                 exchange_balance,
-                                                                                                 volume,
-                                                                                                 exchange.base_currency,
-                                                                                                 price))
-                        # will try and use the btc we have instead
-                        volume = exchange_balance / price * volume
-                        logging.debug(
-                            'Will try to buy {} {} using balance {} {} instead'.format(volume,
-                                                                                       exchange.base_currency,
-                                                                                       exchange_balance,
-                                                                                       exchange.quote_currency))
+    # if we dont have any BTC then we cannot buy any ETH, replenish BTC
+    if exchange_balance == 0:
+        replenish_jobs.append(replenish_job(exchange_buy.name, exchange_buy.quote_currency))
 
-                    # buy is always first in the loop so this is ok
-                    sell_volume = volume
-                else:
-                    price = exchange.highest_bid['price']
-                    # we only want to sell the amount we managed to buy
-                    volume = sell_volume
+    exchange_balance = exchange_sell.balances.get(exchange_buy.quote_currency, 0)
+    # if we dont have any ETH then we cannot buy any BTC, replenish ETH
+    if exchange_balance == 0:
+        replenish_jobs.append(replenish_job(exchange_buy.name, exchange_buy.base_currency))
 
-                    logging.debug('Exchange {} currency balance {}'.format(exchange.name,
-                                                                           exchange.balances.get(
-                                                                               exchange.base_currency)))
-                    exchange_balance = exchange.balances.get(exchange.base_currency, 0)
-                    if Decimal(0) < exchange_balance < volume * price:
-                        logging.debug(
-                            'Exchange {} does not have enough {} ({}) to buy {} {} at {}'.format(exchange.name,
-                                                                                                 exchange.quote_currency,
-                                                                                                 exchange_balance,
-                                                                                                 volume,
-                                                                                                 exchange.base_currency,
-                                                                                                 price))
-                        volume = exchange_balance
-                        # therefore we also only want to buy this much
-                        viable_arbitrages[0]['job_args']['volume'] = decimal_as_string(volume)
-
-                logging.debug('Confirming validity of price {}  volume {} buy_type {}'.format(price, volume, buy_type))
-                trade_valid, price, volume = exchange.trade_validity(currency=currency, price=price, volume=volume)
-
-                if not trade_valid or volume == 0:
-                    logging.debug('INVALID TRADE! {} {} {}'.format(exchange.name, price, volume))
-                    # the trade is not valid when volumes are too small. Therefore we need to replenish volumes of the currency at exchange
-                    replenish_jobs.append(replenish_job(exchange, currency))
-                    viable_arbitrages = []
-                    # no point in running the other part of the loop
-                    break
-
-                # store a record of this trade so that we can analyse later
-                store_profit_audit = True
-                trade_pair = exchange.trade_pair_common
-
-                job = {
-                    'job_type': 'TRANSACT',
-                    'job_args': {
-                        'exchange': exchange.name,
-                        'trade_pair_common': exchange.trade_pair_common,
-                        'volume': decimal_as_string(volume),
-                        'price': decimal_as_string(price),
-                        'type': buy_type,
-
-                    },
-                    'job_info': {'profit': float(round(arbitrage['profit'], 2)), 'currency': FIAT_DEFAULT_SYMBOL}}
-                viable_arbitrages.append(job)
-
-    if store_profit_audit:
-        profit_audit = {
-            'profit': float(round(profit, 2)),
-            'currency': FIAT_DEFAULT_SYMBOL,
-            'exchange_names': list(exchange_names),
-            'trade_pair': trade_pair
-        }
-
-    return viable_arbitrages, replenish_jobs, profit_audit
+    return replenish_jobs
 
 
-def replenish_job(exchange, currency):
-    return {
-        'job_type': 'REPLENISH',
-        'job_args': {
-            'exchange': exchange.name,
-            'currency': currency,
-        }
-    }
+def equalise_buy_and_sell_volumes(exchange_permutation):
+    # Take the volume of the highest bid from an exchange and set it as the volume we should buy
+    # as we should not buy more than we can sell
+    # Example
+    # lowest ask: we can buy 4 BTC (volume) at 99 ETH (price) per BTC
+    # highest bid: but we can only sell 3 BTC (volume) at 100 ETH (price) per BTC
+    volume_equal = None
+    for exchange_buy, exchange_sell in exchange_permutation:
+        volume_equal = exchange_buy.lowest_ask['volume']
+        volume_sell = exchange_buy.lowest_ask['volume']
+        volume_buy = exchange_buy.lowest_ask['volume']
+        if volume_sell < volume_buy:
+            volume_equal = volume_sell
+    return volume_equal
+
+
+def set_maximum_trade_volume(volume, price, fiat_rate):
+    # We don't want to make trades more than 100 GBP at a time
+    # 3 ETH at 0.1 BTC * 8000 GBP = 2400 GBP > 100 GBP => 3 * (100 / 2400) is the volume
+    total_cost_fiat = volume * price * fiat_rate
+    if total_cost_fiat > FIAT_REPLENISH_AMOUNT:
+        volume = FIAT_REPLENISH_AMOUNT / total_cost_fiat * volume
+        logging.debug('Changing volume to {} '.format(volume))
+    return volume
+
+
+def determine_arbitrage_viability(arbitrage, fiat_rate):
+    viable_arbitrages = []
+    exchange_buy = arbitrage['buy']
+    exchange_sell = arbitrage['sell']
+    profit = arbitrage['profit']
+    revalidate = False
+    revalidation_result = None
+
+    # buy #
+    price_buy = exchange_buy.lowest_ask['price']
+    volume_base = exchange_buy.lowest_ask['volume']
+    exchange_balance = exchange_buy.balances.get(exchange_buy.quote_currency, 0)
+
+    # if we have some BTC but not enough to buy required ETH then try to use what BTC we have
+    if Decimal(0) < exchange_balance < volume_base * price_buy:
+        # will try and use the btc we have instead
+        volume_base = exchange_balance / price_buy * volume_base
+        revalidate = True
+
+    # sell #
+    # we may not have had enough BTC to buy all the offered ETH, therefore volume may be lower
+    price_sell = exchange_sell.highest_bid['price']
+    volume_base = min(exchange_sell.lowest_ask['volume'], volume_base)
+
+    exchange_balance = exchange_sell.balances.get(exchange_sell.base_currency, 0)
+
+    # we have some ETH but not as much as we need to sell [volume]
+    if Decimal(0) < exchange_balance < volume_base:
+        volume_base = exchange_balance
+        revalidate = True
+
+    # so we now have a final volume_base. we need to recheck trade validity
+    exchange_buy.lowest_ask['volume'] = volume_base
+    exchange_sell.highest_bid['volume'] = volume_base
+
+    # use the same function as before to check the modified trades for profitability
+    if revalidate:
+        revalidation_result = find_arbitrage(exchange_buy, exchange_sell, fiat_rate=fiat_rate)
+
+    # if the trades were good first time round or the altered trades would generate enough profit
+    if not revalidate or revalidation_result:
+        buy_transact = transact_job(exchange_buy.name, exchange_buy.trade_pair_common, volume_base, price_buy, 'buy',
+                                    profit)
+        sell_transact = transact_job(exchange_sell.name, exchange_sell.trade_pair_common, volume_base, price_sell,
+                                     'sell',
+                                     profit)
+        viable_arbitrages.append(buy_transact)
+        viable_arbitrages.append(sell_transact)
+
+    return viable_arbitrages
 
 
 def check_trade_pair(trade_pair):
@@ -209,37 +197,23 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate):
     if exchange_x.lowest_ask and exchange_y.highest_bid:
         if exchange_x.lowest_ask['price'] < exchange_y.highest_bid['price']:
 
-            profit = calculate_profit(exchange_x, exchange_y, fiat_rate)
-            result = {'buy': exchange_x, 'sell': exchange_y, 'profit': profit}
-            if profit > 0:
+            exchange_x, exchange_y, profit = calculate_profit_and_volume(exchange_x, exchange_y, fiat_rate)
+
+            if profit > FIAT_ARBITRAGE_MINIMUM:
+                result = {'buy': exchange_x, 'sell': exchange_y, 'profit': profit}
                 logging.info(
                     msg='You can buy for {} on {} and sell for {} on {} for profit {} {}'.format(
-                        exchange_x.lowest_ask,
+                        exchange_x.lowest_ask['price'],
                         exchange_x.name,
-                        exchange_y.highest_bid,
+                        exchange_y.highest_bid['price'],
                         exchange_y.name,
-                        profit,
-                        FIAT_DEFAULT_SYMBOL))
-
-    if exchange_y.lowest_ask and exchange_x.highest_bid:
-        if exchange_y.lowest_ask['price'] < exchange_x.highest_bid['price']:
-
-            profit = calculate_profit(exchange_y, exchange_x, fiat_rate)
-            result = {'buy': exchange_y, 'sell': exchange_x, 'profit': profit}
-            if profit > 0:
-                logging.info(
-                    msg='You can buy for {} on {} and sell for {} on {} for profit {} {}'.format(
-                        exchange_y.lowest_ask,
-                        exchange_y.name,
-                        exchange_x.highest_bid,
-                        exchange_x.name,
                         profit,
                         FIAT_DEFAULT_SYMBOL))
 
     return result
 
 
-def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
+def calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate):
     try:
         volume = exchange_buy.lowest_ask['volume']
         price_sell = exchange_sell.highest_bid['price']
@@ -252,17 +226,9 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
     trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(currency=exchange_buy.base_currency,
                                                                          price=price_buy, volume=volume)
     if not trade_valid_buy or not trade_valid_sell:
-        return Decimal('0')
+        raise ValueError('Invalid Trade!')
 
-    # Example
-    # lowest ask: we can get 4 BTC (volume) at 99 ETH (price) per BTC
-    # highest bid: but we can only sell 3 BTC (volume) at 100 ETH (price) per BTC
-    if exchange_sell.highest_bid['volume'] < exchange_buy.lowest_ask['volume']:
-        volume = exchange_sell.highest_bid['volume']
-
-    # 3 ETH at 0.1 BTC * 8000 GBP = 2400 GBP > 100 GBP => 3 * (100 / 2400) is the volume
-    if volume * price_buy * fiat_rate > FIAT_REPLENISH_AMOUNT:
-        volume = FIAT_REPLENISH_AMOUNT / fiat_rate * volume
+    volume = set_maximum_trade_volume(volume, price_buy, fiat_rate)
 
     try:
 
@@ -272,10 +238,11 @@ def calculate_profit(exchange_buy, exchange_sell, fiat_rate):
                         type(exchange_sell.fee))
 
     profit = ((price_sell - price_buy) * volume - fee) * fiat_rate
-    # except Exception as e:
-    #     raise Exception(e)
 
-    return profit
+    exchange_buy.lowest_ask['volume'] = volume
+    exchange_sell.highest_bid['volume'] = volume
+
+    return exchange_buy, exchange_sell, profit
 
 
 # randomly select the names of two exchanges and then check if the trade pair exists in both exchanges
@@ -320,6 +287,40 @@ def exchange_selection(cur_x, cur_y, markets, exchanges, jobqueue_id, directory=
         apis_trade_pair_valid.append(exchange)
 
     return apis_trade_pair_valid
+
+
+def replenish_job(exchange, currency):
+    return {
+        'job_type': 'REPLENISH',
+        'job_args': {
+            'exchange': exchange.name,
+            'currency': currency,
+        }
+    }
+
+
+def profit_audit(profit, exchange_names, trade_pair):
+    return {
+        'profit': float(round(profit, 2)),
+        'currency': FIAT_DEFAULT_SYMBOL,
+        'exchange_names': list(exchange_names),
+        'trade_pair': trade_pair
+    }
+
+
+def transact_job(exchange_name, trade_pair, volume, price, buy_type, profit):
+    job = {
+        'job_type': 'TRANSACT',
+        'job_args': {
+            'exchange': exchange_name,
+            'trade_pair_common': trade_pair,
+            'volume': decimal_as_string(volume),
+            'price': decimal_as_string(price),
+            'type': buy_type,
+
+        },
+        'job_info': {'profit': float(round(profit, 2)), 'currency': FIAT_DEFAULT_SYMBOL}}
+    return job
 
 
 def setup():

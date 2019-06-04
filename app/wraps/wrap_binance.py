@@ -1,4 +1,4 @@
-from binance.client import Client
+from binance.client import Client, BinanceWithdrawException
 from app.settings import BINANCE_SECRET_KEY, BINANCE_PUBLIC_KEY
 from app.lib.errors import ErrorTradePairDoesNotExist
 import time
@@ -71,7 +71,11 @@ class binance(exchange):
         return currency_pairs_list
 
     def get_currency_fees(self):
-        fees_response = self.api.get_trade_fee()
+        try:
+            fees_response = self.api.get_trade_fee()
+        except BinanceWithdrawException as e:
+            raise WrapBinanceError('Error getting currency fees: {}'.format(e))
+
         return {x.get('symbol'):
                     {'maker_fee': x.get('maker'), 'taker_fee': x.get('taker')}
                 for x in fees_response.get('tradeFee')}

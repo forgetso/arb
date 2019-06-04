@@ -137,7 +137,11 @@ class poloniex(exchange):
 
     def get_balances(self):
         try:
-            balances = {x.get('asset'): Decimal(x.get('free')) for x in self.api.get_account().get('balances')}
+            response = self.api.returnAvailableAccountBalances()
+            if not response:
+                balances = {}
+            else:
+                balances = {symbol: balance for symbol, balance in response.get('exchange')}
         except Exception as e:
             raise Exception('Error getting trading balances {}'.format(e))
         self.balances = balances

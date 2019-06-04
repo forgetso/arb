@@ -36,7 +36,6 @@ class JobQueueExecutor:
         remove_api_method_locks()
 
         # we are going to constantly check apis for arbitrage opportunities
-
         for trade_pair in settings.TRADE_PAIRS:
             logging.debug(trade_pair)
             self.compare_trade_pairs_intervals[trade_pair] = call_repeatedly(settings.INTERVAL_COMPARE,
@@ -44,7 +43,6 @@ class JobQueueExecutor:
                                                                              trade_pair)
 
         # we periodically update the fiat rate of BTC to identify potential profit
-
         self.fiat_rate_interval = call_repeatedly(settings.INTERVAL_FIAT_RATE, update_fiat_rates)
 
         # when opportunities are identified they are added as jobs to the db. this next function will find these jobs
@@ -110,6 +108,8 @@ class JobQueueExecutor:
                     # just print it out normally, cron will nab and email it!
                     print(jobthread.err)
                     print(jobthread.job)
+                    logging.debug(jobthread.err)
+
                     ok = False
 
         for jobthread in self.finishedjobs:
@@ -229,4 +229,3 @@ def call_repeatedly(interval, func, *args):
 
     threading.Thread(target=loop).start()
     return stopped.set
-
