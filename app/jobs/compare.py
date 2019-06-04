@@ -101,13 +101,12 @@ def equalise_buy_and_sell_volumes(exchange_permutation):
     # Example
     # lowest ask: we can buy 4 BTC (volume) at 99 ETH (price) per BTC
     # highest bid: but we can only sell 3 BTC (volume) at 100 ETH (price) per BTC
-    volume_equal = None
-    for exchange_buy, exchange_sell in exchange_permutation:
-        volume_equal = exchange_buy.lowest_ask['volume']
-        volume_sell = exchange_buy.lowest_ask['volume']
-        volume_buy = exchange_buy.lowest_ask['volume']
-        if volume_sell < volume_buy:
-            volume_equal = volume_sell
+    exchange_buy, exchange_sell = exchange_permutation
+    volume_equal = exchange_buy.lowest_ask['volume']
+    volume_sell = exchange_buy.lowest_ask['volume']
+    volume_buy = exchange_buy.lowest_ask['volume']
+    if volume_sell < volume_buy:
+        volume_equal = volume_sell
     return volume_equal
 
 
