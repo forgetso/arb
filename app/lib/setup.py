@@ -1,10 +1,11 @@
 import json
 import os
-from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES, TRADE_PAIRS
+from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES, TRADE_PAIRS, MASTER_EXCHANGE
 from pymongo import MongoClient, version_tuple as pymongo_version_tuple
 from pymongo.errors import CollectionInvalid
 from app.lib.jobqueue import JOB_COLLECTION
-from app.lib.common import get_coingecko_meta, get_current_fiat_rates, dynamically_import_exchange
+from app.lib.common import dynamically_import_exchange
+from app.lib.coingecko import get_coingecko_meta, get_current_fiat_rates
 from app.lib.db import store_fiat_rates
 import random
 from pathlib import Path
@@ -78,6 +79,17 @@ def get_exchanges(jobqueue_id):
         exchanges.append(dynamically_import_exchange(exchange)(jobqueue_id))
 
     return exchanges
+
+
+def get_master_exchange(jobqueue_id):
+    return get_exchange(MASTER_EXCHANGE, jobqueue_id)
+
+
+def get_exchange(exchange, jobqueue_id):
+    if exchange in EXCHANGES or exchange != MASTER_EXCHANGE:
+        return dynamically_import_exchange(MASTER_EXCHANGE)(jobqueue_id)
+    else:
+        raise ValueError('Exchange {} is not currently being used'.format(exchange))
 
 
 # take all of the exchanges and choose two of them

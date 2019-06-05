@@ -117,7 +117,6 @@ def set_maximum_trade_volume(volume, price, fiat_rate):
     # We don't want to make trades more than 100 GBP at a time
     # 3 ETH at 0.1 BTC * 8000 GBP = 2400 GBP > 100 GBP => 3 * (100 / 2400) is the volume
     total_cost_fiat = volume * price * fiat_rate
-    print(volume, price, fiat_rate, total_cost_fiat)
     if total_cost_fiat > FIAT_REPLENISH_AMOUNT:
         volume = FIAT_REPLENISH_AMOUNT / total_cost_fiat * volume
         logging.debug('Changing volume to {} '.format(volume))
@@ -304,6 +303,7 @@ def replenish_job(exchange_name, currency):
 
 def profit_audit(profit, exchange_names, trade_pair):
     return {
+        'type': 'profit',
         'profit': float(round(profit, 2)),
         'currency': FIAT_DEFAULT_SYMBOL,
         'exchange_names': list(exchange_names),

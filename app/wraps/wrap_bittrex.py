@@ -168,24 +168,44 @@ class bittrex(exchange):
 
     # currently withdraw is only implemented for bittrex
     def withdraw(self, currency, to_address, quantity):
+        # {
+        #     "success": true,
+        #     "message": "''",
+        #     "result": {
+        #         "uuid": "614c34e4-8d71-11e3-94b5-425861b86ab6"
+        #     }
+        # }
         withdrawn = False
+        id = None
         withdraw_response = self.api.withdraw(currency, quantity, to_address)
         if not withdraw_response.get('success'):
-            if withdraw_response.get('message') != 'INSUFFICIENT_FUNDS':
+            if withdraw_response.get('message') == 'INSUFFICIENT_FUNDS':
+                # TODO get more default currency
+                raise Exception('Write this code!')
+            else:
                 raise WrapBittrexError('Error withdrawing {}'.format(withdraw_response.get('message')))
         else:
             withdrawn = True
-        return withdrawn
-
-    def get_minimum_deposit_volume(self, currency):
-        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
-        return minimum_deposit_volume
+            id = withdraw_response.get('result').get('uuid')
+        return withdrawn, id
 
     def calculate_fees(self, trades_itemised, price):
         raise (NotImplementedError('Calculate Fees not implemented in Bittrex wrapper'))
 
     def get_orders(self, order_id):
         raise (NotImplementedError('Get Orders not implemented in Bittrex wrapper'))
+
+    def get_withdrawal(self, currency, id):
+        withdrawal_history_response = self.api.get_withdrawal_history(currency)
+        if not withdrawal_history_response.get('success'):
+            raise WrapBittrexError('Error getting withdrawal history {}'.format(withdrawal_history_response.get('message')))
+        else:
+            withdrawal = next(x for x in withdrawal_history_response.get('result') if x['PaymentUuid'] == id)
+        return withdrawal
+
+    def get_withdrawal_tx_fee(self, currency, id):
+        withdrawal = self.get_withdrawal(currency, id)
+        return withdrawal['TxCost']
 
 
 class WrapBittrexError(Exception):

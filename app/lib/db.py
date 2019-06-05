@@ -61,6 +61,8 @@ def store_trade(trade):
 def store_audit(audit):
     db = audit_db()
     audit['datetime'] = datetime.datetime.utcnow()
+    if 'type' not in audit:
+        raise ValueError('Audit type must be specified')
     db.audit.insert_one(audit)
 
 

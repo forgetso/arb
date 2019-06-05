@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from app.lib.errors import ErrorTradePairDoesNotExist
 from decimal import Decimal, setcontext, Context
-from app.lib.common import get_number_of_decimal_places, round_decimal_number
+from app.lib.common import round_decimal_number
 import logging
-from app.settings import DEFAULT_CURRENCY
-
 
 # this abstract class contains all of the methods that an exchange wrap must implement
 
@@ -25,6 +23,7 @@ class exchange(ABC):
         self.quote_currency = None
         self.decimal_places = None
         self.balances = None
+        self.minimum_deposit = {}
 
         super().__init__()
 
@@ -125,9 +124,9 @@ class exchange(ABC):
 
         return result, price, volume_corrected
 
-    @abstractmethod
     def get_minimum_deposit_volume(self, currency):
-        pass
+        minimum_deposit_volume = self.minimum_deposit.get(currency, 0)
+        return minimum_deposit_volume
 
     # Round the volume to the allowed number of decimal places
     def round_volume(self, currency, volume):

@@ -35,6 +35,7 @@ class p2pb2b(exchange):
         self.balances = None
         self.balances_time = None
         self.jobqueue_id = jobqueue_id
+        self.minimum_deposit = MINIMUM_DEPOSIT
         exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
 
     def order_book(self):
@@ -260,10 +261,6 @@ class p2pb2b(exchange):
             raise NotImplementedError('')
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
-
-    def get_minimum_deposit_volume(self, currency):
-        minimum_deposit_volume = MINIMUM_DEPOSIT.get(currency, 0)
-        return minimum_deposit_volume
 
 
 class WrapP2PB2BError(Exception):
