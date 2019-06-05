@@ -1,8 +1,10 @@
 from app.lib.common import get_number_of_decimal_places, get_replenish_quantity, CommonError, \
-    get_number_of_places_before_point, round_decimal_number, decimal_as_string
+    get_number_of_places_before_point, round_decimal_number, decimal_as_string, dynamically_import_exchange
 from app.settings import FIAT_REPLENISH_AMOUNT
 from decimal import Decimal
 from pytest import raises
+from abc import ABCMeta
+from app.wraps.wrap_poloniex import poloniex
 
 
 def test_get_number_of_decimal_places():
@@ -48,5 +50,12 @@ def test_decimal_as_string():
         decimal_as_string('a')
     with raises(CommonError):
         decimal_as_string(float)
+
+
+def test_dynamically_import_exchange():
+    exchange = dynamically_import_exchange('poloniex')
+    assert isinstance(exchange, ABCMeta)
+    exchange_init = exchange(jobqueue_id='blah')
+    assert isinstance(exchange_init, poloniex)
 
 # TODO coingecko API tests

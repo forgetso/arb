@@ -1,7 +1,7 @@
 import argparse
 import logging
 from app.settings import LOGLEVEL, DEFAULT_CURRENCY, FIAT_DEFAULT_SYMBOL
-from app.lib.setup import get_exchanges, get_master_exchange, get_exchange
+from app.lib.setup import get_master_exchange, get_exchange
 from app.lib.jobqueue import return_value_to_stdout
 from app.lib.common import get_replenish_quantity
 from app.lib.coingecko import get_current_fiat_rate
