@@ -82,7 +82,9 @@ def get_exchanges(jobqueue_id):
 
 
 def get_master_exchange(jobqueue_id):
-    return get_exchange(MASTER_EXCHANGE, jobqueue_id)
+    # there is no restriction on importing the master exchange as it is always required to fund exchanges
+    # even if it is not being used to trade
+    return dynamically_import_exchange(MASTER_EXCHANGE)(jobqueue_id)
 
 
 def get_exchange(exchange, jobqueue_id):
