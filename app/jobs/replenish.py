@@ -17,7 +17,7 @@ def replenish(exchange, currency, jobqueue_id):
     if not recent_jobs:
         downstream_jobs = []
         master_exchange = get_master_exchange(jobqueue_id)
-        child_exchange = get_exchange(exchange)
+        child_exchange = get_exchange(exchange, jobqueue_id)
         fiat_rate = get_current_fiat_rate(crypto_symbol=currency, fiat_symbol=FIAT_DEFAULT_SYMBOL)
         quantity = get_replenish_quantity(fiat_rate)
         minimum_deposit = child_exchange.get_minimum_deposit_volume(currency)

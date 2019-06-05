@@ -13,7 +13,8 @@ def get_current_fiat_rates(crypto_symbols, fiat_symbol=None):
     if not isinstance(crypto_symbols_set, set):
         raise TypeError(
             'Pass a set of crypto symbols for which to find fiat rates. You passed {}'.format(type(crypto_symbols_set)))
-    uri = build_fiat_rates_uri(crypto_symbols, fiat_symbol)
+    meta_data = get_coingecko_meta()
+    uri = build_fiat_rates_uri(crypto_symbols, fiat_symbol, meta_data)
     req = requests.get(uri)
     coingecko_rates_data = req.json()
     rates_data = {}
@@ -55,9 +56,9 @@ def write_coingecko_meta(data):
         json.dump(data, outfile, indent=2)
 
 
-def build_fiat_rates_uri(crypto_symbols, fiat_symbol):
+def build_fiat_rates_uri(crypto_symbols, fiat_symbol, meta_data):
     ids = []
-    meta_data = get_coingecko_meta()
+
     for crypto_symbol in crypto_symbols:
         idsx = get_coingecko_id(crypto_symbol.lower(), meta_data)
         ids.append(idsx.lower())
