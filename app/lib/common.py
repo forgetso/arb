@@ -9,12 +9,11 @@ import importlib
 logging.basicConfig(format='%(levelname)s:%(message)s', level=LOGLEVEL)
 
 
-
 def get_replenish_quantity(fiat_rate):
     try:
         quantity = FIAT_REPLENISH_AMOUNT / fiat_rate
     except Exception as e:
-        raise CommonError('Error getting replenish quantity {}'.format(e))
+        raise CommonError('Error getting replenish quantity {} for fiat rate {}'.format(e, fiat_rate))
 
     return quantity
 
@@ -78,8 +77,6 @@ def round_decimal_number(number, decimal_places):
         raise CommonError('Error rounding decimal number: {}'.format(e))
 
     return number_corrected
-
-
 
 
 def dynamically_import_exchange(exchange, directory=None):

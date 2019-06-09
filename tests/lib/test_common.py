@@ -57,5 +57,3 @@ def test_dynamically_import_exchange():
     assert isinstance(exchange, ABCMeta)
     exchange_init = exchange(jobqueue_id='blah')
     assert isinstance(exchange_init, poloniex)
-
-# TODO coingecko API tests
