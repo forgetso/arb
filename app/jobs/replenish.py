@@ -38,28 +38,27 @@ def replenish(exchange, currency, jobqueue_id):
         # we may already be waiting for a deposit to complete with pending confirmations
         # if so, we will not try to replenish again
         if currency not in child_exchange.pending_balances:
-            # withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
-            #
-            # if not withdrawal_success:
-            #     # this means we did not have enough of the currency to withdraw and will need to convert some DEFAULT_CURRENCY (ETH) to this currency
-            #     downstream_jobs.append({
-            #         'job_type': 'CONVERT',
-            #         'job_args': {
-            #             'exchange': exchange.name,
-            #             'currency_from': DEFAULT_CURRENCY,
-            #             'currency_to': currency,
-            #             'jobqueue_id': jobqueue_id
-            #         }
-            #     })
-            #     # we will retry this job in 20 seconds time
-            #     # TODO make job queue executor retry jobss
-            #     result['retry'] = int(20)
-            # else:
-            #     fee = master_exchange.get_withdrawal_tx_fee(currency, uuid)
-            #     fee_fiat = fiat_rate * fee
-            #     store_audit(withdrawal_tx_fee_audit(fee_fiat, fiat_rate, exchange, currency, uuid))
-            #     result['success'] = True
-            result['success'] = True
+            withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
+
+            if not withdrawal_success:
+                # this means we did not have enough of the currency to withdraw and will need to convert some DEFAULT_CURRENCY (ETH) to this currency
+                downstream_jobs.append({
+                    'job_type': 'CONVERT',
+                    'job_args': {
+                        'exchange': exchange.name,
+                        'currency_from': DEFAULT_CURRENCY,
+                        'currency_to': currency,
+                        'jobqueue_id': jobqueue_id
+                    }
+                })
+                # we will retry this job in 20 seconds time
+                # TODO make job queue executor retry jobss
+                result['retry'] = int(20)
+            else:
+                fee = master_exchange.get_withdrawal_tx_fee(currency, uuid)
+                fee_fiat = fiat_rate * fee
+                store_audit(withdrawal_tx_fee_audit(fee_fiat, fiat_rate, exchange, currency, uuid))
+                result['success'] = True
 
     else:
         result['success'] = True
