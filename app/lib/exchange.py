@@ -4,6 +4,7 @@ from decimal import Decimal, setcontext, Context
 from app.lib.common import round_decimal_number
 import logging
 
+
 # this abstract class contains all of the methods that an exchange wrap must implement
 
 class exchange(ABC):
@@ -24,6 +25,7 @@ class exchange(ABC):
         self.decimal_places = None
         self.balances = None
         self.minimum_deposit = {}
+        self.pending_balances = {}
 
         super().__init__()
 

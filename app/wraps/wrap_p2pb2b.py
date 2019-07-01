@@ -257,10 +257,9 @@ class p2pb2b(exchange):
         return result
 
     def get_pending_balances(self):
-        try:
-            raise NotImplementedError('')
-        except Exception as e:
-            raise Exception('Error getting pending balances {}'.format(e))
+        # TODO check with P2PB2B to see if this is definitely the case
+        raise NotImplementedError('P2PB2B does not provide a pending balances API call')
+
 
 
 class WrapP2PB2BError(Exception):

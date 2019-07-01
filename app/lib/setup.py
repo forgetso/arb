@@ -89,7 +89,7 @@ def get_master_exchange(jobqueue_id):
 
 def get_exchange(exchange, jobqueue_id):
     if exchange in EXCHANGES or exchange != MASTER_EXCHANGE:
-        return dynamically_import_exchange(MASTER_EXCHANGE)(jobqueue_id)
+        return dynamically_import_exchange(exchange)(jobqueue_id)
     else:
         raise ValueError('Exchange {} is not currently being used'.format(exchange))
 

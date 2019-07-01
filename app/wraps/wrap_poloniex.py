@@ -1,11 +1,10 @@
 from poloniex import Poloniex
 from app.settings import POLONIEX_SECRET_KEY, POLONIEX_PUBLIC_KEY
-from app.lib.errors import ErrorTradePairDoesNotExist
 import time
-from decimal import Decimal, Context, setcontext
-import math
-from app.lib.common import round_decimal_number, get_number_of_decimal_places
+from decimal import Decimal
+from app.lib.common import get_number_of_decimal_places
 from app.lib.exchange import exchange
+from datetime import datetime, timedelta
 
 POLONIEX_TAKER_FEE = 0.002
 POLONIEX_MAKER_FEE = 0.0008
@@ -148,10 +147,11 @@ class poloniex(exchange):
 
     def get_address(self, symbol):
         try:
-            address_json = self.api.get_deposit_address(asset=symbol)
+            addresses_json = self.api.returnDepositAddresses()
         except Exception as e:
-            raise Exception('Error getting currency address in Binance {}'.format(e))
-        return address_json.get('address')
+            raise Exception('Error getting currency address in Poloniex {}'.format(e))
+        print(addresses_json)
+        return addresses_json.get(symbol)
 
     def calculate_fees(self, trades_itemised, price):
         total_commission = 0
@@ -163,9 +163,11 @@ class poloniex(exchange):
 
     def get_pending_balances(self):
         try:
-            deposit_history = self.api.get_deposit_history()
-            pending_balances = {x.get('asset'): Decimal(x.get('amount')) for x in deposit_history['depositList'] if
-                                x.get('status') == 0}
+            end = datetime.utcnow()
+            start = end - timedelta(minutes=5)
+            deposit_history = self.api.returnDeposits(start.timestamp(), end.timestamp())
+            pending_balances = {x.get('currency'): Decimal(x.get('amount')) for x in deposit_history if
+                                x.get('status') == 'PENDING'}
         except Exception as e:
             raise Exception('Error getting pending balances {}'.format(e))
         self.pending_balances = pending_balances

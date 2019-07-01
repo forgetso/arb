@@ -100,7 +100,10 @@ def get_replenish_jobs(exchange, currency):
     db = jobqueue_db()
     recent_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
     replenish_jobs = [x for x in db.jobs.find(
-        {'job_args.exchange': exchange, 'job_args.currency': currency, 'datetime': {'$gt': recent_time}})]
+        {'job_args.exchange': exchange,
+         'job_args.currency': currency,
+         'datetime': {'$gt': recent_time},
+         'job_result.success': True})]
     return replenish_jobs
 
 

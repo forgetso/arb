@@ -14,6 +14,7 @@ def replenish(exchange, currency, jobqueue_id):
     # First, check that there was not a replenish job in the last 5 minutes
     recent_jobs = get_replenish_jobs(exchange, currency)
     result = {'success': False}
+    pending_balances_not_implemented = True
     if not recent_jobs:
         downstream_jobs = []
         master_exchange = get_master_exchange(jobqueue_id)
@@ -33,11 +34,18 @@ def replenish(exchange, currency, jobqueue_id):
         if not to_address:
             raise ReplenishError('No address to send {} for exchange {}'.format(currency, exchange))
 
-        child_exchange.get_pending_balances()
+        try:
+            # some exchanges do not provide the functionality to check for pending balances so we have to assume the crypto is sent
+            child_exchange.get_pending_balances()
+        except NotImplementedError:
+            pending_balances_not_implemented = True
+            pass
 
         # we may already be waiting for a deposit to complete with pending confirmations
         # if so, we will not try to replenish again
-        if currency not in child_exchange.pending_balances:
+        if currency in child_exchange.pending_balances:
+            pass
+        elif currency not in child_exchange.pending_balances or pending_balances_not_implemented:
             withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
 
             if not withdrawal_success:
@@ -52,7 +60,7 @@ def replenish(exchange, currency, jobqueue_id):
                     }
                 })
                 # we will retry this job in 20 seconds time
-                # TODO make job queue executor retry jobss
+                # TODO make job queue executor retry jobs
                 result['retry'] = int(20)
             else:
                 fee = master_exchange.get_withdrawal_tx_fee(currency, uuid)

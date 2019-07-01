@@ -1,11 +1,8 @@
-from bittrex.bittrex import Bittrex as BittrexAPI, API_V1_1, API_V2_0, ORDERTYPE_LIMIT, TIMEINEFFECT_GOOD_TIL_CANCELLED
+from bittrex.bittrex import Bittrex as BittrexAPI, API_V1_1, API_V2_0
 from app.settings import BITTREX_PRIVATE_KEY, BITTREX_PUBLIC_KEY
-from app.lib.errors import ErrorTradePairDoesNotExist
 import time
-from decimal import Decimal, Context, setcontext
-from app.lib.common import get_number_of_decimal_places, round_decimal_number
-from app.settings import DEFAULT_CURRENCY
-import logging
+from decimal import Decimal
+from app.lib.common import get_number_of_decimal_places
 from app.lib.exchange import exchange
 
 BITTREX_TAKER_FEE = 0.0025
@@ -148,7 +145,7 @@ class bittrex(exchange):
         try:
             balances = {x.get('Currency'): x.get('Available') for x in self.api.get_balances().get('result', {})}
         except Exception as e:
-            raise Exception('Error getting trading balances {}'.format(e))
+            raise WrapBittrexError('Error getting trading balances {}'.format(e))
         self.balances = balances
 
     def get_address(self, symbol):
@@ -156,14 +153,15 @@ class bittrex(exchange):
             address_json = self.api.get_deposit_address(currency=symbol)
             address = address_json.get('result').get('Address')
         except Exception as e:
-            raise Exception('Error getting currency address {}'.format(e))
+            raise WrapBittrexError('Error getting currency address {}'.format(e))
         return address
 
     def get_pending_balances(self):
         try:
-            balances = {x.get('Currency'): x.get('Pending') for x in self.api.get_balances().get('result', {})}
+            balances = {x.get('Currency'): Decimal(x.get('Pending')) for x in self.api.get_balances().get('result', {})
+                        if x.get('Pending') > 0}
         except Exception as e:
-            raise Exception('Error getting trading balances {}'.format(e))
+            raise WrapBittrexError('Error getting trading balances {}'.format(e))
         self.pending_balances = balances
 
     # currently withdraw is only implemented for bittrex
@@ -190,15 +188,16 @@ class bittrex(exchange):
         return withdrawn, id
 
     def calculate_fees(self, trades_itemised, price):
-        raise (NotImplementedError('Calculate Fees not implemented in Bittrex wrapper'))
+        raise NotImplementedError('Calculate Fees not implemented in Bittrex wrapper')
 
     def get_orders(self, order_id):
-        raise (NotImplementedError('Get Orders not implemented in Bittrex wrapper'))
+        raise NotImplementedError('Get Orders not implemented in Bittrex wrapper')
 
     def get_withdrawal(self, currency, id):
         withdrawal_history_response = self.api.get_withdrawal_history(currency)
         if not withdrawal_history_response.get('success'):
-            raise WrapBittrexError('Error getting withdrawal history {}'.format(withdrawal_history_response.get('message')))
+            raise WrapBittrexError(
+                'Error getting withdrawal history {}'.format(withdrawal_history_response.get('message')))
         else:
             withdrawal = next(x for x in withdrawal_history_response.get('result') if x['PaymentUuid'] == id)
         return withdrawal
