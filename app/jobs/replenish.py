@@ -15,8 +15,9 @@ def replenish(exchange, currency, jobqueue_id):
     recent_jobs = get_replenish_jobs(exchange, currency)
     result = {'success': False}
     pending_balances_not_implemented = True
+    downstream_jobs = []
     if not recent_jobs:
-        downstream_jobs = []
+
         master_exchange = get_master_exchange(jobqueue_id)
         child_exchange = get_exchange(exchange, jobqueue_id)
         fiat_rate = get_current_fiat_rate(crypto_symbol=currency, fiat_symbol=FIAT_DEFAULT_SYMBOL)
@@ -41,6 +42,8 @@ def replenish(exchange, currency, jobqueue_id):
             pending_balances_not_implemented = True
             pass
 
+        child_exchange.get_balances()
+
         # we may already be waiting for a deposit to complete with pending confirmations
         # if so, we will not try to replenish again
         if currency in child_exchange.pending_balances:
@@ -63,20 +66,33 @@ def replenish(exchange, currency, jobqueue_id):
                 # TODO make job queue executor retry jobs
                 result['retry'] = int(20)
             else:
-                fee = master_exchange.get_withdrawal_tx_fee(currency, uuid)
-                fee_fiat = fiat_rate * fee
-                store_audit(withdrawal_tx_fee_audit(fee_fiat, fiat_rate, exchange, currency, uuid))
                 result['success'] = True
-
+                audit_id = store_audit(withdrawal_tx_fee_audit(0, fiat_rate, 0, exchange, currency, uuid))
+                downstream_jobs.append(withdrawal_fee_job(master_exchange.name, currency, uuid, audit_id))
     else:
         result['success'] = True
+    if downstream_jobs:
+        result['downstream_jobs'] = downstream_jobs
     return_value_to_stdout(result)
 
 
-def withdrawal_tx_fee_audit(fee, fee_fiat, exchange, currency, id):
+def withdrawal_fee_job(exchange_name, currency, id, audit_id):
+    return {
+        'job_type': 'WITHDRAWAL_FEE',
+        'job_args': {
+            'exchange': exchange_name,
+            'currency': currency,
+            'withdrawal_id': id,
+            'audit_id': str(audit_id)
+        }
+    }
+
+
+def withdrawal_tx_fee_audit(fee, fiat_rate, fee_fiat, exchange, currency, id):
     return {
         'type': 'txfee',
         'fee': fee,
+        'fiat_rate': fiat_rate,
         'fee_fiat': fee_fiat,
         'exchange': exchange,
         'currency': currency,

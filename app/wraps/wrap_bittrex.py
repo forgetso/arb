@@ -195,15 +195,29 @@ class bittrex(exchange):
 
     def get_withdrawal(self, currency, id):
         withdrawal_history_response = self.api.get_withdrawal_history(currency)
+        withdrawal = None
         if not withdrawal_history_response.get('success'):
             raise WrapBittrexError(
                 'Error getting withdrawal history {}'.format(withdrawal_history_response.get('message')))
         else:
-            withdrawal = next(x for x in withdrawal_history_response.get('result') if x['PaymentUuid'] == id)
+            try:
+                withdrawal = next(x for x in withdrawal_history_response.get('result') if x['PaymentUuid'] == id)
+            except StopIteration:
+                pass
         return withdrawal
 
     def get_withdrawal_tx_fee(self, currency, id):
-        withdrawal = self.get_withdrawal(currency, id)
+        withdrawal = None
+        count = 0
+        while withdrawal is None:
+            withdrawal = self.get_withdrawal(currency, id)
+            if withdrawal:
+                break
+            else:
+                count += 1
+                if count > 5:
+                    raise WrapBittrexError('Error retrieving withdrawal fee for {} ID {}'.format(currency, id))
+                time.sleep(10)
         return withdrawal['TxCost']
 
 

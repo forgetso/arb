@@ -90,7 +90,7 @@ def check_zero_balances(arbitrage):
     exchange_balance = exchange_sell.balances.get(exchange_buy.quote_currency, 0)
     # if we dont have any ETH then we cannot buy any BTC, replenish ETH
     if exchange_balance == 0:
-        replenish_jobs.append(replenish_job(exchange_buy.name, exchange_buy.base_currency))
+        replenish_jobs.append(replenish_job(exchange_sell.name, exchange_buy.base_currency))
 
     return replenish_jobs
 

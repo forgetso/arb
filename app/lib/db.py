@@ -63,7 +63,28 @@ def store_audit(audit):
     audit['datetime'] = datetime.datetime.utcnow()
     if 'type' not in audit:
         raise ValueError('Audit type must be specified')
-    db.audit.insert_one(audit)
+    _id = db.audit.insert_one(audit)
+    return _id
+
+
+def update_audit(_id, update_dict):
+    db = audit_db()
+    audit = db.audit.find_one({'_id': _id})
+    for key, val in update_dict.items():
+        if key in audit:
+            audit[key] = val
+    audit['updatedatetime'] = datetime.datetime.utcnow()
+    db.audit.update({'_id': _id}, {'$set': audit})
+
+
+def update_withdrawal_fee(_id, fee):
+    db = audit_db()
+    audit = db.audit.find_one({'_id': _id})
+    try:
+        fee_fiat = audit['fiat_rate'] * fee
+        update_audit(_id, {'fee': fee, 'fee_fiat': fee_fiat})
+    except Exception as e:
+        raise DatabaseError('Error updating withdrawal fee: {}'.format(e))
 
 
 def store_fiat_rates(fiat_rates):
@@ -98,7 +119,7 @@ def get_balances(exchange):
 
 def get_replenish_jobs(exchange, currency):
     db = jobqueue_db()
-    recent_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
+    recent_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
     replenish_jobs = [x for x in db.jobs.find(
         {'job_args.exchange': exchange,
          'job_args.currency': currency,
@@ -219,3 +240,7 @@ def get_trade_id():
         # we may be running the job outside of the job queue
         trade_id = uuid.uuid4().hex.replace('-', '')[0:23]
     return str(trade_id)
+
+
+class DatabaseError(Exception):
+    pass

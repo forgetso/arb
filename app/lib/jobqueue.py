@@ -35,6 +35,13 @@ JOB_DEFINITIONS = {'TRANSACT':
                        {'exchange': {'type': str},
                         'currency': {'type': str},
                         'jobqueue_id': {'type': str},
+                        },
+                   'WITHDRAWAL_FEE':
+                       {'exchange': {'type': str},
+                        'currency': {'type': str},
+                        'withdrawal_id': {'type': str},
+                        'audit_id': {'type': str},
+                        'jobqueue_id': {'type': str},
                         }
                    }
 

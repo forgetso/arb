@@ -150,8 +150,11 @@ class poloniex(exchange):
             addresses_json = self.api.returnDepositAddresses()
         except Exception as e:
             raise Exception('Error getting currency address in Poloniex {}'.format(e))
-        print(addresses_json)
-        return addresses_json.get(symbol)
+        address = addresses_json.get(symbol)
+        if isinstance(address, int):
+            # poloniex gives deposit address as int
+            address = hex(address)
+        return address
 
     def calculate_fees(self, trades_itemised, price):
         total_commission = 0
