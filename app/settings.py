@@ -3,7 +3,7 @@ from app.apikeys import *
 
 FIAT_DEFAULT_SYMBOL = 'GBP'
 # This should be set to a value based in the fiat default symol above. e.g. 1 = 1 GBP
-FIAT_ARBITRAGE_MINIMUM = 0.0
+FIAT_ARBITRAGE_MINIMUM = 2
 
 DEFAULT_CURRENCY = 'ETH'
 DB_HOST_JOBQUEUE = 'localhost'
@@ -61,8 +61,8 @@ TRADE_PAIRS = [
     # 'ZRX-ETH'
 ]
 LOGLEVEL = 'DEBUG'
-# JOBS_NOT_RUNNING = []
-JOBS_NOT_RUNNING = ['TRANSACT', ]
+JOBS_NOT_RUNNING = []
+# JOBS_NOT_RUNNINGG = ['TRANSACT', ]
 
 INTERVAL_COMPARE = int(10)
 INTERVAL_NEWJOBS = int(1)

@@ -1,6 +1,6 @@
 import argparse
 import logging
-from app.settings import LOGLEVEL, DEFAULT_CURRENCY, FIAT_DEFAULT_SYMBOL, MASTER_EXCHANGE
+from app.settings import LOGLEVEL, MASTER_EXCHANGE
 from app.lib.setup import get_exchange, get_master_exchange
 from app.lib.jobqueue import return_value_to_stdout
 from app.lib.db import update_withdrawal_fee

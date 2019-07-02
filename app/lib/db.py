@@ -128,6 +128,24 @@ def get_replenish_jobs(exchange, currency):
     return replenish_jobs
 
 
+##################################### Exchange Locking Functions #######################################################
+
+def exchange_lock(exchange, jobqueue_id, job, lock):
+    db = exchange_db()
+    record = {'exchange': exchange, 'jobqueue_id': jobqueue_id, 'job': job, 'pid': os.getpid()}
+    if lock:
+        db.exchange_lock.insert(record)
+    else:
+        db.exchange_lock.remove(record)
+    return
+
+
+def get_exchange_lock(exchange, jobqueue_id, job):
+    db = exchange_db()
+    lock = db.exchange_lock.find_one({'exchange': exchange, 'jobqueue_id': jobqueue_id, 'job': job})
+    return lock
+
+
 ##################################### API Access Rate Functions ########################################################
 
 # retrieve last accessed time of API method on exchange

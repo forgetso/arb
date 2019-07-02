@@ -5,17 +5,19 @@ from app.lib.setup import get_master_exchange, get_exchange
 from app.lib.jobqueue import return_value_to_stdout
 from app.lib.common import get_replenish_quantity
 from app.lib.coingecko import get_current_fiat_rate
-from app.lib.db import get_replenish_jobs, store_audit
+from app.lib.db import get_replenish_jobs, store_audit, exchange_lock
 
 
 def replenish(exchange, currency, jobqueue_id):
     # *exchange* has zero quanity of *currency*
     # we need to replenish the stocks from MASTER_EXCHANGE
     # First, check that there was not a replenish job in the last 5 minutes
+    exchange_lock(exchange, jobqueue_id, 'REPLENISH', lock=True)
     recent_jobs = get_replenish_jobs(exchange, currency)
     result = {'success': False}
     pending_balances_not_implemented = True
     downstream_jobs = []
+
     if not recent_jobs:
 
         master_exchange = get_master_exchange(jobqueue_id)
@@ -49,7 +51,8 @@ def replenish(exchange, currency, jobqueue_id):
         if currency in child_exchange.pending_balances:
             pass
         elif currency not in child_exchange.pending_balances or pending_balances_not_implemented:
-            withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
+            # withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
+            withdrawal_success, uuid = True, 1
 
             if not withdrawal_success:
                 # this means we did not have enough of the currency to withdraw and will need to convert some DEFAULT_CURRENCY (ETH) to this currency
@@ -73,6 +76,7 @@ def replenish(exchange, currency, jobqueue_id):
         result['success'] = True
     if downstream_jobs:
         result['downstream_jobs'] = downstream_jobs
+    exchange_lock(exchange, jobqueue_id, 'REPLENISH', lock=False)
     return_value_to_stdout(result)
 
 

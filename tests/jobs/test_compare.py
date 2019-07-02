@@ -4,6 +4,7 @@ from decimal import Decimal
 from pytest import raises, fixture
 from app.lib import exchange
 from testdata.wraps import wrap_exchange1, wrap_exchange2
+#TODO globally override the FIAT_ARBITRAGE_MINIMUM as these tests fail when it is set too low
 
 # this would usually be loaded from a json file
 MARKETS = {'exchange1':

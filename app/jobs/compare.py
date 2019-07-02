@@ -7,7 +7,7 @@ from app.lib.errors import ErrorTradePairDoesNotExist
 from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES, FIAT_REPLENISH_AMOUNT
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
-from app.lib.db import store_audit, get_fiat_rates
+from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock
 from app.lib.common import round_decimal_number, decimal_as_string
 
 
@@ -16,8 +16,13 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     viable_arbitrages = []
     replenish_jobs = []
     result = {'downstream_jobs': []}
+    exchange_shortlist = []
 
-    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets, EXCHANGES, jobqueue_id)
+    for exchange in EXCHANGES:
+        if not get_exchange_lock(exchange, jobqueue_id, 'COMPARE'):
+            exchange_shortlist.append(exchange)
+
+    apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets, exchange_shortlist, jobqueue_id)
 
     if len(apis_trade_pair_valid) < 2:
         # return early as there will be no arbitrage possibility with only one or zero exchanges
@@ -64,6 +69,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
         if not replenish_jobs:
             viable_arbitrages = determine_arbitrage_viability(arbitrage, fiat_rate)
 
+
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
     for job in result['downstream_jobs']:
@@ -79,18 +85,19 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
 def check_zero_balances(arbitrage):
     replenish_jobs = []
-    exchange_buy = arbitrage['buy']
-    exchange_sell = arbitrage['sell']
-    exchange_balance = exchange_buy.balances.get(exchange_buy.quote_currency, 0)
+    for buy_type in ['buy', 'sell']:
+        exchange = arbitrage[buy_type]
+        exchange_balance_quote = exchange.balances.get(exchange.quote_currency, 0)
 
-    # if we dont have any BTC then we cannot buy any ETH, replenish BTC
-    if exchange_balance == 0:
-        replenish_jobs.append(replenish_job(exchange_buy.name, exchange_buy.quote_currency))
+        # if we dont have any BTC then we cannot buy any ETH, replenish BTC
+        if exchange_balance_quote == 0:
+            replenish_jobs.append(replenish_job(exchange.name, exchange.quote_currency))
 
-    exchange_balance = exchange_sell.balances.get(exchange_buy.quote_currency, 0)
-    # if we dont have any ETH then we cannot buy any BTC, replenish ETH
-    if exchange_balance == 0:
-        replenish_jobs.append(replenish_job(exchange_sell.name, exchange_buy.base_currency))
+        exchange_balance_base = exchange.balances.get(exchange.base_currency, 0)
+
+        # if we dont have any ETH then we cannot buy any BTC, replenish ETH
+        if exchange_balance_base == 0:
+            replenish_jobs.append(replenish_job(exchange.name, exchange.base_currency))
 
     return replenish_jobs
 

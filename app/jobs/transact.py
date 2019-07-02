@@ -11,10 +11,11 @@ import logging
 from app.lib.setup import load_currency_pairs
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
-from app.lib.db import store_trade, get_trade_id
+from app.lib.db import store_trade, get_trade_id, exchange_lock
 from app.lib.common import dynamically_import_exchange
 import json
 from bson import json_util
+
 
 def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue_id, test_transaction=False):
     logging.info(
@@ -22,6 +23,9 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue
                                                                               exchange))
     logging.info('Trade pair {} has base currency of {}'.format(trade_pair_common,
                                                                 markets[exchange][trade_pair_common]['base_currency']))
+
+    logging.info('Locking exchange {}'.format(exchange))
+    exchange_lock(exchange, jobqueue_id, 'TRANSACT', lock=True)
     trade = {}
     trade_id = get_trade_id()
 
@@ -35,7 +39,8 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue
         exchange_obj.order_book()
         price = exchange_obj.lowest_ask['price']
 
-    trade_valid, price, volume = exchange_obj.trade_validity(currency=exchange_obj.base_currency, price=price, volume=volume)
+    trade_valid, price, volume = exchange_obj.trade_validity(currency=exchange_obj.base_currency, price=price,
+                                                             volume=volume)
 
     if trade_valid:
         # we convert Decimal objects to str for the API requests
@@ -54,7 +59,7 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue
             logging.debug(trade)
             store_trade(trade)
             return_value_to_stdout(json.dumps(trade, default=json_util.default))
-
+    exchange_lock(exchange, jobqueue_id, 'TRANSACT', lock=False)
     return trade
 
 

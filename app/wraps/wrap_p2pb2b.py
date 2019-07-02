@@ -156,11 +156,16 @@ class p2pb2b(exchange):
             if order_response['result']['left'] == 0:
                 order_result = order_response['result']
                 break
-            time.sleep(5)
+            time.sleep(20)
         return order_result
 
     def get_order(self, order_id):
-        return self.api.getOrder(orderId=order_id)
+        try:
+            order = self.api.getOrder(order_id)
+        except Exception as e:
+            raise WrapP2PB2BError('Error retrieving order: {}'.format(e))
+
+        return order
 
     def get_orders(self, order_id):
         raise NotImplementedError('Get Orders not implemented in P2PB2B Wrapper')
@@ -204,6 +209,7 @@ class p2pb2b(exchange):
         # this api has limits so we've stored the balances in the database in case of querying too frequently
         # fingers crossed they are correct !
         logging.debug('Last accessed time {}'.format(last_accessed_time))
+        # if we know when we last accessed balances and that time was less than 60s ago then we get balances from the db
         if self.balances_time and datetime.utcnow() - self.balances_time < timedelta(
                 seconds=60) or time.time() - last_accessed_time.timestamp() < 60:
             balances = get_balances(self.name)
@@ -259,7 +265,6 @@ class p2pb2b(exchange):
     def get_pending_balances(self):
         # TODO check with P2PB2B to see if this is definitely the case
         raise NotImplementedError('P2PB2B does not provide a pending balances API call')
-
 
 
 class WrapP2PB2BError(Exception):

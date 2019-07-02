@@ -140,7 +140,7 @@ class poloniex(exchange):
             if not response:
                 balances = {}
             else:
-                balances = {symbol: balance for symbol, balance in response.get('exchange')}
+                balances = {symbol: balance for symbol, balance in response.get('exchange').items()}
         except Exception as e:
             raise Exception('Error getting trading balances {}'.format(e))
         self.balances = balances
