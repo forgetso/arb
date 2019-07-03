@@ -56,6 +56,21 @@ class Jobqueue:
         self._id = None
         self.compare_trade_pairs_intervals = {}
         self.runningjobs = []
+        self._newjob = None
+        self._observers = []
+
+    @property
+    def newjob(self):
+        return self._newjob
+
+    @newjob.setter
+    def newjob(self, value):
+        self._newjob = value
+        for callback in self._observers:
+            callback(self._newjob)
+
+    def bind_to(self, callback):
+        self._observers.append(callback)
 
     def remove_job(self, _id):
         result = self.db[JOB_COLLECTION].remove({'_id': _id})
@@ -73,6 +88,7 @@ class Jobqueue:
             valid_job['jobqueue_id'] = jobqueue_id
             _id_result = self.db[JOB_COLLECTION].insert_one(valid_job)
             _id = _id_result.inserted_id
+            self.newjob = _id
         return _id
 
     def add_jobs(self, jobs):

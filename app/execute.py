@@ -45,10 +45,10 @@ class JobQueueExecutor:
         # we periodically update the fiat rate of BTC to identify potential profit
         self.fiat_rate_interval = call_repeatedly(settings.INTERVAL_FIAT_RATE, update_fiat_rates)
 
-        # when opportunities are identified they are added as jobs to the db. this next function will find these jobs
-        # and execute them, adding any subsequent downstream jobs to the queue
+        # when opportunities are identified they are added as jobs to the db. this next function will be notified of any
+        # new jobs that are added and it will be called
 
-        self.start_jobs_interval = call_repeatedly(settings.INTERVAL_NEWJOBS, self.start_jobs)
+        self.jq.bind_to(self.start_job)
 
         self.check_running_jobs_interval = call_repeatedly(settings.INTERVAL_RUNNINGJOBS, self.check_running_jobs)
 
@@ -61,37 +61,30 @@ class JobQueueExecutor:
 
         return
 
-    def start_jobs(self):
-        # stop command may have been issued
-        self.is_running()
-        if not self.running:
-            # cancels the interval
-            self.start_jobs_interval()
+    def start_job(self, _id):
 
-        jobs_to_start = self.jq.db[JOB_COLLECTION].find(
-            {'job_status': STATUS_CREATING, 'job_type': {'$nin': settings.JOBS_NOT_RUNNING}})
-        for job in jobs_to_start:
-            job_type = job['job_type']
-            if job_type not in JOB_DEFINITIONS:
-                raise TypeError('Unknown job type {}'.format(job_type))
+        job = self.jq.db[JOB_COLLECTION].find_one({'_id': _id})
+        job_type = job['job_type']
+        if job_type not in JOB_DEFINITIONS:
+            raise TypeError('Unknown job type {}'.format(job_type))
 
-            safecmd = ['app.jobs.{}'.format(job_type.lower())]
-            for arg_key, arg_value in job['job_args'].items():
-                type_function = None
-                try:
-                    type_function = JOB_DEFINITIONS[job_type][arg_key].get('type')
-                    safecmd.append(type_function(arg_value))
-                except:
-                    raise TypeError('Invalid job argument supplied: {} should be {}'.format(arg_value, type_function))
-            jobthread = JobQueueThread(self.jq, job, safecmd)
-            jobthread.setDaemon(True)
-            jobthread.start()
-            job['job_startat'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-            job['job_status'] = STATUS_RUNNING
-            job['job_lock'] = True
-            job['jobqueue_id'] = self._id
-            self.jq.update_job(job)
-            self.runningjobs.append(jobthread)
+        safecmd = ['app.jobs.{}'.format(job_type.lower())]
+        for arg_key, arg_value in job['job_args'].items():
+            type_function = None
+            try:
+                type_function = JOB_DEFINITIONS[job_type][arg_key].get('type')
+                safecmd.append(type_function(arg_value))
+            except:
+                raise TypeError('Invalid job argument supplied: {} should be {}'.format(arg_value, type_function))
+        jobthread = JobQueueThread(self.jq, job, safecmd)
+        jobthread.setDaemon(True)
+        jobthread.start()
+        job['job_startat'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        job['job_status'] = STATUS_RUNNING
+        job['job_lock'] = True
+        job['jobqueue_id'] = self._id
+        self.jq.update_job(job)
+        self.runningjobs.append(jobthread)
 
     def check_running_jobs(self):
         ok = True

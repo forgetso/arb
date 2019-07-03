@@ -136,13 +136,12 @@ class p2pb2b(exchange):
             raise WrapP2PB2BError('{}'.format(result.get('message')))
 
         result = response.get('result')
-        if result.get('left') == 0:
+        if Decimal(result.get('left')) == 0:
             raw_trade = result
         else:
-            raw_trade = self.get_order_status(result.get('orderId'))
-
-        if not raw_trade.get('left') == 0:
-            raise WrapP2PB2BError('{}'.format(result.get('message')))
+            order_id = result.get('orderId')
+            raw_trade = self.get_order_status(order_id)
+            raw_trade['orderId'] = order_id
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 
@@ -153,7 +152,7 @@ class p2pb2b(exchange):
         order_result = {}
         while not order_completed:
             order_response = self.get_order(order_id=order_id)
-            if order_response['result']['left'] == 0:
+            if order_response.get('success') and order_response.get('result') != []:
                 order_result = order_response['result']
                 break
             time.sleep(20)
@@ -163,7 +162,7 @@ class p2pb2b(exchange):
         try:
             order = self.api.getOrder(order_id)
         except Exception as e:
-            raise WrapP2PB2BError('Error retrieving order: {}'.format(e))
+            raise WrapP2PB2BError('Error retrieving order: {} {}'.format(e, order))
 
         return order
 
@@ -171,17 +170,26 @@ class p2pb2b(exchange):
         raise NotImplementedError('Get Orders not implemented in P2PB2B Wrapper')
 
     def format_trade(self, raw_trade, trade_type, trade_id):
-
-        # {'symbol': 'ADXBTC', 'orderId': 26852121, 'clientOrderId': 'CCEUFAceue5R2wksYE3FYo',
-        #  'transactTime': 1548755950370, 'price': '0.00002606', 'origQty': '39.00000000', 'executedQty': '39.00000000',
-        #  'cummulativeQuoteQty': '0.00101634', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY',
-        #  'fills': [{'price': '0.00002606', 'qty': '39.00000000', 'commission': '0.03900000', 'commissionAsset': 'ADX',
-        #             'tradeId': 3522988}]}
-
-        # {'symbol': 'ETHBTC', 'orderId': 271097202, 'clientOrderId': 'A584YfHssjyLZkVNdehqlB', 'price': '0.03076800',
-        #  'origQty': '0.03400000', 'executedQty': '0.03400000', 'cummulativeQuoteQty': '0.00104611', 'status': 'FILLED',
-        #  'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'SELL', 'stopPrice': '0.00000000', 'icebergQty': '0.00000000',
-        #  'time': 1548786572329, 'updateTime': 1548786572444, 'isWorking': True}
+        # {
+        #     "success": true,
+        #     "message": "",
+        #     "result": {
+        #         "offset": 0,
+        #         "limit": 50,
+        #         "records": [
+        #             {
+        #                 "time": 1533310924.935978,
+        #                 "fee": "0",
+        #                 "price": "80.22761599",
+        #                 "amount": "2.12687945",
+        #                 "id": 548,
+        #                 "dealOrderId": 1237,
+        #                 "role": 1,
+        #                 "deal": "170.6344677716224055"
+        #             }
+        #         ]
+        #     }
+        # }
 
         try:
             trade = {
@@ -191,16 +199,15 @@ class p2pb2b(exchange):
                 'trade_pair_common': self.trade_pair_common,
                 'trade_pair': self.trade_pair,
                 'trade_type': trade_type,
-                'price': raw_trade['price'],
-                'volume': raw_trade['executedQty'],
-                'trades_itemised': raw_trade.get('fills', []),
-                # seems like either one of these can be present
-                'date': raw_trade.get('transactTime') or raw_trade.get('time'),
-                'fees': self.calculate_fees(raw_trade['fills'], raw_trade['price']),
+                'price': raw_trade['records'][0]['price'],
+                'volume': raw_trade['records'][0]['amount'],
+                'trades_itemised': raw_trade['records'],
+                'date': raw_trade['records'][0]['time'],
+                'fees': raw_trade['records'][0]['fee'],
                 'exchange': self.name
             }
         except Exception as e:
-            raise WrapP2PB2BError('Error formatting trade {}'.format(e))
+            raise WrapP2PB2BError('Error formatting trade {} {}'.format(e, raw_trade))
 
         return trade
 

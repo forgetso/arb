@@ -85,7 +85,7 @@ class poloniex(exchange):
         order_completed = False
         order_result = {}
         while not order_completed:
-            order_result = self.get_orders()
+            order_result = self.get_orders(order_id)
             if order_id not in order_result:
                 break
             time.sleep(5)

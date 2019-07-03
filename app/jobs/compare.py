@@ -49,7 +49,11 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     # determine whether buying and selling across each permutation will result in a profit > FIAT_ARBITRAGE_MINIMUM
     for exchange_permutation in exchange_permutations_fixed:
         exchange_buy, exchange_sell = exchange_permutation
-        arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
+        arbitrage = None
+        try:
+            arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
+        except InvalidTrade:
+            continue
         if arbitrage:
             arbitrages.append(arbitrage)
             exchange_names = [arbitrage['buy'].name, arbitrage['sell'].name]
@@ -258,7 +262,7 @@ def calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate):
     trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(currency=exchange_buy.base_currency,
                                                                          price=price_buy, volume=volume)
     if not trade_valid_buy or not trade_valid_sell:
-        raise ValueError('Invalid Trade!')
+        raise InvalidTrade('Either the buy or the sell is invalid')
 
     volume = set_maximum_trade_volume(volume, price_buy, fiat_rate)
 
@@ -382,6 +386,10 @@ def setup():
 
 
 class CompareError(Exception):
+    pass
+
+
+class InvalidTrade(Exception):
     pass
 
 
