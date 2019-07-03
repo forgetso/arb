@@ -51,8 +51,7 @@ def replenish(exchange, currency, jobqueue_id):
         if currency in child_exchange.pending_balances:
             pass
         elif currency not in child_exchange.pending_balances or pending_balances_not_implemented:
-            # withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
-            withdrawal_success, uuid = True, 1
+            withdrawal_success, uuid = master_exchange.withdraw(currency.upper(), to_address, quantity)
 
             if not withdrawal_success:
                 # this means we did not have enough of the currency to withdraw and will need to convert some DEFAULT_CURRENCY (ETH) to this currency

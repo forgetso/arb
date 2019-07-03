@@ -63,7 +63,7 @@ def store_audit(audit):
     audit['datetime'] = datetime.datetime.utcnow()
     if 'type' not in audit:
         raise ValueError('Audit type must be specified')
-    _id = db.audit.insert_one(audit)
+    _id = db.audit.insert(audit)
     return _id
 
 

@@ -7,14 +7,12 @@ from app.lib.errors import ErrorTradePairDoesNotExist
 from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES, FIAT_REPLENISH_AMOUNT
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
-from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock
+from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock, get_replenish_jobs
 from app.lib.common import round_decimal_number, decimal_as_string
 
 
 def compare(cur_x, cur_y, markets, jobqueue_id):
     arbitrages = []
-    viable_arbitrages = []
-    replenish_jobs = []
     result = {'downstream_jobs': []}
     exchange_shortlist = []
 
@@ -60,15 +58,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
                                                exchange_names)
             store_audit(profit_audit_record)
 
-    for arbitrage in arbitrages:
-        arbitrage['buy'].get_balances()
-        arbitrage['sell'].get_balances()
-        # first, make sure we do not have zero of the currency we're trying to sell
-        # send more of the currency to that exchange if there is a zero balance
-        replenish_jobs = check_zero_balances(arbitrage)
-        if not replenish_jobs:
-            viable_arbitrages = determine_arbitrage_viability(arbitrage, fiat_rate)
-
+    replenish_jobs, viable_arbitrages = get_downstream_jobs(arbitrages, fiat_rate)
 
     # result is a list of downstream jobs to add to the queue
     result['downstream_jobs'] = viable_arbitrages + replenish_jobs
@@ -83,8 +73,41 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     return result
 
 
+def get_downstream_jobs(arbitrages, fiat_rate):
+    replenish_jobs = []
+    viable_arbitrages = []
+    for arbitrage in arbitrages:
+        arbitrage['buy'].get_balances()
+        arbitrage['sell'].get_balances()
+        # first, make sure we do not have zero of the currency we're trying to sell
+        # send more of the currency to that exchange if there is a zero balance
+        new_replenish_jobs = check_zero_balances(arbitrage)
+        # however, a replenish job may have recently run successfully but the balance will still be zero if
+        # confirmations have not been received. BTC takes ages.
+        recent_replenish_jobs = get_recent_replenish_jobs(arbitrage)
+        if not replenish_jobs:
+            viable_arbitrages.extend(determine_arbitrage_viability(arbitrage, fiat_rate))
+        # now remove any unnecessary replenish jobs
+        filtered_jobs = [x for x in new_replenish_jobs if x not in recent_replenish_jobs]
+        replenish_jobs.extend(filtered_jobs)
+    return replenish_jobs, viable_arbitrages
+
+
+def get_recent_replenish_jobs(arbitrage):
+    recent_jobs = []
+    for buy_type in ['buy', 'sell']:
+        recent_jobs_quote = [replenish_job(x['exchange'], x['currency']) for x in
+                             get_replenish_jobs(arbitrage[buy_type].name, arbitrage[buy_type].quote_currency)]
+        recent_jobs += recent_jobs_quote
+        recent_jobs_base = [replenish_job(x['exchange'], x['currency']) for x in
+                            get_replenish_jobs(arbitrage[buy_type].name, arbitrage[buy_type].base_currency)]
+        recent_jobs += recent_jobs_base
+    return recent_jobs
+
+
 def check_zero_balances(arbitrage):
     replenish_jobs = []
+
     for buy_type in ['buy', 'sell']:
         exchange = arbitrage[buy_type]
         exchange_balance_quote = exchange.balances.get(exchange.quote_currency, 0)

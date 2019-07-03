@@ -66,16 +66,15 @@ class poloniex(exchange):
         elif trade_type == 'sell':
             result = self.api.sell(currencyPair=self.trade_pair, amount=volume, rate=price)
 
-        if not result.get('status'):
-            raise WrapPoloniexError('{}'.format(result.get('message')))
+        # Returns something like this
+        # {'orderNumber': 613107503923, 'resultingTrades': [
+        #     {'amount': 0.011, 'date': '2019-07-03 15:48:19', 'rate': 0.02579294, 'total': 0.00028372,
+        #      'tradeID': 47232767, 'type': 'buy', 'takerAdjustment': 0.0109725}], 'fee': 0.0025,
+        #  'currencyPair': 'BTC_ETH'}
+        if not result.get('orderNumber'):
+            raise WrapPoloniexError('{}'.format(result))
 
-        if result.get('status').upper() == 'FILLED':
-            raw_trade = result
-        else:
-            raw_trade = self.get_order_status(result.get('orderId'))
-
-        if not raw_trade.get('status').upper() == 'FILLED':
-            raise WrapPoloniexError('{}'.format(result.get('message')))
+        raw_trade = self.get_order_status(result.get('orderId'))
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 
@@ -102,31 +101,24 @@ class poloniex(exchange):
 
     def format_trade(self, raw_trade, trade_type, trade_id):
 
-        # {'symbol': 'ADXBTC', 'orderId': 26852121, 'clientOrderId': 'CCEUFAceue5R2wksYE3FYo',
-        #  'transactTime': 1548755950370, 'price': '0.00002606', 'origQty': '39.00000000', 'executedQty': '39.00000000',
-        #  'cummulativeQuoteQty': '0.00101634', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY',
-        #  'fills': [{'price': '0.00002606', 'qty': '39.00000000', 'commission': '0.03900000', 'commissionAsset': 'ADX',
-        #             'tradeId': 3522988}]}
-
-        # {'symbol': 'ETHBTC', 'orderId': 271097202, 'clientOrderId': 'A584YfHssjyLZkVNdehqlB', 'price': '0.03076800',
-        #  'origQty': '0.03400000', 'executedQty': '0.03400000', 'cummulativeQuoteQty': '0.00104611', 'status': 'FILLED',
-        #  'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'SELL', 'stopPrice': '0.00000000', 'icebergQty': '0.00000000',
-        #  'time': 1548786572329, 'updateTime': 1548786572444, 'isWorking': True}
-
+        # {'orderNumber': 613107503923, 'resultingTrades': [
+        #     {'amount': 0.011, 'date': '2019-07-03 15:48:19', 'rate': 0.02579294, 'total': 0.00028372,
+        #      'tradeID': 47232767, 'type': 'buy', 'takerAdjustment': 0.0109725}], 'fee': 0.0025,
+        #  'currencyPair': 'BTC_ETH'}
+        # TODO handle multiple resultingTrades
         try:
             trade = {
-                'external_id': raw_trade['orderId'],
+                'external_id': raw_trade['orderNumber'],
                 '_id': str(trade_id),
                 'status': 'Closed',
                 'trade_pair_common': self.trade_pair_common,
                 'trade_pair': self.trade_pair,
                 'trade_type': trade_type,
-                'price': raw_trade['price'],
-                'volume': raw_trade['executedQty'],
-                'trades_itemised': raw_trade.get('fills', []),
-                # seems like either one of these can be present
-                'date': raw_trade.get('transactTime') or raw_trade.get('time'),
-                'fees': self.calculate_fees(raw_trade['fills'], raw_trade['price']),
+                'price': raw_trade['resultingTrades'][0]['rate'],
+                'volume': raw_trade['resultingTrades'][0]['amount'],
+                'trades_itemised': raw_trade.get('resultingTrades', []),
+                'date': raw_trade['resultingTrades'][0]['date'],
+                'fees': raw_trade['fee'],
                 'exchange': self.name
             }
         except Exception as e:

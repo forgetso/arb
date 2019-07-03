@@ -173,19 +173,32 @@ class bittrex(exchange):
         #         "uuid": "614c34e4-8d71-11e3-94b5-425861b86ab6"
         #     }
         # }
+
+        withdraw_response = self.api.withdraw(currency, quantity, to_address)
+        withdrawn, id, retry = self.handleResponse(withdraw_response)
+        if retry:
+            withdrawn, id, retry = self.handleResponse(withdraw_response)
+
+        return withdrawn, id
+
+    def handleResponse(self, withdraw_response):
+        retry = False
         withdrawn = False
         id = None
-        withdraw_response = self.api.withdraw(currency, quantity, to_address)
         if not withdraw_response.get('success'):
             if withdraw_response.get('message') == 'INSUFFICIENT_FUNDS':
                 # TODO get more default currency
                 raise Exception('Write this code!')
+            # withdrawals are locked for 2 minutes after login via 2FA
+            elif withdraw_response.get('message') == 'LOGIN_2FA_LOCK_2M':
+                time.sleep(120)
+                retry = True
             else:
                 raise WrapBittrexError('Error withdrawing {}'.format(withdraw_response.get('message')))
         else:
             withdrawn = True
             id = withdraw_response.get('result').get('uuid')
-        return withdrawn, id
+        return withdrawn, id, retry
 
     def calculate_fees(self, trades_itemised, price):
         raise NotImplementedError('Calculate Fees not implemented in Bittrex wrapper')
@@ -217,7 +230,7 @@ class bittrex(exchange):
                 count += 1
                 if count > 5:
                     raise WrapBittrexError('Error retrieving withdrawal fee for {} ID {}'.format(currency, id))
-                time.sleep(10)
+                time.sleep(60)
         return withdrawal['TxCost']
 
 
