@@ -1357,8 +1357,8 @@
       "trading_code": "WTCBNB",
       "base_currency": "WTC",
       "quote_currency": "BNB",
-      "decimal_places": 2,
-      "min_trade_size": 0.01,
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
       "min_trade_size_currency": "WTC",
       "min_notional": 0.1,
       "taker_fee": 0.001,
@@ -3934,7 +3934,7 @@
       "decimal_places": 1,
       "min_trade_size": 0.1,
       "min_trade_size_currency": "XLM",
-      "min_notional": 0.1,
+      "min_notional": 10.0,
       "taker_fee": 0.001,
       "maker_fee": 0.001,
       "fee": 0.001
@@ -4493,7 +4493,7 @@
       "decimal_places": 0,
       "min_trade_size": 1.0,
       "min_trade_size_currency": "VET",
-      "min_notional": 1.0,
+      "min_notional": 10.0,
       "taker_fee": 0.001,
       "maker_fee": 0.001,
       "fee": 0.001
@@ -4805,7 +4805,7 @@
       "decimal_places": 1,
       "min_trade_size": 0.1,
       "min_trade_size_currency": "XLM",
-      "min_notional": 0.1,
+      "min_notional": 10.0,
       "taker_fee": 0.001,
       "maker_fee": 0.001,
       "fee": 0.001
@@ -4883,7 +4883,7 @@
       "decimal_places": 1,
       "min_trade_size": 0.1,
       "min_trade_size_currency": "XLM",
-      "min_notional": 0.1,
+      "min_notional": 10.0,
       "taker_fee": 0.001,
       "maker_fee": 0.001,
       "fee": 0.001
@@ -5715,7 +5715,7 @@
       "decimal_places": 0,
       "min_trade_size": 1.0,
       "min_trade_size_currency": "IOST",
-      "min_notional": 1.0,
+      "min_notional": 10.0,
       "taker_fee": 0.001,
       "maker_fee": 0.001,
       "fee": 0.001
@@ -6330,6 +6330,357 @@
       "taker_fee": 0.001,
       "maker_fee": 0.001,
       "fee": 0.001
+    },
+    "FTM-BNB": {
+      "name": "FTM-BNB",
+      "trading_code": "FTMBNB",
+      "base_currency": "FTM",
+      "quote_currency": "BNB",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "FTM",
+      "min_notional": 0.1,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "FTM-BTC": {
+      "name": "FTM-BTC",
+      "trading_code": "FTMBTC",
+      "base_currency": "FTM",
+      "quote_currency": "BTC",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "FTM",
+      "min_notional": 0.001,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "FTM-USDT": {
+      "name": "FTM-USDT",
+      "trading_code": "FTMUSDT",
+      "base_currency": "FTM",
+      "quote_currency": "USDT",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "FTM",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "FTM-TUSD": {
+      "name": "FTM-TUSD",
+      "trading_code": "FTMTUSD",
+      "base_currency": "FTM",
+      "quote_currency": "TUSD",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "FTM",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "FTM-PAX": {
+      "name": "FTM-PAX",
+      "trading_code": "FTMPAX",
+      "base_currency": "FTM",
+      "quote_currency": "PAX",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "FTM",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "FTM-USDC": {
+      "name": "FTM-USDC",
+      "trading_code": "FTMUSDC",
+      "base_currency": "FTM",
+      "quote_currency": "USDC",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "FTM",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "BTCB-BTC": {
+      "name": "BTCB-BTC",
+      "trading_code": "BTCBBTC",
+      "base_currency": "BTCB",
+      "quote_currency": "BTC",
+      "decimal_places": 3,
+      "min_trade_size": 0.001,
+      "min_trade_size_currency": "BTCB",
+      "min_notional": 0.001,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "BCPT-TUSD": {
+      "name": "BCPT-TUSD",
+      "trading_code": "BCPTTUSD",
+      "base_currency": "BCPT",
+      "quote_currency": "TUSD",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "BCPT",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "BCPT-PAX": {
+      "name": "BCPT-PAX",
+      "trading_code": "BCPTPAX",
+      "base_currency": "BCPT",
+      "quote_currency": "PAX",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "BCPT",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "BCPT-USDC": {
+      "name": "BCPT-USDC",
+      "trading_code": "BCPTUSDC",
+      "base_currency": "BCPT",
+      "quote_currency": "USDC",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "BCPT",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ALGO-BNB": {
+      "name": "ALGO-BNB",
+      "trading_code": "ALGOBNB",
+      "base_currency": "ALGO",
+      "quote_currency": "BNB",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "ALGO",
+      "min_notional": 0.1,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ALGO-BTC": {
+      "name": "ALGO-BTC",
+      "trading_code": "ALGOBTC",
+      "base_currency": "ALGO",
+      "quote_currency": "BTC",
+      "decimal_places": 2,
+      "min_trade_size": 0.01,
+      "min_trade_size_currency": "ALGO",
+      "min_notional": 0.001,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ALGO-USDT": {
+      "name": "ALGO-USDT",
+      "trading_code": "ALGOUSDT",
+      "base_currency": "ALGO",
+      "quote_currency": "USDT",
+      "decimal_places": 3,
+      "min_trade_size": 0.001,
+      "min_trade_size_currency": "ALGO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ALGO-TUSD": {
+      "name": "ALGO-TUSD",
+      "trading_code": "ALGOTUSD",
+      "base_currency": "ALGO",
+      "quote_currency": "TUSD",
+      "decimal_places": 3,
+      "min_trade_size": 0.001,
+      "min_trade_size_currency": "ALGO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ALGO-PAX": {
+      "name": "ALGO-PAX",
+      "trading_code": "ALGOPAX",
+      "base_currency": "ALGO",
+      "quote_currency": "PAX",
+      "decimal_places": 3,
+      "min_trade_size": 0.001,
+      "min_trade_size_currency": "ALGO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ALGO-USDC": {
+      "name": "ALGO-USDC",
+      "trading_code": "ALGOUSDC",
+      "base_currency": "ALGO",
+      "quote_currency": "USDC",
+      "decimal_places": 3,
+      "min_trade_size": 0.001,
+      "min_trade_size_currency": "ALGO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "USDSB-USDT": {
+      "name": "USDSB-USDT",
+      "trading_code": "USDSBUSDT",
+      "base_currency": "USDSB",
+      "quote_currency": "USDT",
+      "decimal_places": 2,
+      "min_trade_size": 0.01,
+      "min_trade_size_currency": "USDSB",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "USDSB-USDS": {
+      "name": "USDSB-USDS",
+      "trading_code": "USDSBUSDS",
+      "base_currency": "USDSB",
+      "quote_currency": "USDS",
+      "decimal_places": 2,
+      "min_trade_size": 0.01,
+      "min_trade_size_currency": "USDSB",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "GTO-USDT": {
+      "name": "GTO-USDT",
+      "trading_code": "GTOUSDT",
+      "base_currency": "GTO",
+      "quote_currency": "USDT",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "GTO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "GTO-PAX": {
+      "name": "GTO-PAX",
+      "trading_code": "GTOPAX",
+      "base_currency": "GTO",
+      "quote_currency": "PAX",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "GTO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "GTO-TUSD": {
+      "name": "GTO-TUSD",
+      "trading_code": "GTOTUSD",
+      "base_currency": "GTO",
+      "quote_currency": "TUSD",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "GTO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "GTO-USDC": {
+      "name": "GTO-USDC",
+      "trading_code": "GTOUSDC",
+      "base_currency": "GTO",
+      "quote_currency": "USDC",
+      "decimal_places": 1,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "GTO",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ERD-BNB": {
+      "name": "ERD-BNB",
+      "trading_code": "ERDBNB",
+      "base_currency": "ERD",
+      "quote_currency": "BNB",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "ERD",
+      "min_notional": 0.1,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ERD-BTC": {
+      "name": "ERD-BTC",
+      "trading_code": "ERDBTC",
+      "base_currency": "ERD",
+      "quote_currency": "BTC",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "ERD",
+      "min_notional": 0.001,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ERD-USDT": {
+      "name": "ERD-USDT",
+      "trading_code": "ERDUSDT",
+      "base_currency": "ERD",
+      "quote_currency": "USDT",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "ERD",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ERD-PAX": {
+      "name": "ERD-PAX",
+      "trading_code": "ERDPAX",
+      "base_currency": "ERD",
+      "quote_currency": "PAX",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "ERD",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
+    },
+    "ERD-USDC": {
+      "name": "ERD-USDC",
+      "trading_code": "ERDUSDC",
+      "base_currency": "ERD",
+      "quote_currency": "USDC",
+      "decimal_places": 0,
+      "min_trade_size": 1.0,
+      "min_trade_size_currency": "ERD",
+      "min_notional": 10.0,
+      "taker_fee": 0.001,
+      "maker_fee": 0.001,
+      "fee": 0.001
     }
   },
   "bittrex": {
@@ -6393,16 +6744,6 @@
       "min_trade_size_currency": "RDD",
       "fee": 0.0025
     },
-    "NXT-BTC": {
-      "name": "NXT-BTC",
-      "trading_code": "BTC-NXT",
-      "base_currency": "NXT",
-      "quote_currency": "BTC",
-      "min_trade_size": 34.38789546,
-      "decimal_places": 8,
-      "min_trade_size_currency": "NXT",
-      "fee": 0.0025
-    },
     "DASH-BTC": {
       "name": "DASH-BTC",
       "trading_code": "BTC-DASH",
@@ -6411,16 +6752,6 @@
       "min_trade_size": 0.01103735,
       "decimal_places": 8,
       "min_trade_size_currency": "DASH",
-      "fee": 0.0025
-    },
-    "POT-BTC": {
-      "name": "POT-BTC",
-      "trading_code": "BTC-POT",
-      "base_currency": "POT",
-      "quote_currency": "BTC",
-      "min_trade_size": 52.96610169,
-      "decimal_places": 8,
-      "min_trade_size_currency": "POT",
       "fee": 0.0025
     },
     "BLK-BTC": {
@@ -6511,16 +6842,6 @@
       "min_trade_size": 1.97223099,
       "decimal_places": 8,
       "min_trade_size_currency": "MONA",
-      "fee": 0.0025
-    },
-    "THC-BTC": {
-      "name": "THC-BTC",
-      "trading_code": "BTC-THC",
-      "base_currency": "THC",
-      "quote_currency": "BTC",
-      "min_trade_size": 70.42253521,
-      "decimal_places": 8,
-      "min_trade_size_currency": "THC",
       "fee": 0.0025
     },
     "VRC-BTC": {
@@ -6643,16 +6964,6 @@
       "min_trade_size_currency": "SYS",
       "fee": 0.0025
     },
-    "NEOS-BTC": {
-      "name": "NEOS-BTC",
-      "trading_code": "BTC-NEOS",
-      "base_currency": "NEOS",
-      "quote_currency": "BTC",
-      "min_trade_size": 8.92857143,
-      "decimal_places": 8,
-      "min_trade_size_currency": "NEOS",
-      "fee": 0.0025
-    },
     "DGB-BTC": {
       "name": "DGB-BTC",
       "trading_code": "BTC-DGB",
@@ -6683,16 +6994,6 @@
       "min_trade_size_currency": "EXCL",
       "fee": 0.0025
     },
-    "BLOCK-BTC": {
-      "name": "BLOCK-BTC",
-      "trading_code": "BTC-BLOCK",
-      "base_currency": "BLOCK",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.449964,
-      "decimal_places": 6,
-      "min_trade_size_currency": "BLOCK",
-      "fee": 0.0025
-    },
     "ABY-BTC": {
       "name": "ABY-BTC",
       "trading_code": "BTC-ABY",
@@ -6701,16 +7002,6 @@
       "min_trade_size": 862.06896552,
       "decimal_places": 8,
       "min_trade_size_currency": "ABY",
-      "fee": 0.0025
-    },
-    "BAY-BTC": {
-      "name": "BAY-BTC",
-      "trading_code": "BTC-BAY",
-      "base_currency": "BAY",
-      "quote_currency": "BTC",
-      "min_trade_size": 138.12154696,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BAY",
       "fee": 0.0025
     },
     "BTS-BTC": {
@@ -6771,16 +7062,6 @@
       "min_trade_size": 2.44474868,
       "decimal_places": 8,
       "min_trade_size_currency": "GEO",
-      "fee": 0.0025
-    },
-    "FLDC-BTC": {
-      "name": "FLDC-BTC",
-      "trading_code": "BTC-FLDC",
-      "base_currency": "FLDC",
-      "quote_currency": "BTC",
-      "min_trade_size": 1190.47619048,
-      "decimal_places": 8,
-      "min_trade_size_currency": "FLDC",
       "fee": 0.0025
     },
     "GRC-BTC": {
@@ -6893,16 +7174,6 @@
       "min_trade_size_currency": "EXP",
       "fee": 0.0025
     },
-    "AMP-BTC": {
-      "name": "AMP-BTC",
-      "trading_code": "BTC-AMP",
-      "base_currency": "AMP",
-      "quote_currency": "BTC",
-      "min_trade_size": 55.55555556,
-      "decimal_places": 8,
-      "min_trade_size_currency": "AMP",
-      "fee": 0.0025
-    },
     "XLM-BTC": {
       "name": "XLM-BTC",
       "trading_code": "BTC-XLM",
@@ -6923,16 +7194,6 @@
       "min_trade_size_currency": "BTC",
       "fee": 0.0025
     },
-    "RVR-BTC": {
-      "name": "RVR-BTC",
-      "trading_code": "BTC-RVR",
-      "base_currency": "RVR",
-      "quote_currency": "BTC",
-      "min_trade_size": 90.25270758,
-      "decimal_places": 8,
-      "min_trade_size_currency": "RVR",
-      "fee": 0.0025
-    },
     "EMC-BTC": {
       "name": "EMC-BTC",
       "trading_code": "BTC-EMC",
@@ -6941,16 +7202,6 @@
       "min_trade_size": 3.21543408,
       "decimal_places": 8,
       "min_trade_size_currency": "EMC",
-      "fee": 0.0025
-    },
-    "FCT-BTC": {
-      "name": "FCT-BTC",
-      "trading_code": "BTC-FCT",
-      "base_currency": "FCT",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.16286114,
-      "decimal_places": 8,
-      "min_trade_size_currency": "FCT",
       "fee": 0.0025
     },
     "SLS-BTC": {
@@ -7193,16 +7444,6 @@
       "min_trade_size_currency": "ZCL",
       "fee": 0.0025
     },
-    "IOP-BTC": {
-      "name": "IOP-BTC",
-      "trading_code": "BTC-IOP",
-      "base_currency": "IOP",
-      "quote_currency": "BTC",
-      "min_trade_size": 7.75434243,
-      "decimal_places": 8,
-      "min_trade_size_currency": "IOP",
-      "fee": 0.0025
-    },
     "UBQ-BTC": {
       "name": "UBQ-BTC",
       "trading_code": "BTC-UBQ",
@@ -7233,16 +7474,6 @@
       "min_trade_size_currency": "SIB",
       "fee": 0.0025
     },
-    "ION-BTC": {
-      "name": "ION-BTC",
-      "trading_code": "BTC-ION",
-      "base_currency": "ION",
-      "quote_currency": "BTC",
-      "min_trade_size": 6.47165415,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ION",
-      "fee": 0.0025
-    },
     "QWARK-BTC": {
       "name": "QWARK-BTC",
       "trading_code": "BTC-QWARK",
@@ -7261,26 +7492,6 @@
       "min_trade_size": 6.9637883,
       "decimal_places": 7,
       "min_trade_size_currency": "CRW",
-      "fee": 0.0025
-    },
-    "SWT-BTC": {
-      "name": "SWT-BTC",
-      "trading_code": "BTC-SWT",
-      "base_currency": "SWT",
-      "quote_currency": "BTC",
-      "min_trade_size": 6.96572862,
-      "decimal_places": 8,
-      "min_trade_size_currency": "SWT",
-      "fee": 0.0025
-    },
-    "MLN-BTC": {
-      "name": "MLN-BTC",
-      "trading_code": "BTC-MLN",
-      "base_currency": "MLN",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.11810503,
-      "decimal_places": 8,
-      "min_trade_size_currency": "MLN",
       "fee": 0.0025
     },
     "ARK-BTC": {
@@ -7303,16 +7514,6 @@
       "min_trade_size_currency": "DYN",
       "fee": 0.0025
     },
-    "TKS-BTC": {
-      "name": "TKS-BTC",
-      "trading_code": "BTC-TKS",
-      "base_currency": "TKS",
-      "quote_currency": "BTC",
-      "min_trade_size": 3.25478453,
-      "decimal_places": 8,
-      "min_trade_size_currency": "TKS",
-      "fee": 0.0025
-    },
     "MUSIC-BTC": {
       "name": "MUSIC-BTC",
       "trading_code": "BTC-MUSIC",
@@ -7321,16 +7522,6 @@
       "min_trade_size": 1315.78947368,
       "decimal_places": 8,
       "min_trade_size_currency": "MUSIC",
-      "fee": 0.0025
-    },
-    "INCNT-BTC": {
-      "name": "INCNT-BTC",
-      "trading_code": "BTC-INCNT",
-      "base_currency": "INCNT",
-      "quote_currency": "BTC",
-      "min_trade_size": 7.25478816,
-      "decimal_places": 8,
-      "min_trade_size_currency": "INCNT",
       "fee": 0.0025
     },
     "GBYTE-BTC": {
@@ -7351,16 +7542,6 @@
       "min_trade_size": 11.98465964,
       "decimal_places": 8,
       "min_trade_size_currency": "GNT",
-      "fee": 0.0025
-    },
-    "EDG-BTC": {
-      "name": "EDG-BTC",
-      "trading_code": "BTC-EDG",
-      "base_currency": "EDG",
-      "quote_currency": "BTC",
-      "min_trade_size": 8.12215724,
-      "decimal_places": 8,
-      "min_trade_size_currency": "EDG",
       "fee": 0.0025
     },
     "MORE-BTC": {
@@ -7403,96 +7584,6 @@
       "min_trade_size_currency": "ETH",
       "fee": 0.0025
     },
-    "WINGS-BTC": {
-      "name": "WINGS-BTC",
-      "trading_code": "BTC-WINGS",
-      "base_currency": "WINGS",
-      "quote_currency": "BTC",
-      "min_trade_size": 21.20441052,
-      "decimal_places": 8,
-      "min_trade_size_currency": "WINGS",
-      "fee": 0.0025
-    },
-    "RLC-BTC": {
-      "name": "RLC-BTC",
-      "trading_code": "BTC-RLC",
-      "base_currency": "RLC",
-      "quote_currency": "BTC",
-      "min_trade_size": 2.51205788,
-      "decimal_places": 8,
-      "min_trade_size_currency": "RLC",
-      "fee": 0.0025
-    },
-    "GNO-BTC": {
-      "name": "GNO-BTC",
-      "trading_code": "BTC-GNO",
-      "base_currency": "GNO",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.07183165,
-      "decimal_places": 8,
-      "min_trade_size_currency": "GNO",
-      "fee": 0.0025
-    },
-    "GUP-BTC": {
-      "name": "GUP-BTC",
-      "trading_code": "BTC-GUP",
-      "base_currency": "GUP",
-      "quote_currency": "BTC",
-      "min_trade_size": 50.1002004,
-      "decimal_places": 7,
-      "min_trade_size_currency": "GUP",
-      "fee": 0.0025
-    },
-    "LUN-BTC": {
-      "name": "LUN-BTC",
-      "trading_code": "BTC-LUN",
-      "base_currency": "LUN",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.38650032,
-      "decimal_places": 8,
-      "min_trade_size_currency": "LUN",
-      "fee": 0.0025
-    },
-    "GNO-ETH": {
-      "name": "GNO-ETH",
-      "trading_code": "ETH-GNO",
-      "base_currency": "GNO",
-      "quote_currency": "ETH",
-      "min_trade_size": 0.04850824,
-      "decimal_places": 8,
-      "min_trade_size_currency": "GNO",
-      "fee": 0.0025
-    },
-    "HMQ-BTC": {
-      "name": "HMQ-BTC",
-      "trading_code": "BTC-HMQ",
-      "base_currency": "HMQ",
-      "quote_currency": "BTC",
-      "min_trade_size": 102.88065844,
-      "decimal_places": 8,
-      "min_trade_size_currency": "HMQ",
-      "fee": 0.0025
-    },
-    "ANT-BTC": {
-      "name": "ANT-BTC",
-      "trading_code": "BTC-ANT",
-      "base_currency": "ANT",
-      "quote_currency": "BTC",
-      "min_trade_size": 1.98412698,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ANT",
-      "fee": 0.0025
-    },
-    "ANT-ETH": {
-      "name": "ANT-ETH",
-      "trading_code": "ETH-ANT",
-      "base_currency": "ANT",
-      "quote_currency": "ETH",
-      "min_trade_size": 1.34770889,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ANT",
-      "fee": 0.0025
-    },
     "SC-BTC": {
       "name": "SC-BTC",
       "trading_code": "BTC-SC",
@@ -7533,56 +7624,6 @@
       "min_trade_size_currency": "ZEN",
       "fee": 0.0025
     },
-    "QRL-BTC": {
-      "name": "QRL-BTC",
-      "trading_code": "BTC-QRL",
-      "base_currency": "QRL",
-      "quote_currency": "BTC",
-      "min_trade_size": 6.40040963,
-      "decimal_places": 8,
-      "min_trade_size_currency": "QRL",
-      "fee": 0.0025
-    },
-    "PTOY-BTC": {
-      "name": "PTOY-BTC",
-      "trading_code": "BTC-PTOY",
-      "base_currency": "PTOY",
-      "quote_currency": "BTC",
-      "min_trade_size": 59.52380952,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PTOY",
-      "fee": 0.0025
-    },
-    "BNT-BTC": {
-      "name": "BNT-BTC",
-      "trading_code": "BTC-BNT",
-      "base_currency": "BNT",
-      "quote_currency": "BTC",
-      "min_trade_size": 1.68918919,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BNT",
-      "fee": 0.0025
-    },
-    "BNT-ETH": {
-      "name": "BNT-ETH",
-      "trading_code": "ETH-BNT",
-      "base_currency": "BNT",
-      "quote_currency": "ETH",
-      "min_trade_size": 1.13341932,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BNT",
-      "fee": 0.0025
-    },
-    "NMR-BTC": {
-      "name": "NMR-BTC",
-      "trading_code": "BTC-NMR",
-      "base_currency": "NMR",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.12504627,
-      "decimal_places": 8,
-      "min_trade_size_currency": "NMR",
-      "fee": 0.0025
-    },
     "LTC-ETH": {
       "name": "LTC-ETH",
       "trading_code": "ETH-LTC",
@@ -7603,96 +7644,6 @@
       "min_trade_size_currency": "XRP",
       "fee": 0.0025
     },
-    "SNT-BTC": {
-      "name": "SNT-BTC",
-      "trading_code": "BTC-SNT",
-      "base_currency": "SNT",
-      "quote_currency": "BTC",
-      "min_trade_size": 44.72271914,
-      "decimal_places": 8,
-      "min_trade_size_currency": "SNT",
-      "fee": 0.0025
-    },
-    "SNT-ETH": {
-      "name": "SNT-ETH",
-      "trading_code": "ETH-SNT",
-      "base_currency": "SNT",
-      "quote_currency": "ETH",
-      "min_trade_size": 30.1295571,
-      "decimal_places": 7,
-      "min_trade_size_currency": "SNT",
-      "fee": 0.0025
-    },
-    "DCT-BTC": {
-      "name": "DCT-BTC",
-      "trading_code": "BTC-DCT",
-      "base_currency": "DCT",
-      "quote_currency": "BTC",
-      "min_trade_size": 16.28664495,
-      "decimal_places": 8,
-      "min_trade_size_currency": "DCT",
-      "fee": 0.0025
-    },
-    "XEL-BTC": {
-      "name": "XEL-BTC",
-      "trading_code": "BTC-XEL",
-      "base_currency": "XEL",
-      "quote_currency": "BTC",
-      "min_trade_size": 33.11258278,
-      "decimal_places": 8,
-      "min_trade_size_currency": "XEL",
-      "fee": 0.0025
-    },
-    "MCO-BTC": {
-      "name": "MCO-BTC",
-      "trading_code": "BTC-MCO",
-      "base_currency": "MCO",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.30674847,
-      "decimal_places": 8,
-      "min_trade_size_currency": "MCO",
-      "fee": 0.0025
-    },
-    "MCO-ETH": {
-      "name": "MCO-ETH",
-      "trading_code": "ETH-MCO",
-      "base_currency": "MCO",
-      "quote_currency": "ETH",
-      "min_trade_size": 0.2062104,
-      "decimal_places": 7,
-      "min_trade_size_currency": "MCO",
-      "fee": 0.0025
-    },
-    "ADT-BTC": {
-      "name": "ADT-BTC",
-      "trading_code": "BTC-ADT",
-      "base_currency": "ADT",
-      "quote_currency": "BTC",
-      "min_trade_size": 137.36263736,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ADT",
-      "fee": 0.0025
-    },
-    "PAY-BTC": {
-      "name": "PAY-BTC",
-      "trading_code": "BTC-PAY",
-      "base_currency": "PAY",
-      "quote_currency": "BTC",
-      "min_trade_size": 3.45065562,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PAY",
-      "fee": 0.0025
-    },
-    "PAY-ETH": {
-      "name": "PAY-ETH",
-      "trading_code": "ETH-PAY",
-      "base_currency": "PAY",
-      "quote_currency": "ETH",
-      "min_trade_size": 2.3364486,
-      "decimal_places": 7,
-      "min_trade_size_currency": "PAY",
-      "fee": 0.0025
-    },
     "MTL-BTC": {
       "name": "MTL-BTC",
       "trading_code": "BTC-MTL",
@@ -7701,36 +7652,6 @@
       "min_trade_size": 2.7168007,
       "decimal_places": 7,
       "min_trade_size_currency": "MTL",
-      "fee": 0.0025
-    },
-    "STORJ-BTC": {
-      "name": "STORJ-BTC",
-      "trading_code": "BTC-STORJ",
-      "base_currency": "STORJ",
-      "quote_currency": "BTC",
-      "min_trade_size": 3.71913121,
-      "decimal_places": 8,
-      "min_trade_size_currency": "STORJ",
-      "fee": 0.0025
-    },
-    "ADX-BTC": {
-      "name": "ADX-BTC",
-      "trading_code": "BTC-ADX",
-      "base_currency": "ADX",
-      "quote_currency": "BTC",
-      "min_trade_size": 7.0303712,
-      "decimal_places": 7,
-      "min_trade_size_currency": "ADX",
-      "fee": 0.0025
-    },
-    "ADX-ETH": {
-      "name": "ADX-ETH",
-      "trading_code": "ETH-ADX",
-      "base_currency": "ADX",
-      "quote_currency": "ETH",
-      "min_trade_size": 4.74698566,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ADX",
       "fee": 0.0025
     },
     "DASH-ETH": {
@@ -7801,76 +7722,6 @@
       "min_trade_size": 9.90066204,
       "decimal_places": 8,
       "min_trade_size_currency": "XRP",
-      "fee": 0.0025
-    },
-    "OMG-BTC": {
-      "name": "OMG-BTC",
-      "trading_code": "BTC-OMG",
-      "base_currency": "OMG",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.60477043,
-      "decimal_places": 8,
-      "min_trade_size_currency": "OMG",
-      "fee": 0.0025
-    },
-    "OMG-ETH": {
-      "name": "OMG-ETH",
-      "trading_code": "ETH-OMG",
-      "base_currency": "OMG",
-      "quote_currency": "ETH",
-      "min_trade_size": 0.40356265,
-      "decimal_places": 8,
-      "min_trade_size_currency": "OMG",
-      "fee": 0.0025
-    },
-    "CVC-BTC": {
-      "name": "CVC-BTC",
-      "trading_code": "BTC-CVC",
-      "base_currency": "CVC",
-      "quote_currency": "BTC",
-      "min_trade_size": 12.5502008,
-      "decimal_places": 7,
-      "min_trade_size_currency": "CVC",
-      "fee": 0.0025
-    },
-    "CVC-ETH": {
-      "name": "CVC-ETH",
-      "trading_code": "ETH-CVC",
-      "base_currency": "CVC",
-      "quote_currency": "ETH",
-      "min_trade_size": 8.47457627,
-      "decimal_places": 8,
-      "min_trade_size_currency": "CVC",
-      "fee": 0.0025
-    },
-    "PART-BTC": {
-      "name": "PART-BTC",
-      "trading_code": "BTC-PART",
-      "base_currency": "PART",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.41535829,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PART",
-      "fee": 0.0025
-    },
-    "QTUM-BTC": {
-      "name": "QTUM-BTC",
-      "trading_code": "BTC-QTUM",
-      "base_currency": "QTUM",
-      "quote_currency": "BTC",
-      "min_trade_size": 0.40150968,
-      "decimal_places": 8,
-      "min_trade_size_currency": "QTUM",
-      "fee": 0.0025
-    },
-    "QTUM-ETH": {
-      "name": "QTUM-ETH",
-      "trading_code": "ETH-QTUM",
-      "base_currency": "QTUM",
-      "quote_currency": "ETH",
-      "min_trade_size": 0.27162546,
-      "decimal_places": 8,
-      "min_trade_size_currency": "QTUM",
       "fee": 0.0025
     },
     "XMR-ETH": {
@@ -7963,16 +7814,6 @@
       "min_trade_size_currency": "BCH",
       "fee": 0.0025
     },
-    "DNT-BTC": {
-      "name": "DNT-BTC",
-      "trading_code": "BTC-DNT",
-      "base_currency": "DNT",
-      "quote_currency": "BTC",
-      "min_trade_size": 70.0280112,
-      "decimal_places": 7,
-      "min_trade_size_currency": "DNT",
-      "fee": 0.0025
-    },
     "NEO-USDT": {
       "name": "NEO-USDT",
       "trading_code": "USDT-NEO",
@@ -8013,16 +7854,6 @@
       "min_trade_size_currency": "DGB",
       "fee": 0.0025
     },
-    "OMG-USDT": {
-      "name": "OMG-USDT",
-      "trading_code": "USDT-OMG",
-      "base_currency": "OMG",
-      "quote_currency": "USDT",
-      "min_trade_size": 1.77145749,
-      "decimal_places": 8,
-      "min_trade_size_currency": "OMG",
-      "fee": 0.0025
-    },
     "ADA-BTC": {
       "name": "ADA-BTC",
       "trading_code": "BTC-ADA",
@@ -8053,46 +7884,6 @@
       "min_trade_size_currency": "MANA",
       "fee": 0.0025
     },
-    "TIX-BTC": {
-      "name": "TIX-BTC",
-      "trading_code": "BTC-TIX",
-      "base_currency": "TIX",
-      "quote_currency": "BTC",
-      "min_trade_size": 45.45454545,
-      "decimal_places": 8,
-      "min_trade_size_currency": "TIX",
-      "fee": 0.0025
-    },
-    "RCN-BTC": {
-      "name": "RCN-BTC",
-      "trading_code": "BTC-RCN",
-      "base_currency": "RCN",
-      "quote_currency": "BTC",
-      "min_trade_size": 42.58943782,
-      "decimal_places": 8,
-      "min_trade_size_currency": "RCN",
-      "fee": 0.0025
-    },
-    "VIB-BTC": {
-      "name": "VIB-BTC",
-      "trading_code": "BTC-VIB",
-      "base_currency": "VIB",
-      "quote_currency": "BTC",
-      "min_trade_size": 36.44314869,
-      "decimal_places": 8,
-      "min_trade_size_currency": "VIB",
-      "fee": 0.0025
-    },
-    "VIB-ETH": {
-      "name": "VIB-ETH",
-      "trading_code": "ETH-VIB",
-      "base_currency": "VIB",
-      "quote_currency": "ETH",
-      "min_trade_size": 24.45585718,
-      "decimal_places": 8,
-      "min_trade_size_currency": "VIB",
-      "fee": 0.0025
-    },
     "MER-BTC": {
       "name": "MER-BTC",
       "trading_code": "BTC-MER",
@@ -8103,26 +7894,6 @@
       "min_trade_size_currency": "MER",
       "fee": 0.0025
     },
-    "POWR-BTC": {
-      "name": "POWR-BTC",
-      "trading_code": "BTC-POWR",
-      "base_currency": "POWR",
-      "quote_currency": "BTC",
-      "min_trade_size": 9.18105031,
-      "decimal_places": 8,
-      "min_trade_size_currency": "POWR",
-      "fee": 0.0025
-    },
-    "POWR-ETH": {
-      "name": "POWR-ETH",
-      "trading_code": "ETH-POWR",
-      "base_currency": "POWR",
-      "quote_currency": "ETH",
-      "min_trade_size": 6.19448196,
-      "decimal_places": 8,
-      "min_trade_size_currency": "POWR",
-      "fee": 0.0025
-    },
     "ADA-ETH": {
       "name": "ADA-ETH",
       "trading_code": "ETH-ADA",
@@ -8131,26 +7902,6 @@
       "min_trade_size": 11.39237622,
       "decimal_places": 8,
       "min_trade_size_currency": "ADA",
-      "fee": 0.0025
-    },
-    "ENG-BTC": {
-      "name": "ENG-BTC",
-      "trading_code": "BTC-ENG",
-      "base_currency": "ENG",
-      "quote_currency": "BTC",
-      "min_trade_size": 2.39601303,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ENG",
-      "fee": 0.0025
-    },
-    "ENG-ETH": {
-      "name": "ENG-ETH",
-      "trading_code": "ETH-ENG",
-      "base_currency": "ENG",
-      "quote_currency": "ETH",
-      "min_trade_size": 1.63172597,
-      "decimal_places": 8,
-      "min_trade_size_currency": "ENG",
       "fee": 0.0025
     },
     "ADA-USDT": {
@@ -8171,16 +7922,6 @@
       "min_trade_size": 443.18710621,
       "decimal_places": 8,
       "min_trade_size_currency": "XVG",
-      "fee": 0.0025
-    },
-    "NXT-USDT": {
-      "name": "NXT-USDT",
-      "trading_code": "USDT-NXT",
-      "base_currency": "NXT",
-      "quote_currency": "USDT",
-      "min_trade_size": 103.18966122,
-      "decimal_places": 8,
-      "min_trade_size_currency": "NXT",
       "fee": 0.0025
     },
     "UKG-BTC": {
@@ -8211,26 +7952,6 @@
       "min_trade_size": 50.1002004,
       "decimal_places": 7,
       "min_trade_size_currency": "IGNIS",
-      "fee": 0.0025
-    },
-    "SRN-BTC": {
-      "name": "SRN-BTC",
-      "trading_code": "BTC-SRN",
-      "base_currency": "SRN",
-      "quote_currency": "BTC",
-      "min_trade_size": 27.32240437,
-      "decimal_places": 8,
-      "min_trade_size_currency": "SRN",
-      "fee": 0.0025
-    },
-    "SRN-ETH": {
-      "name": "SRN-ETH",
-      "trading_code": "ETH-SRN",
-      "base_currency": "SRN",
-      "quote_currency": "ETH",
-      "min_trade_size": 18.47609194,
-      "decimal_places": 8,
-      "min_trade_size_currency": "SRN",
       "fee": 0.0025
     },
     "WAX-BTC": {
@@ -8273,26 +7994,6 @@
       "min_trade_size_currency": "ZRX",
       "fee": 0.0025
     },
-    "VEE-BTC": {
-      "name": "VEE-BTC",
-      "trading_code": "BTC-VEE",
-      "base_currency": "VEE",
-      "quote_currency": "BTC",
-      "min_trade_size": 221.23893805,
-      "decimal_places": 8,
-      "min_trade_size_currency": "VEE",
-      "fee": 0.0025
-    },
-    "BCPT-BTC": {
-      "name": "BCPT-BTC",
-      "trading_code": "BTC-BCPT",
-      "base_currency": "BCPT",
-      "quote_currency": "BTC",
-      "min_trade_size": 23.74169041,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BCPT",
-      "fee": 0.0025
-    },
     "TRX-BTC": {
       "name": "TRX-BTC",
       "trading_code": "BTC-TRX",
@@ -8323,16 +8024,6 @@
       "min_trade_size_currency": "TUSD",
       "fee": 0.0025
     },
-    "LRC-BTC": {
-      "name": "LRC-BTC",
-      "trading_code": "BTC-LRC",
-      "base_currency": "LRC",
-      "quote_currency": "BTC",
-      "min_trade_size": 16.73360107,
-      "decimal_places": 8,
-      "min_trade_size_currency": "LRC",
-      "fee": 0.0025
-    },
     "TUSD-ETH": {
       "name": "TUSD-ETH",
       "trading_code": "ETH-TUSD",
@@ -8341,36 +8032,6 @@
       "min_trade_size": 0.67202404,
       "decimal_places": 8,
       "min_trade_size_currency": "TUSD",
-      "fee": 0.0025
-    },
-    "UP-BTC": {
-      "name": "UP-BTC",
-      "trading_code": "BTC-UP",
-      "base_currency": "UP",
-      "quote_currency": "BTC",
-      "min_trade_size": 54.94505495,
-      "decimal_places": 8,
-      "min_trade_size_currency": "UP",
-      "fee": 0.0025
-    },
-    "DMT-BTC": {
-      "name": "DMT-BTC",
-      "trading_code": "BTC-DMT",
-      "base_currency": "DMT",
-      "quote_currency": "BTC",
-      "min_trade_size": 4.08229915,
-      "decimal_places": 8,
-      "min_trade_size_currency": "DMT",
-      "fee": 0.0025
-    },
-    "DMT-ETH": {
-      "name": "DMT-ETH",
-      "trading_code": "ETH-DMT",
-      "base_currency": "DMT",
-      "quote_currency": "ETH",
-      "min_trade_size": 2.74876306,
-      "decimal_places": 8,
-      "min_trade_size_currency": "DMT",
       "fee": 0.0025
     },
     "TUSD-USDT": {
@@ -8403,16 +8064,6 @@
       "min_trade_size_currency": "POLY",
       "fee": 0.0025
     },
-    "PRO-BTC": {
-      "name": "PRO-BTC",
-      "trading_code": "BTC-PRO",
-      "base_currency": "PRO",
-      "quote_currency": "BTC",
-      "min_trade_size": 6.06796117,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PRO",
-      "fee": 0.0025
-    },
     "SC-USDT": {
       "name": "SC-USDT",
       "trading_code": "USDT-SC",
@@ -8433,66 +8084,6 @@
       "min_trade_size_currency": "TRX",
       "fee": 0.0025
     },
-    "BLT-BTC": {
-      "name": "BLT-BTC",
-      "trading_code": "BTC-BLT",
-      "base_currency": "BLT",
-      "quote_currency": "BTC",
-      "min_trade_size": 26.23294858,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BLT",
-      "fee": 0.0025
-    },
-    "STORM-BTC": {
-      "name": "STORM-BTC",
-      "trading_code": "BTC-STORM",
-      "base_currency": "STORM",
-      "quote_currency": "BTC",
-      "min_trade_size": 304.87804878,
-      "decimal_places": 8,
-      "min_trade_size_currency": "STORM",
-      "fee": 0.0025
-    },
-    "STORM-ETH": {
-      "name": "STORM-ETH",
-      "trading_code": "ETH-STORM",
-      "base_currency": "STORM",
-      "quote_currency": "ETH",
-      "min_trade_size": 206.8680182,
-      "decimal_places": 7,
-      "min_trade_size_currency": "STORM",
-      "fee": 0.0025
-    },
-    "AID-BTC": {
-      "name": "AID-BTC",
-      "trading_code": "BTC-AID",
-      "base_currency": "AID",
-      "quote_currency": "BTC",
-      "min_trade_size": 19.27525058,
-      "decimal_places": 8,
-      "min_trade_size_currency": "AID",
-      "fee": 0.0025
-    },
-    "NGC-BTC": {
-      "name": "NGC-BTC",
-      "trading_code": "BTC-NGC",
-      "base_currency": "NGC",
-      "quote_currency": "BTC",
-      "min_trade_size": 13.19957761,
-      "decimal_places": 8,
-      "min_trade_size_currency": "NGC",
-      "fee": 0.0025
-    },
-    "GTO-BTC": {
-      "name": "GTO-BTC",
-      "trading_code": "BTC-GTO",
-      "base_currency": "GTO",
-      "quote_currency": "BTC",
-      "min_trade_size": 28.73563218,
-      "decimal_places": 8,
-      "min_trade_size_currency": "GTO",
-      "fee": 0.0025
-    },
     "DCR-USDT": {
       "name": "DCR-USDT",
       "trading_code": "USDT-DCR",
@@ -8501,26 +8092,6 @@
       "min_trade_size": 0.15669388,
       "decimal_places": 8,
       "min_trade_size_currency": "DCR",
-      "fee": 0.0025
-    },
-    "OCN-BTC": {
-      "name": "OCN-BTC",
-      "trading_code": "BTC-OCN",
-      "base_currency": "OCN",
-      "quote_currency": "BTC",
-      "min_trade_size": 367.64705882,
-      "decimal_places": 8,
-      "min_trade_size_currency": "OCN",
-      "fee": 0.0025
-    },
-    "OCN-ETH": {
-      "name": "OCN-ETH",
-      "trading_code": "ETH-OCN",
-      "base_currency": "OCN",
-      "quote_currency": "ETH",
-      "min_trade_size": 247.27992087,
-      "decimal_places": 8,
-      "min_trade_size_currency": "OCN",
       "fee": 0.0025
     },
     "BTC-USD": {
@@ -8563,16 +8134,6 @@
       "min_trade_size_currency": "TUBE",
       "fee": 0.0025
     },
-    "CMCT-BTC": {
-      "name": "CMCT-BTC",
-      "trading_code": "BTC-CMCT",
-      "base_currency": "CMCT",
-      "quote_currency": "BTC",
-      "min_trade_size": 657.89473684,
-      "decimal_places": 8,
-      "min_trade_size_currency": "CMCT",
-      "fee": 0.0025
-    },
     "ETH-USD": {
       "name": "ETH-USD",
       "trading_code": "USD-ETH",
@@ -8583,36 +8144,6 @@
       "min_trade_size_currency": "ETH",
       "fee": 0.0025
     },
-    "NLC2-BTC": {
-      "name": "NLC2-BTC",
-      "trading_code": "BTC-NLC2",
-      "base_currency": "NLC2",
-      "quote_currency": "BTC",
-      "min_trade_size": 93.98496241,
-      "decimal_places": 8,
-      "min_trade_size_currency": "NLC2",
-      "fee": 0.0025
-    },
-    "BKX-BTC": {
-      "name": "BKX-BTC",
-      "trading_code": "BTC-BKX",
-      "base_currency": "BKX",
-      "quote_currency": "BTC",
-      "min_trade_size": 45.37205082,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BKX",
-      "fee": 0.0025
-    },
-    "MFT-BTC": {
-      "name": "MFT-BTC",
-      "trading_code": "BTC-MFT",
-      "base_currency": "MFT",
-      "quote_currency": "BTC",
-      "min_trade_size": 301.20481928,
-      "decimal_places": 8,
-      "min_trade_size_currency": "MFT",
-      "fee": 0.0025
-    },
     "LOOM-BTC": {
       "name": "LOOM-BTC",
       "trading_code": "BTC-LOOM",
@@ -8621,16 +8152,6 @@
       "min_trade_size": 14.2612664,
       "decimal_places": 7,
       "min_trade_size_currency": "LOOM",
-      "fee": 0.0025
-    },
-    "RFR-BTC": {
-      "name": "RFR-BTC",
-      "trading_code": "BTC-RFR",
-      "base_currency": "RFR",
-      "quote_currency": "BTC",
-      "min_trade_size": 462.96296296,
-      "decimal_places": 8,
-      "min_trade_size_currency": "RFR",
       "fee": 0.0025
     },
     "DGB-USDT": {
@@ -8673,46 +8194,6 @@
       "min_trade_size_currency": "ETC",
       "fee": 0.0025
     },
-    "BFT-BTC": {
-      "name": "BFT-BTC",
-      "trading_code": "BTC-BFT",
-      "base_currency": "BFT",
-      "quote_currency": "BTC",
-      "min_trade_size": 35.61253561,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BFT",
-      "fee": 0.0025
-    },
-    "GO-BTC": {
-      "name": "GO-BTC",
-      "trading_code": "BTC-GO",
-      "base_currency": "GO",
-      "quote_currency": "BTC",
-      "min_trade_size": 38.75968992,
-      "decimal_places": 8,
-      "min_trade_size_currency": "GO",
-      "fee": 0.0025
-    },
-    "HYDRO-BTC": {
-      "name": "HYDRO-BTC",
-      "trading_code": "BTC-HYDRO",
-      "base_currency": "HYDRO",
-      "quote_currency": "BTC",
-      "min_trade_size": 641.02564103,
-      "decimal_places": 8,
-      "min_trade_size_currency": "HYDRO",
-      "fee": 0.0025
-    },
-    "UPP-BTC": {
-      "name": "UPP-BTC",
-      "trading_code": "BTC-UPP",
-      "base_currency": "UPP",
-      "quote_currency": "BTC",
-      "min_trade_size": 64.93506494,
-      "decimal_places": 8,
-      "min_trade_size_currency": "UPP",
-      "fee": 0.0025
-    },
     "ADA-USD": {
       "name": "ADA-USD",
       "trading_code": "USD-ADA",
@@ -8753,16 +8234,6 @@
       "min_trade_size_currency": "ENJ",
       "fee": 0.0025
     },
-    "MET-BTC": {
-      "name": "MET-BTC",
-      "trading_code": "BTC-MET",
-      "base_currency": "MET",
-      "quote_currency": "BTC",
-      "min_trade_size": 1.04297038,
-      "decimal_places": 8,
-      "min_trade_size_currency": "MET",
-      "fee": 0.0025
-    },
     "LTC-USD": {
       "name": "LTC-USD",
       "trading_code": "USD-LTC",
@@ -8783,16 +8254,6 @@
       "min_trade_size_currency": "TRX",
       "fee": 0.0025
     },
-    "DTA-BTC": {
-      "name": "DTA-BTC",
-      "trading_code": "BTC-DTA",
-      "base_currency": "DTA",
-      "quote_currency": "BTC",
-      "min_trade_size": 781.25,
-      "decimal_places": 2,
-      "min_trade_size_currency": "DTA",
-      "fee": 0.0025
-    },
     "EDR-BTC": {
       "name": "EDR-BTC",
       "trading_code": "BTC-EDR",
@@ -8801,26 +8262,6 @@
       "min_trade_size": 33.37783712,
       "decimal_places": 8,
       "min_trade_size_currency": "EDR",
-      "fee": 0.0025
-    },
-    "BOXX-BTC": {
-      "name": "BOXX-BTC",
-      "trading_code": "BTC-BOXX",
-      "base_currency": "BOXX",
-      "quote_currency": "BTC",
-      "min_trade_size": 14.26940639,
-      "decimal_places": 8,
-      "min_trade_size_currency": "BOXX",
-      "fee": 0.0025
-    },
-    "IHT-BTC": {
-      "name": "IHT-BTC",
-      "trading_code": "BTC-IHT",
-      "base_currency": "IHT",
-      "quote_currency": "BTC",
-      "min_trade_size": 92.93680297,
-      "decimal_places": 8,
-      "min_trade_size_currency": "IHT",
       "fee": 0.0025
     },
     "BCH-USD": {
@@ -8853,16 +8294,6 @@
       "min_trade_size_currency": "ZRX",
       "fee": 0.0025
     },
-    "PMA-BTC": {
-      "name": "PMA-BTC",
-      "trading_code": "BTC-PMA",
-      "base_currency": "PMA",
-      "quote_currency": "BTC",
-      "min_trade_size": 2083.33333333,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PMA",
-      "fee": 0.0025
-    },
     "BAT-USDT": {
       "name": "BAT-USDT",
       "trading_code": "USDT-BAT",
@@ -8881,16 +8312,6 @@
       "min_trade_size": 50.88385252,
       "decimal_places": 8,
       "min_trade_size_currency": "RVN",
-      "fee": 0.0025
-    },
-    "PAL-BTC": {
-      "name": "PAL-BTC",
-      "trading_code": "BTC-PAL",
-      "base_currency": "PAL",
-      "quote_currency": "BTC",
-      "min_trade_size": 204.91803279,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PAL",
       "fee": 0.0025
     },
     "SC-USD": {
@@ -8923,26 +8344,6 @@
       "min_trade_size_currency": "PAX",
       "fee": 0.0025
     },
-    "MOC-BTC": {
-      "name": "MOC-BTC",
-      "trading_code": "BTC-MOC",
-      "base_currency": "MOC",
-      "quote_currency": "BTC",
-      "min_trade_size": 13.9275766,
-      "decimal_places": 7,
-      "min_trade_size_currency": "MOC",
-      "fee": 0.0025
-    },
-    "SPC-BTC": {
-      "name": "SPC-BTC",
-      "trading_code": "BTC-SPC",
-      "base_currency": "SPC",
-      "quote_currency": "BTC",
-      "min_trade_size": 140.4494382,
-      "decimal_places": 7,
-      "min_trade_size_currency": "SPC",
-      "fee": 0.0025
-    },
     "BSV-BTC": {
       "name": "BSV-BTC",
       "trading_code": "BTC-BSV",
@@ -8951,16 +8352,6 @@
       "min_trade_size": 0.01548745,
       "decimal_places": 8,
       "min_trade_size_currency": "BSV",
-      "fee": 0.0025
-    },
-    "XNK-BTC": {
-      "name": "XNK-BTC",
-      "trading_code": "BTC-XNK",
-      "base_currency": "XNK",
-      "quote_currency": "BTC",
-      "min_trade_size": 210.08403361,
-      "decimal_places": 8,
-      "min_trade_size_currency": "XNK",
       "fee": 0.0025
     },
     "BSV-USDT": {
@@ -9003,16 +8394,6 @@
       "min_trade_size_currency": "USDS",
       "fee": 0.0025
     },
-    "PMA-USDT": {
-      "name": "PMA-USDT",
-      "trading_code": "USDT-PMA",
-      "base_currency": "PMA",
-      "quote_currency": "USDT",
-      "min_trade_size": 6355.93220339,
-      "decimal_places": 8,
-      "min_trade_size_currency": "PMA",
-      "fee": 0.0025
-    },
     "ZRX-USD": {
       "name": "ZRX-USD",
       "trading_code": "USD-ZRX",
@@ -9021,26 +8402,6 @@
       "min_trade_size": 10.75268817,
       "decimal_places": 8,
       "min_trade_size_currency": "ZRX",
-      "fee": 0.0025
-    },
-    "LBA-BTC": {
-      "name": "LBA-BTC",
-      "trading_code": "BTC-LBA",
-      "base_currency": "LBA",
-      "quote_currency": "BTC",
-      "min_trade_size": 38.22629969,
-      "decimal_places": 8,
-      "min_trade_size_currency": "LBA",
-      "fee": 0.0025
-    },
-    "MOBI-BTC": {
-      "name": "MOBI-BTC",
-      "trading_code": "BTC-MOBI",
-      "base_currency": "MOBI",
-      "quote_currency": "BTC",
-      "min_trade_size": 63.29113924,
-      "decimal_places": 8,
-      "min_trade_size_currency": "MOBI",
       "fee": 0.0025
     },
     "BAT-USD": {
@@ -10105,16 +9466,6 @@
       "min_trade_size_currency": "XTZ",
       "fee": 0.002
     },
-    "UET-ETH": {
-      "name": "UET-ETH",
-      "trading_code": "UETETH",
-      "base_currency": "UET",
-      "quote_currency": "ETH",
-      "decimal_places": 10,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "UET",
-      "fee": 0.002
-    },
     "MYB-ETH": {
       "name": "MYB-ETH",
       "trading_code": "MYBETH",
@@ -11155,16 +10506,6 @@
       "min_trade_size_currency": "WTC",
       "fee": 0.002
     },
-    "ODN-BTC": {
-      "name": "ODN-BTC",
-      "trading_code": "ODNBTC",
-      "base_currency": "ODN",
-      "quote_currency": "BTC",
-      "decimal_places": 10,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "ODN",
-      "fee": 0.002
-    },
     "BTM-BTC": {
       "name": "BTM-BTC",
       "trading_code": "BTMBTC",
@@ -11443,16 +10784,6 @@
       "decimal_places": 10,
       "min_trade_size": 1.0,
       "min_trade_size_currency": "SCL",
-      "fee": 0.002
-    },
-    "ATL-BTC": {
-      "name": "ATL-BTC",
-      "trading_code": "ATLBTC",
-      "base_currency": "ATL",
-      "quote_currency": "BTC",
-      "decimal_places": 10,
-      "min_trade_size": 1.0,
-      "min_trade_size_currency": "ATL",
       "fee": 0.002
     },
     "ETP-BTC": {
@@ -11773,16 +11104,6 @@
       "decimal_places": 9,
       "min_trade_size": 1.0,
       "min_trade_size_currency": "DRPU",
-      "fee": 0.002
-    },
-    "OTN-BTC": {
-      "name": "OTN-BTC",
-      "trading_code": "OTNBTC",
-      "base_currency": "OTN",
-      "quote_currency": "BTC",
-      "decimal_places": 9,
-      "min_trade_size": 1.0,
-      "min_trade_size_currency": "OTN",
       "fee": 0.002
     },
     "XRP-ETH": {
@@ -12965,16 +12286,6 @@
       "min_trade_size_currency": "ADA",
       "fee": 0.002
     },
-    "SIG-BTC": {
-      "name": "SIG-BTC",
-      "trading_code": "SIGBTC",
-      "base_currency": "SIG",
-      "quote_currency": "BTC",
-      "decimal_places": 11,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "SIG",
-      "fee": 0.002
-    },
     "MTX-BTC": {
       "name": "MTX-BTC",
       "trading_code": "MTXBTC",
@@ -13443,36 +12754,6 @@
       "decimal_places": 10,
       "min_trade_size": 100.0,
       "min_trade_size_currency": "TEL",
-      "fee": 0.002
-    },
-    "BUBO-BTC": {
-      "name": "BUBO-BTC",
-      "trading_code": "BUBOBTC",
-      "base_currency": "BUBO",
-      "quote_currency": "BTC",
-      "decimal_places": 11,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "BUBO",
-      "fee": 0.002
-    },
-    "BUBO-ETH": {
-      "name": "BUBO-ETH",
-      "trading_code": "BUBOETH",
-      "base_currency": "BUBO",
-      "quote_currency": "ETH",
-      "decimal_places": 10,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "BUBO",
-      "fee": 0.002
-    },
-    "BUBO-USD": {
-      "name": "BUBO-USD",
-      "trading_code": "BUBOUSD",
-      "base_currency": "BUBO",
-      "quote_currency": "USD",
-      "decimal_places": 8,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "BUBO",
       "fee": 0.002
     },
     "NCT-BTC": {
@@ -14695,6 +13976,16 @@
       "min_trade_size_currency": "INK",
       "fee": 0.002
     },
+    "CBC-BTC": {
+      "name": "CBC-BTC",
+      "trading_code": "CBCBTC",
+      "base_currency": "CBC",
+      "quote_currency": "BTC",
+      "decimal_places": 7,
+      "min_trade_size": 10.0,
+      "min_trade_size_currency": "CBC",
+      "fee": 0.002
+    },
     "IOST-USD": {
       "name": "IOST-USD",
       "trading_code": "IOSTUSD",
@@ -14763,6 +14054,26 @@
       "decimal_places": 9,
       "min_trade_size": 0.1,
       "min_trade_size_currency": "BCI",
+      "fee": 0.002
+    },
+    "CBC-ETH": {
+      "name": "CBC-ETH",
+      "trading_code": "CBCETH",
+      "base_currency": "CBC",
+      "quote_currency": "ETH",
+      "decimal_places": 6,
+      "min_trade_size": 10.0,
+      "min_trade_size_currency": "CBC",
+      "fee": 0.002
+    },
+    "CBC-USD": {
+      "name": "CBC-USD",
+      "trading_code": "CBCUSD",
+      "base_currency": "CBC",
+      "quote_currency": "USD",
+      "decimal_places": 5,
+      "min_trade_size": 10.0,
+      "min_trade_size_currency": "CBC",
       "fee": 0.002
     },
     "PITCH-BTC": {
@@ -16435,36 +15746,6 @@
       "min_trade_size_currency": "AXPR",
       "fee": 0.002
     },
-    "TOLL-BTC": {
-      "name": "TOLL-BTC",
-      "trading_code": "TOLLBTC",
-      "base_currency": "TOLL",
-      "quote_currency": "BTC",
-      "decimal_places": 11,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "TOLL",
-      "fee": 0.002
-    },
-    "TOLL-ETH": {
-      "name": "TOLL-ETH",
-      "trading_code": "TOLLETH",
-      "base_currency": "TOLL",
-      "quote_currency": "ETH",
-      "decimal_places": 10,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "TOLL",
-      "fee": 0.002
-    },
-    "TOLL-USD": {
-      "name": "TOLL-USD",
-      "trading_code": "TOLLUSD",
-      "base_currency": "TOLL",
-      "quote_currency": "USD",
-      "decimal_places": 8,
-      "min_trade_size": 10.0,
-      "min_trade_size_currency": "TOLL",
-      "fee": 0.002
-    },
     "DAG-BTC": {
       "name": "DAG-BTC",
       "trading_code": "DAGBTC",
@@ -16513,6 +15794,36 @@
       "decimal_places": 8,
       "min_trade_size": 10.0,
       "min_trade_size_currency": "BITS",
+      "fee": 0.002
+    },
+    "CDCC-BTC": {
+      "name": "CDCC-BTC",
+      "trading_code": "CDCCBTC",
+      "base_currency": "CDCC",
+      "quote_currency": "BTC",
+      "decimal_places": 11,
+      "min_trade_size": 100.0,
+      "min_trade_size_currency": "CDCC",
+      "fee": 0.002
+    },
+    "CDCC-ETH": {
+      "name": "CDCC-ETH",
+      "trading_code": "CDCCETH",
+      "base_currency": "CDCC",
+      "quote_currency": "ETH",
+      "decimal_places": 10,
+      "min_trade_size": 100.0,
+      "min_trade_size_currency": "CDCC",
+      "fee": 0.002
+    },
+    "CDCC-USD": {
+      "name": "CDCC-USD",
+      "trading_code": "CDCCUSD",
+      "base_currency": "CDCC",
+      "quote_currency": "USD",
+      "decimal_places": 9,
+      "min_trade_size": 100.0,
+      "min_trade_size_currency": "CDCC",
       "fee": 0.002
     },
     "VET-BTC": {
@@ -16783,16 +16094,6 @@
       "decimal_places": 11,
       "min_trade_size": 100.0,
       "min_trade_size_currency": "SNBL",
-      "fee": 0.002
-    },
-    "OAK-ETH": {
-      "name": "OAK-ETH",
-      "trading_code": "OAKETH",
-      "base_currency": "OAK",
-      "quote_currency": "ETH",
-      "decimal_places": 9,
-      "min_trade_size": 1.0,
-      "min_trade_size_currency": "OAK",
       "fee": 0.002
     },
     "BCHABC-BTC": {
@@ -18054,6 +17355,146 @@
       "min_trade_size": 1.0,
       "min_trade_size_currency": "QKC",
       "fee": 0.002
+    },
+    "KNC-BTC": {
+      "name": "KNC-BTC",
+      "trading_code": "KNCBTC",
+      "base_currency": "KNC",
+      "quote_currency": "BTC",
+      "decimal_places": 9,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "KNC",
+      "fee": 0.002
+    },
+    "KNC-ETH": {
+      "name": "KNC-ETH",
+      "trading_code": "KNCETH",
+      "base_currency": "KNC",
+      "quote_currency": "ETH",
+      "decimal_places": 8,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "KNC",
+      "fee": 0.002
+    },
+    "KNC-USD": {
+      "name": "KNC-USD",
+      "trading_code": "KNCUSD",
+      "base_currency": "KNC",
+      "quote_currency": "USD",
+      "decimal_places": 6,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "KNC",
+      "fee": 0.002
+    },
+    "KEY-BTC": {
+      "name": "KEY-BTC",
+      "trading_code": "KEYBTC",
+      "base_currency": "KEY",
+      "quote_currency": "BTC",
+      "decimal_places": 11,
+      "min_trade_size": 10.0,
+      "min_trade_size_currency": "KEY",
+      "fee": 0.002
+    },
+    "KEY-ETH": {
+      "name": "KEY-ETH",
+      "trading_code": "KEYETH",
+      "base_currency": "KEY",
+      "quote_currency": "ETH",
+      "decimal_places": 10,
+      "min_trade_size": 10.0,
+      "min_trade_size_currency": "KEY",
+      "fee": 0.002
+    },
+    "ATOM-BTC": {
+      "name": "ATOM-BTC",
+      "trading_code": "ATOMBTC",
+      "base_currency": "ATOM",
+      "quote_currency": "BTC",
+      "decimal_places": 8,
+      "min_trade_size": 0.01,
+      "min_trade_size_currency": "ATOM",
+      "fee": 0.002
+    },
+    "ATOM-USD": {
+      "name": "ATOM-USD",
+      "trading_code": "ATOMUSD",
+      "base_currency": "ATOM",
+      "quote_currency": "USD",
+      "decimal_places": 5,
+      "min_trade_size": 0.01,
+      "min_trade_size_currency": "ATOM",
+      "fee": 0.002
+    },
+    "ATOM-ETH": {
+      "name": "ATOM-ETH",
+      "trading_code": "ATOMETH",
+      "base_currency": "ATOM",
+      "quote_currency": "ETH",
+      "decimal_places": 7,
+      "min_trade_size": 0.01,
+      "min_trade_size_currency": "ATOM",
+      "fee": 0.002
+    },
+    "BRDG-BTC": {
+      "name": "BRDG-BTC",
+      "trading_code": "BRDGBTC",
+      "base_currency": "BRDG",
+      "quote_currency": "BTC",
+      "decimal_places": 11,
+      "min_trade_size": 100.0,
+      "min_trade_size_currency": "BRDG",
+      "fee": 0.002
+    },
+    "BRDG-ETH": {
+      "name": "BRDG-ETH",
+      "trading_code": "BRDGETH",
+      "base_currency": "BRDG",
+      "quote_currency": "ETH",
+      "decimal_places": 10,
+      "min_trade_size": 100.0,
+      "min_trade_size_currency": "BRDG",
+      "fee": 0.002
+    },
+    "BRDG-USD": {
+      "name": "BRDG-USD",
+      "trading_code": "BRDGUSD",
+      "base_currency": "BRDG",
+      "quote_currency": "USD",
+      "decimal_places": 9,
+      "min_trade_size": 100.0,
+      "min_trade_size_currency": "BRDG",
+      "fee": 0.002
+    },
+    "MTL-BTC": {
+      "name": "MTL-BTC",
+      "trading_code": "MTLBTC",
+      "base_currency": "MTL",
+      "quote_currency": "BTC",
+      "decimal_places": 9,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "MTL",
+      "fee": 0.002
+    },
+    "MTL-ETH": {
+      "name": "MTL-ETH",
+      "trading_code": "MTLETH",
+      "base_currency": "MTL",
+      "quote_currency": "ETH",
+      "decimal_places": 8,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "MTL",
+      "fee": 0.002
+    },
+    "EXP-BTC": {
+      "name": "EXP-BTC",
+      "trading_code": "EXPBTC",
+      "base_currency": "EXP",
+      "quote_currency": "BTC",
+      "decimal_places": 9,
+      "min_trade_size": 0.1,
+      "min_trade_size_currency": "EXP",
+      "fee": 0.002
     }
   },
   "poloniex": {
@@ -18134,7 +17575,7 @@
       "trading_code": "BTC_GAME",
       "base_currency": "BTC",
       "quote_currency": "GAME",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "GAME",
       "maker_fee": 0.0008,
@@ -18146,7 +17587,7 @@
       "trading_code": "BTC_LTC",
       "base_currency": "BTC",
       "quote_currency": "LTC",
-      "decimal_places": 8,
+      "decimal_places": 6,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LTC",
       "maker_fee": 0.0008,
@@ -18158,7 +17599,7 @@
       "trading_code": "BTC_MAID",
       "base_currency": "BTC",
       "quote_currency": "MAID",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "MAID",
       "maker_fee": 0.0008,
@@ -18242,7 +17683,7 @@
       "trading_code": "BTC_XEM",
       "base_currency": "BTC",
       "quote_currency": "XEM",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "XEM",
       "maker_fee": 0.0008,
@@ -18254,7 +17695,7 @@
       "trading_code": "BTC_XMR",
       "base_currency": "BTC",
       "quote_currency": "XMR",
-      "decimal_places": 8,
+      "decimal_places": 5,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "XMR",
       "maker_fee": 0.0008,
@@ -18290,7 +17731,7 @@
       "trading_code": "USDT_BTC",
       "base_currency": "USDT",
       "quote_currency": "BTC",
-      "decimal_places": 8,
+      "decimal_places": 1,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "BTC",
       "maker_fee": 0.0008,
@@ -18314,7 +17755,7 @@
       "trading_code": "USDT_LTC",
       "base_currency": "USDT",
       "quote_currency": "LTC",
-      "decimal_places": 4,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LTC",
       "maker_fee": 0.0008,
@@ -18386,7 +17827,7 @@
       "trading_code": "XMR_DASH",
       "base_currency": "XMR",
       "quote_currency": "DASH",
-      "decimal_places": 8,
+      "decimal_places": 3,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "DASH",
       "maker_fee": 0.0008,
@@ -18398,7 +17839,7 @@
       "trading_code": "XMR_LTC",
       "base_currency": "XMR",
       "quote_currency": "LTC",
-      "decimal_places": 7,
+      "decimal_places": 2,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LTC",
       "maker_fee": 0.0008,
@@ -18434,7 +17875,7 @@
       "trading_code": "BTC_ETH",
       "base_currency": "BTC",
       "quote_currency": "ETH",
-      "decimal_places": 8,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ETH",
       "maker_fee": 0.0008,
@@ -18542,7 +17983,7 @@
       "trading_code": "ETH_STEEM",
       "base_currency": "ETH",
       "quote_currency": "STEEM",
-      "decimal_places": 8,
+      "decimal_places": 5,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "STEEM",
       "maker_fee": 0.0008,
@@ -18554,7 +17995,7 @@
       "trading_code": "BTC_ETC",
       "base_currency": "BTC",
       "quote_currency": "ETC",
-      "decimal_places": 8,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ETC",
       "maker_fee": 0.0008,
@@ -18566,7 +18007,7 @@
       "trading_code": "ETH_ETC",
       "base_currency": "ETH",
       "quote_currency": "ETC",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ETC",
       "maker_fee": 0.0008,
@@ -18590,7 +18031,7 @@
       "trading_code": "BTC_REP",
       "base_currency": "BTC",
       "quote_currency": "REP",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "REP",
       "maker_fee": 0.0008,
@@ -18638,7 +18079,7 @@
       "trading_code": "BTC_ZEC",
       "base_currency": "BTC",
       "quote_currency": "ZEC",
-      "decimal_places": 8,
+      "decimal_places": 5,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ZEC",
       "maker_fee": 0.0008,
@@ -18674,7 +18115,7 @@
       "trading_code": "XMR_ZEC",
       "base_currency": "XMR",
       "quote_currency": "ZEC",
-      "decimal_places": 8,
+      "decimal_places": 2,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ZEC",
       "maker_fee": 0.0008,
@@ -18926,7 +18367,7 @@
       "trading_code": "ETH_KNC",
       "base_currency": "ETH",
       "quote_currency": "KNC",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "KNC",
       "maker_fee": 0.0008,
@@ -18962,7 +18403,7 @@
       "trading_code": "ETH_BAT",
       "base_currency": "ETH",
       "quote_currency": "BAT",
-      "decimal_places": 8,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "BAT",
       "maker_fee": 0.0008,
@@ -18986,7 +18427,7 @@
       "trading_code": "BTC_LOOM",
       "base_currency": "BTC",
       "quote_currency": "LOOM",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LOOM",
       "maker_fee": 0.0008,
@@ -19010,7 +18451,7 @@
       "trading_code": "USDT_LOOM",
       "base_currency": "USDT",
       "quote_currency": "LOOM",
-      "decimal_places": 8,
+      "decimal_places": 4,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LOOM",
       "maker_fee": 0.0008,
@@ -19022,7 +18463,7 @@
       "trading_code": "USDT_DOGE",
       "base_currency": "USDT",
       "quote_currency": "DOGE",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "DOGE",
       "maker_fee": 0.0008,
@@ -19046,7 +18487,7 @@
       "trading_code": "USDT_LSK",
       "base_currency": "USDT",
       "quote_currency": "LSK",
-      "decimal_places": 8,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LSK",
       "maker_fee": 0.0008,
@@ -19106,7 +18547,7 @@
       "trading_code": "USDT_QTUM",
       "base_currency": "USDT",
       "quote_currency": "QTUM",
-      "decimal_places": 2,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "QTUM",
       "maker_fee": 0.0008,
@@ -19118,7 +18559,7 @@
       "trading_code": "USDC_BTC",
       "base_currency": "USDC",
       "quote_currency": "BTC",
-      "decimal_places": 1,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "BTC",
       "maker_fee": 0.0008,
@@ -19130,7 +18571,7 @@
       "trading_code": "USDC_ETH",
       "base_currency": "USDC",
       "quote_currency": "ETH",
-      "decimal_places": 8,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ETH",
       "maker_fee": 0.0008,
@@ -19142,7 +18583,7 @@
       "trading_code": "USDC_USDT",
       "base_currency": "USDC",
       "quote_currency": "USDT",
-      "decimal_places": 8,
+      "decimal_places": 4,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "USDT",
       "maker_fee": 0.0008,
@@ -19250,7 +18691,7 @@
       "trading_code": "BTC_BCHSV",
       "base_currency": "BTC",
       "quote_currency": "BCHSV",
-      "decimal_places": 8,
+      "decimal_places": 6,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "BCHSV",
       "maker_fee": 0.0008,
@@ -19322,7 +18763,7 @@
       "trading_code": "USDC_LTC",
       "base_currency": "USDC",
       "quote_currency": "LTC",
-      "decimal_places": 1,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "LTC",
       "maker_fee": 0.0008,
@@ -19334,7 +18775,7 @@
       "trading_code": "USDC_ZEC",
       "base_currency": "USDC",
       "quote_currency": "ZEC",
-      "decimal_places": 8,
+      "decimal_places": 7,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ZEC",
       "maker_fee": 0.0008,
@@ -19358,7 +18799,7 @@
       "trading_code": "USDC_FOAM",
       "base_currency": "USDC",
       "quote_currency": "FOAM",
-      "decimal_places": 7,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "FOAM",
       "maker_fee": 0.0008,
@@ -19370,7 +18811,7 @@
       "trading_code": "BTC_NMR",
       "base_currency": "BTC",
       "quote_currency": "NMR",
-      "decimal_places": 6,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "NMR",
       "maker_fee": 0.0008,
@@ -19430,7 +18871,7 @@
       "trading_code": "BTC_ATOM",
       "base_currency": "BTC",
       "quote_currency": "ATOM",
-      "decimal_places": 6,
+      "decimal_places": 8,
       "min_trade_size": 0.0001,
       "min_trade_size_currency": "ATOM",
       "maker_fee": 0.0008,

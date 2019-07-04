@@ -12,7 +12,7 @@ def api_request(uri):
 
 
 def get_current_fiat_rates(crypto_symbols, fiat_symbol=None):
-    crypto_symbols_set = None
+    crypto_symbols_set = crypto_symbols
     if not isinstance(crypto_symbols, set):
         crypto_symbols_set = {crypto_symbols}
     if not isinstance(crypto_symbols_set, set):

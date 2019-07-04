@@ -94,7 +94,7 @@ class p2pb2b(exchange):
                          order_book_dict['buy']['orders']]
             self.highest_bid = self.bids[0]
             logging.debug(
-                'p2pb2b {} lowest {} highest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
+                'p2pb2b {} highest {} lowest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
             #return_value_to_stdout(self.__getstate__())
 
     def get_currency_pairs(self):

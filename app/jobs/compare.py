@@ -11,6 +11,7 @@ from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock, get_reple
 from app.lib.common import round_decimal_number, decimal_as_string
 from threading import Thread
 
+
 def compare(cur_x, cur_y, markets, jobqueue_id):
     arbitrages = []
     result = {'downstream_jobs': []}
@@ -43,7 +44,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
         arbitrage = None
         try:
             # do not fetch the order books until the very last instant. do this asynchronously
-            get_order_books(exchange_buy, exchange_sell)
+            run_exchange_functions_as_threads(exchange_buy.order_book, exchange_sell.order_book)
             # make sure the volumes are identical in each exchange object
             exchange_buy, exchange_sell = equalise_buy_and_sell_volumes(exchange_buy, exchange_sell)
             # ?????
@@ -74,24 +75,24 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     return result
 
 
-def get_order_books(exchange_buy, exchange_sell):
+def run_exchange_functions_as_threads(exchange_buy, exchange_sell):
     # In Python, because of GIL (Global Interpreter Lock) a single python process cannot run threads in
     # parallel (utilize multiple cores). It can however run them concurrently (context switch during I/O bound operations)
     # TODO make this use multiprocessing
-    orders_buy = Thread(name='get_orders_buy', target=exchange_buy.order_book)
-    orders_sell = Thread(name='get_orders_sell', target=exchange_sell.order_book)
-    orders_buy.start()
-    orders_sell.start()
-    orders_buy.join()
-    orders_sell.join()
+    buy = Thread(name='buy_thread', target=exchange_buy)
+    sell = Thread(name='sell_thread', target=exchange_sell)
+    buy.start()
+    sell.start()
+    buy.join()
+    sell.join()
 
 
 def get_downstream_jobs(arbitrages, fiat_rate):
     replenish_jobs = []
     viable_arbitrages = []
     for arbitrage in arbitrages:
-        arbitrage['buy'].get_balances()
-        arbitrage['sell'].get_balances()
+        # runs the get balance functions as threads meaning the cpu can switch between tasks during I/O
+        run_exchange_functions_as_threads(arbitrage['buy'].get_balances, arbitrage['sell'].get_balances())
         # first, make sure we do not have zero of the currency we're trying to sell
         # send more of the currency to that exchange if there is a zero balance
         new_replenish_jobs = check_zero_balances(arbitrage)
