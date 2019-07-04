@@ -9,6 +9,7 @@ import json
 import sys
 import calendar
 from bson import json_util
+import simplejson
 
 POLL_INTERVAL = timedelta(seconds=2)
 STATUS_CREATING = 'CREATING'

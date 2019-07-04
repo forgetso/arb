@@ -9,6 +9,11 @@ from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock, get_replenish_jobs
 from app.lib.common import round_decimal_number, decimal_as_string
+from multiprocessing import Process, Pipe
+from threading import Thread
+import simplejson
+import sys
+import binascii
 
 
 def compare(cur_x, cur_y, markets, jobqueue_id):
@@ -34,24 +39,21 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     except:
         raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
 
-    # get the order book from each api
-    for exchange in apis_trade_pair_valid:
-        exchange.order_book()
-
     # generate a unique list of permutations for comparison [[buy, sell], [buy, sell], ...]
     exchange_permutations = list(itertools.permutations(apis_trade_pair_valid, 2))
 
-    # first sort out the volumes in each exchange object
-    exchange_permutations_fixed = []
-    for exchange_permutation in exchange_permutations:
-        exchange_permutations_fixed.append(equalise_buy_and_sell_volumes(exchange_permutation))
-
     # determine whether buying and selling across each permutation will result in a profit > FIAT_ARBITRAGE_MINIMUM
-    for exchange_permutation in exchange_permutations_fixed:
+    for exchange_permutation in exchange_permutations:
         exchange_buy, exchange_sell = exchange_permutation
         arbitrage = None
         try:
+            # do not fetch the order books until the very last instant. do this asynchronously
+            get_order_books(exchange_buy, exchange_sell)
+            # make sure the volumes are identical in each exchange object
+            exchange_buy, exchange_sell = equalise_buy_and_sell_volumes(exchange_buy, exchange_sell)
+            # ?????
             arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
+            # profit!
         except InvalidTrade:
             continue
         if arbitrage:
@@ -75,6 +77,15 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     return_value_to_stdout(result)
 
     return result
+
+
+def get_order_books(exchange_buy, exchange_sell):
+    orders_buy = Thread(name='get_orders_buy', target=exchange_buy.order_book)
+    orders_sell = Thread(name='get_orders_sell', target=exchange_sell.order_book)
+    orders_buy.start()
+    orders_sell.start()
+    orders_buy.join()
+    orders_sell.join()
 
 
 def get_downstream_jobs(arbitrages, fiat_rate):
@@ -129,13 +140,12 @@ def check_zero_balances(arbitrage):
     return replenish_jobs
 
 
-def equalise_buy_and_sell_volumes(exchange_permutation):
+def equalise_buy_and_sell_volumes(exchange_buy, exchange_sell):
     # Take the volume of the highest bid from an exchange and set it as the volume we should buy
     # as we should not buy more than we can sell
     # Example
     # lowest ask: we can buy 4 BTC (volume) at 99 ETH (price) per BTC
     # highest bid: but we can only sell 3 BTC (volume) at 100 ETH (price) per BTC
-    exchange_buy, exchange_sell = exchange_permutation
     volume_equal = exchange_buy.lowest_ask['volume']
     volume_sell = exchange_sell.highest_bid['volume']
     volume_buy = exchange_buy.lowest_ask['volume']
@@ -144,7 +154,7 @@ def equalise_buy_and_sell_volumes(exchange_permutation):
     exchange_buy.lowest_ask['volume'] = volume_equal
     exchange_sell.highest_bid['volume'] = volume_equal
 
-    return (exchange_buy, exchange_sell)
+    return exchange_buy, exchange_sell
 
 
 def set_maximum_trade_volume(volume, price, fiat_rate):
@@ -172,9 +182,12 @@ def determine_arbitrage_viability(arbitrage, fiat_rate):
 
     # if we have some BTC but not enough to buy required ETH then try to use what BTC we have
     if Decimal(0) < exchange_balance < volume_base * price_buy:
-        # will try and use the btc we have instead
-        volume_base = exchange_balance / price_buy * volume_base
-        revalidate = True
+        try:
+            # will try and use the btc we have instead
+            volume_base = exchange_balance / price_buy * volume_base
+            revalidate = True
+        except TypeError:
+            raise CompareError('Types are wrong {} {} {}'.format(exchange_balance, price_buy, volume_base))
 
     # sell #
     # we may not have had enough BTC to buy all the offered ETH, therefore volume may be lower
@@ -203,8 +216,9 @@ def determine_arbitrage_viability(arbitrage, fiat_rate):
         sell_transact = transact_job(exchange_sell.name, exchange_sell.trade_pair_common, volume_base, price_sell,
                                      'sell',
                                      profit)
-        viable_arbitrages.append(buy_transact)
+        # always do the sell first as it is more likely to be the trade that generates the profit
         viable_arbitrages.append(sell_transact)
+        viable_arbitrages.append(buy_transact)
 
     return viable_arbitrages
 

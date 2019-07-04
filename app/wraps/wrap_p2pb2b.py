@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timedelta
 import time
 from app.lib.exchange import exchange
+from app.lib.jobqueue import return_value_to_stdout
 
 P2PB2B_TAKER_FEE = 0.0020
 P2PB2B_MAKER_FEE = 0.0020
@@ -37,6 +38,21 @@ class p2pb2b(exchange):
         self.jobqueue_id = jobqueue_id
         self.minimum_deposit = MINIMUM_DEPOSIT
         exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state['api']
+        return state
+
+    def __setstate__(self, state):
+        # Restore instance attributes (i.e., filename and lineno).
+        self.__dict__.update(state)
+        # API cannot be pickled
+        self.api = P2PB2B(P2PB2B_PUBLIC_KEY, P2PB2B_SECRET_KEY)
 
     def order_book(self):
         # TODO put rate limiting in for this wrapper at the very beginning. Store the number of API hits that have occurred in the current minute and second
@@ -70,15 +86,16 @@ class p2pb2b(exchange):
             #       'makerFee': '0.002', 'dealStock': '0', 'dealMoney': '0'}]}}
 
             # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
-            self.asks = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
-                         order_book_dict['buy']['orders']]
-            self.lowest_ask = self.asks[0]
-            self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['amount'])} for x in
+            # we take the volume from left as this is how much of this trade is left until it completes
+            self.asks = [{'price': Decimal(x['price']), 'volume': Decimal(x['left'])} for x in
                          order_book_dict['sell']['orders']]
+            self.lowest_ask = self.asks[0]
+            self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['left'])} for x in
+                         order_book_dict['buy']['orders']]
             self.highest_bid = self.bids[0]
             logging.debug(
                 'p2pb2b {} lowest {} highest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
-        return order_book_dict
+            #return_value_to_stdout(self.__getstate__())
 
     def get_currency_pairs(self):
         # get all of their currency pairs in the format for the markets file

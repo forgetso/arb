@@ -5,6 +5,7 @@ from decimal import Decimal
 from app.lib.common import get_number_of_decimal_places
 from app.lib.exchange import exchange
 from datetime import datetime, timedelta
+from app.lib.jobqueue import return_value_to_stdout
 
 POLONIEX_TAKER_FEE = 0.002
 POLONIEX_MAKER_FEE = 0.0008
@@ -21,6 +22,21 @@ class poloniex(exchange):
         self.name = 'poloniex'
         exchange.__init__(self, name=self.name, jobqueue_id=jobqueue_id)
 
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        del state['api']
+        return state
+
+    def __setstate__(self, state):
+        # Restore instance attributes (i.e., filename and lineno).
+        self.__dict__.update(state)
+        # API cannot be pickled
+        self.api = Poloniex(POLONIEX_PUBLIC_KEY, POLONIEX_SECRET_KEY)
+
     def order_book(self):
         ticker = self.api.returnOrderBook()
         order_book_dict = ticker[self.trade_pair]
@@ -31,7 +47,7 @@ class poloniex(exchange):
         self.lowest_ask = {'price': Decimal(self.asks[0][0][0]), 'volume': Decimal(self.asks[0][0][1])}
         self.bids = [order_book_dict.get('bids')]
         self.highest_bid = {'price': Decimal(self.bids[0][0][0]), 'volume': Decimal(self.bids[0][0][1])}
-        return order_book_dict
+        #return_value_to_stdout(self.__getstate__())
 
     def get_currency_pairs(self):
         # get all of their currency pairs in the format for the markets file
@@ -74,20 +90,34 @@ class poloniex(exchange):
         if not result.get('orderNumber'):
             raise WrapPoloniexError('{}'.format(result))
 
-        raw_trade = self.get_order_status(result.get('orderId'))
+        # [{globalTradeID: 394127362,
+        #   tradeID: 13536351,
+        #   currencyPair: 'BTC_STR',
+        #   type: 'buy',
+        #   rate: '0.00003432',
+        #   amount: '3696.05342780',
+        #   total: '0.12684855',
+        #   fee: '0.00200000',
+        #   date: '2018-10-16 17:03:43'},
+        #  ...]
+        raw_trades = self.get_order_status(result.get('orderNumber'))
 
-        trade = self.format_trade(raw_trade, trade_type, trade_id)
+        result['resultingTrades'] = raw_trades
+
+        trade = self.format_trade(result, trade_type, trade_id)
 
         return trade
 
     def get_order_status(self, order_id):
         # TODO work out how these responses works
         order_completed = False
-        order_result = {}
+        order_result = []
         while not order_completed:
-            order_result = self.get_orders(order_id)
-            if order_id not in order_result:
-                break
+            response = self.api.returnOrderTrades(order_id)
+            if 'error' not in response:
+                order_completed = True
+                order_result = response
+
             time.sleep(5)
 
         return order_result
@@ -105,7 +135,6 @@ class poloniex(exchange):
         #     {'amount': 0.011, 'date': '2019-07-03 15:48:19', 'rate': 0.02579294, 'total': 0.00028372,
         #      'tradeID': 47232767, 'type': 'buy', 'takerAdjustment': 0.0109725}], 'fee': 0.0025,
         #  'currencyPair': 'BTC_ETH'}
-        # TODO handle multiple resultingTrades
         try:
             trade = {
                 'external_id': raw_trade['orderNumber'],
@@ -115,12 +144,16 @@ class poloniex(exchange):
                 'trade_pair': self.trade_pair,
                 'trade_type': trade_type,
                 'price': raw_trade['resultingTrades'][0]['rate'],
-                'volume': raw_trade['resultingTrades'][0]['amount'],
                 'trades_itemised': raw_trade.get('resultingTrades', []),
                 'date': raw_trade['resultingTrades'][0]['date'],
-                'fees': raw_trade['fee'],
+                'fees': raw_trade['takerAdjustment'],
                 'exchange': self.name
             }
+            volume = 0
+            for individual_trade in trade['trades_itemised']:
+                volume += Decimal(individual_trade['amount'])
+
+            trade['volume'] = volume
         except Exception as e:
             raise WrapPoloniexError('Error formatting trade {}'.format(e))
 
