@@ -9,12 +9,7 @@ from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock, get_replenish_jobs
 from app.lib.common import round_decimal_number, decimal_as_string
-from multiprocessing import Process, Pipe
 from threading import Thread
-import simplejson
-import sys
-import binascii
-
 
 def compare(cur_x, cur_y, markets, jobqueue_id):
     arbitrages = []
@@ -80,6 +75,9 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
 
 def get_order_books(exchange_buy, exchange_sell):
+    # In Python, because of GIL (Global Interpreter Lock) a single python process cannot run threads in
+    # parallel (utilize multiple cores). It can however run them concurrently (context switch during I/O bound operations)
+    # TODO make this use multiprocessing
     orders_buy = Thread(name='get_orders_buy', target=exchange_buy.order_book)
     orders_sell = Thread(name='get_orders_sell', target=exchange_sell.order_book)
     orders_buy.start()
