@@ -99,7 +99,7 @@ class exchange(ABC):
     # The quotation EUR/USD 1.2500 means that one euro is exchanged for 1.2500 US dollars.
     # Here, EUR is the base currency and USD is the quote currency(counter currency).
     def trade_validity(self, currency, price, volume):
-        result = False
+        result = None
         if not self.trade_pair:
             raise ExchangeError('Trade pair must be set')
 
@@ -109,21 +109,31 @@ class exchange(ABC):
                                                                                                 type(volume)))
 
         volume_corrected = self.round_volume(currency, volume)
+        if not self.min_trade_size_currency:
+            raise ExchangeError('Missing min trade size currency')
 
         # if the min trade size is denoted in ETH and the volume is in ETH, and the volume > min trade size, we're good
+
         if self.min_trade_size_currency == currency:
-            if volume_corrected > self.min_trade_size:
+            if volume_corrected >= self.min_trade_size:
+                # logging.debug('volume corrected is greater than min trade size')
                 result = True
-        elif price * volume_corrected > self.min_trade_size:
+            else:
+                result = False
+        elif price * volume_corrected >= self.min_trade_size:
+            # logging.debug('volume corrected * price is greater than min trade size in btc')
             result = True
+        else:
+            result = False
 
         # this would be the trade size in BTC if the trade pair was ETHBTC
         if self.min_notional:
-            if price * volume_corrected > self.min_notional:
-                result = True
-            else:
-                logging.debug('Trade is below min notional {}'.format(self.min_notional))
-                result = False
+            if result is True:
+                if price * volume_corrected >= self.min_notional:
+                    result = True
+                else:
+                    logging.debug('Trade is below min notional {}'.format(self.min_notional))
+                    result = False
 
         return result, price, volume_corrected
 
