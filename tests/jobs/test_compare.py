@@ -1,6 +1,6 @@
 from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calculate_profit_and_volume, \
     check_trade_pair, exchange_selection, CompareError, equalise_buy_and_sell_volumes, set_maximum_trade_volume, \
-    run_exchange_functions_as_threads, get_downstream_jobs
+    run_exchange_functions_as_threads, get_downstream_jobs, check_zero_balances
 from decimal import Decimal
 from pytest import raises
 from testdata.wraps import wrap_exchange1, wrap_exchange2
@@ -14,6 +14,15 @@ MARKETS = {'exchange1':
         "trading_code": "BTC-ETH",
         "base_currency": "ETH",
         "quote_currency": "BTC",
+        "min_trade_size": 0.00740642,
+        "decimal_places": 8,
+        "min_trade_size_currency": "ETH",
+        "fee": 0.001
+    }, "ETH-ADX": {
+        "name": "ETH-ADX",
+        "trading_code": "ETH-ADX",
+        "base_currency": "ETH",
+        "quote_currency": "ADX",
         "min_trade_size": 0.00740642,
         "decimal_places": 8,
         "min_trade_size_currency": "ETH",
@@ -32,7 +41,20 @@ MARKETS = {'exchange1':
             "taker_fee": 0.001,
             "maker_fee": 0.001,
             "fee": 0.001
-        }},
+        },
+            "ETH-ADX": {
+                "name": "ETH-ADX",
+                "trading_code": "ETHADX",
+                "base_currency": "ETH",
+                "quote_currency": "ADX",
+                "decimal_places": 3,
+                "min_trade_size": 0.001,
+                "min_trade_size_currency": "ETH",
+                "min_notional": 0.001,
+                "taker_fee": 0.001,
+                "maker_fee": 0.001,
+                "fee": 0.001
+            }},
     # this exchange will be ignored as it doesn't exist in our allowed list of exchanges
     'exchange3':
         {"ETH-BTC": {
@@ -233,4 +255,18 @@ def test_get_downstream_jobs():
     exchange2.get_balances()
     arbitrage = find_arbitrage(exchange1, exchange2, fiat_rate, fiat_arbitrage_minimum=0)
     replenish_jobs, viable_arbitrages = get_downstream_jobs([arbitrage], fiat_rate)
-    assert len(viable_arbitrages)== 2
+    assert len(viable_arbitrages) == 2
+
+
+def test_check_zero_balances():
+    exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange2 = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchange1.set_trade_pair('ETH-ADX', MARKETS)
+    exchange2.set_trade_pair('ETH-ADX', MARKETS)
+    exchange1.get_balances()
+    exchange2.get_balances()
+    arbitrage = {'buy': exchange1, 'sell': exchange2}
+    replenish_jobs = check_zero_balances(arbitrage)
+    assert replenish_jobs == [{'job_type': 'REPLENISH', 'job_args': {'exchange': 'exchange1', 'currency': 'ADX'}},
+                              {'job_type': 'REPLENISH', 'job_args': {'exchange': 'exchange1', 'currency': 'ETH'}},
+                              {'job_type': 'REPLENISH', 'job_args': {'exchange': 'exchange2', 'currency': 'ADX'}}]
