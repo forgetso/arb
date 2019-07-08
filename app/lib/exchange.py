@@ -44,6 +44,7 @@ class exchange(ABC):
             self.min_trade_size_currency = trade_pair_details.get('min_trade_size_currency')
             self.base_currency = trade_pair_details.get('base_currency')
             self.quote_currency = trade_pair_details.get('quote_currency')
+            self.min_notional = trade_pair_details.get('min_notional')
         except AttributeError as e:
             raise ErrorTradePairDoesNotExist(e)
 
@@ -117,7 +118,7 @@ class exchange(ABC):
             result = True
 
         # this would be the trade size in BTC if the trade pair was ETHBTC
-        if hasattr(self, 'min_notional'):
+        if self.min_notional:
             if price * volume_corrected > self.min_notional:
                 result = True
             else:
