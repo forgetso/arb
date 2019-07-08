@@ -283,7 +283,8 @@ def calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate):
     trade_valid_buy, price_buy, volume_buy = exchange_buy.trade_validity(currency=exchange_buy.base_currency,
                                                                          price=price_buy, volume=volume)
     if not trade_valid_buy or not trade_valid_sell:
-        raise InvalidTrade('Either the buy or the sell is invalid')
+        # one or more of the trades is invalid so the potential profit is zero
+        return exchange_buy, exchange_sell, 0
 
     volume = set_maximum_trade_volume(volume, price_buy, fiat_rate)
 
