@@ -97,9 +97,9 @@ def run_exchange_functions_as_threads(exchanges, function_name):
 def get_downstream_jobs(arbitrages, fiat_rate):
     replenish_jobs = []
     viable_arbitrages = []
-    # runs the get balance functions as threads meaning the cpu can switch between tasks during I/O
-    run_exchange_functions_as_threads(arbitrages, 'get_balances')
     for arbitrage in arbitrages:
+        # runs the get balance functions as threads meaning the cpu can switch between tasks during I/O
+        run_exchange_functions_as_threads([arbitrage['buy'], arbitrage['sell']], 'get_balances')
         # first, make sure we do not have zero of the currency we're trying to sell
         # send more of the currency to that exchange if there is a zero balance
         new_replenish_jobs = check_zero_balances(arbitrage)
@@ -247,15 +247,16 @@ def check_trade_pair(trade_pair):
     return result
 
 
-def find_arbitrage(exchange_x, exchange_y, fiat_rate):
+def find_arbitrage(exchange_x, exchange_y, fiat_rate, fiat_arbitrage_minimum=None):
     result = {}
-
+    if fiat_arbitrage_minimum is None:
+        fiat_arbitrage_minimum = FIAT_ARBITRAGE_MINIMUM
     if exchange_x.lowest_ask and exchange_y.highest_bid:
         if exchange_x.lowest_ask['price'] < exchange_y.highest_bid['price']:
 
             exchange_x, exchange_y, profit = calculate_profit_and_volume(exchange_x, exchange_y, fiat_rate)
 
-            if profit > FIAT_ARBITRAGE_MINIMUM:
+            if profit > fiat_arbitrage_minimum:
                 result = {'buy': exchange_x, 'sell': exchange_y, 'profit': profit}
                 logging.info(
                     msg='You can buy for {} on {} and sell for {} on {} for profit {} {}'.format(

@@ -8,7 +8,7 @@ from queue import Queue, Empty  # python 3.x
 
 def main():
     logging.basicConfig(format='%(levelname)s:%(message)s', level='DEBUG')
-    cmd = ['python3', 'app/tmp/p2pb2b_test.py']
+    cmd = ['python3', 'app/tmp/p2pb2b_tst.py']
     execute(cmd, '/home/chris/dev/arb')
     exit(0)
     # env = os.environ.copy()

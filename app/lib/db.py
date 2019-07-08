@@ -216,7 +216,7 @@ def lock_api_method(exchange, method, jobqueue_id):
 # unlock an API method after the request has finished
 def unlock_api_method(exchange, method, jobqueue_id):
     db = exchange_db()
-    db.method_lock.remove({'exchange': exchange, 'method': method, 'jobqueue_id': ObjectId(jobqueue_id)})
+    db.method_lock.delete_one({'exchange': exchange, 'method': method, 'jobqueue_id': ObjectId(jobqueue_id)})
 
 
 # check if an API method is locked
@@ -242,10 +242,10 @@ def remove_api_method_locks():
             jobqueues_ended.append(jobqueue_status_doc['_id'])
 
     # remove the jobqueue statuses for jobqueues that are not running
-    db.status.remove({'_id': {'$in': jobqueues_ended}})
+    db.status.delete_many({'_id': {'$in': jobqueues_ended}})
     db = exchange_db()
     # remove any method locks associated with jobqueues that are not running
-    db.method_lock.remove({'_id': {'$in': jobqueues_ended}})
+    db.method_lock.delete_many({'_id': {'$in': jobqueues_ended}})
 
 
 def get_trade_id():

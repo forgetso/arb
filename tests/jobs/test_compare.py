@@ -1,10 +1,11 @@
 from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calculate_profit_and_volume, \
-    check_trade_pair, exchange_selection, CompareError, equalise_buy_and_sell_volumes, set_maximum_trade_volume
+    check_trade_pair, exchange_selection, CompareError, equalise_buy_and_sell_volumes, set_maximum_trade_volume, \
+    run_exchange_functions_as_threads, get_downstream_jobs
 from decimal import Decimal
-from pytest import raises, fixture
-from app.lib import exchange
+from pytest import raises
 from testdata.wraps import wrap_exchange1, wrap_exchange2
-#TODO globally override the FIAT_ARBITRAGE_MINIMUM as these tests fail when it is set too low
+
+# TODO globally override the FIAT_ARBITRAGE_MINIMUM as these tests fail when it is set too low
 
 # this would usually be loaded from a json file
 MARKETS = {'exchange1':
@@ -80,7 +81,8 @@ def test_find_arbitrage():
     exchange2 = wrap_exchange2.exchange2(JOBQUEUE_ID)
     exchange1.set_trade_pair('ETH-BTC', MARKETS)
     exchange2.set_trade_pair('ETH-BTC', MARKETS)
-    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100))
+    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100),
+                            fiat_arbitrage_minimum=0)
     # at this stage the exchange objects have no ask/bid data attached
     assert result == {}
     exchange1.order_book()
@@ -88,7 +90,8 @@ def test_find_arbitrage():
     # now we should have order book data in each exchange
     assert exchange1.lowest_ask is not None
     assert exchange2.lowest_ask is not None
-    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100))
+    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100),
+                            fiat_arbitrage_minimum=0)
     # an arbitrage should have been found
     assert result != {}
     assert result['buy'].name == 'exchange1'
@@ -207,3 +210,27 @@ def test_set_maximum_trade_volume():
     fiat_rate = 0.5
     volume = set_maximum_trade_volume(volume, price, fiat_rate)
     assert volume == 100
+
+
+def test_run_exchange_functions_as_threads():
+    exchange_buy = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange_sell = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchanges = [exchange_buy, exchange_sell]
+    run_exchange_functions_as_threads(exchanges, 'order_book')
+    assert exchange_buy.lowest_ask is not None
+    assert exchange_sell.lowest_ask is not None
+
+
+def test_get_downstream_jobs():
+    fiat_rate = 1
+    exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange2 = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchange1.set_trade_pair('ETH-BTC', MARKETS)
+    exchange2.set_trade_pair('ETH-BTC', MARKETS)
+    exchange1.order_book()
+    exchange2.order_book()
+    exchange1.get_balances()
+    exchange2.get_balances()
+    arbitrage = find_arbitrage(exchange1, exchange2, fiat_rate, fiat_arbitrage_minimum=0)
+    replenish_jobs, viable_arbitrages = get_downstream_jobs([arbitrage], fiat_rate)
+    assert len(viable_arbitrages)== 2
