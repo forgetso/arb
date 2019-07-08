@@ -94,8 +94,8 @@ class p2pb2b(exchange):
                          order_book_dict['buy']['orders']]
             self.highest_bid = self.bids[0]
             logging.debug(
-                'p2pb2b {} highest {} lowest {}'.format(self.trade_pair_common, self.lowest_ask, self.highest_bid))
-            #return_value_to_stdout(self.__getstate__())
+                'p2pb2b lowest ask {} highest bid {}'.format(self.lowest_ask['price'], self.highest_bid['price']))
+            # return_value_to_stdout(self.__getstate__())
 
     def get_currency_pairs(self):
         # get all of their currency pairs in the format for the markets file
@@ -153,12 +153,9 @@ class p2pb2b(exchange):
             raise WrapP2PB2BError('{}'.format(result.get('message')))
 
         result = response.get('result')
-        if Decimal(result.get('left')) == 0:
-            raw_trade = result
-        else:
-            order_id = result.get('orderId')
-            raw_trade = self.get_order_status(order_id)
-            raw_trade['orderId'] = order_id
+        order_id = result.get('orderId')
+        raw_trade = self.get_order_status(order_id)
+        raw_trade['orderId'] = order_id
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 

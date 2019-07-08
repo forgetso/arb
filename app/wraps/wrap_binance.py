@@ -40,6 +40,8 @@ class binance(exchange):
         self.bids = [{'price': Decimal(x[0]), 'volume': Decimal(x[1])} for x in
                      order_book_dict.get('bids', [])]
         self.highest_bid = self.bids[0]
+        logging.debug(
+            'Binance lowest ask {} highest bid {}'.format(self.lowest_ask['price'], self.highest_bid['price']))
         return order_book_dict
 
     def get_currency_pairs(self):
@@ -93,7 +95,7 @@ class binance(exchange):
         if result.get('status').upper() == 'FILLED':
             raw_trade = result
         else:
-            raw_trade = self.get_order_status(result.get('symbol'), result.get('orderId'))
+            raw_trade = self.get_order_status(result.get('orderId'))
 
         if not raw_trade.get('status').upper() == 'FILLED':
             raise WrapBinanceError('{}'.format(result.get('message')))

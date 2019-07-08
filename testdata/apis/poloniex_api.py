@@ -1,15 +1,127 @@
-
-
 class PoloniexAPI():
     def __init__(self):
+        self.methods = {'returnBalances': {{'1CR': '0.00000000',
+                                            'ABY': '0.00000000',
+                                            'AC': '0.00000000',
+                                            'YIN': '0.00000000',
+                                            'ZEC': '0.02380926',
+                                            'ZRX': '0.00000000'}},
+                        'returnCompleteBalances': {'1CR':
+                                                       {'available': '0.00000000',
+                                                        'onOrders': '0.00000000',
+                                                        'btcValue': '0.00000000'},
+                                                   'ABY':
+                                                       {'available': '0.00000000',
+                                                        'onOrders': '0.00000000',
+                                                        'btcValue': '0.00000000'},
+                                                   'AC':
+                                                       {'available': '0.00000000',
+                                                        'onOrders': '0.00000000',
+                                                        'btcValue': '0.00000000'},
+                                                   'YIN':
+                                                       {'available': '0.00000000',
+                                                        'onOrders': '0.00000000',
+                                                        'btcValue': '0.00000000'},
+                                                   'ZEC':
+                                                       {'available': '0.02380926',
+                                                        'onOrders': '0.00000000',
+                                                        'btcValue': '0.00044059'},
+                                                   'ZRX':
+                                                       {'available': '0.00000000',
+                                                        'onOrders': '0.00000000',
+                                                        'btcValue': '0.00000000'}},
+                        'returnDepositAddresses': {'BCH': '1FhCkdKeMGa621mCpAtFYzeVfUBnHbooLj',
+                                                   'BTC': '131rdg5Rzn6BFufnnQaHhVa5ZtRU1J2EZR',
+                                                   'XMR': '4JUdGzvrMFDWrUUwY3toJATSeNwjn54LkCnKBPRzDuhzi5vSepHfUckJNxRL2gjkNrSqtCoRUrEDAgRwsQvVCjZbRxGLC7uLNMGQ693YeY',
+                                                   'ZEC': 't1MHktAs4DMjMWqKiji4czLYD1rGNczGeFV'},
+                        'generateNewAddress': {'success': 1,
+                                               'response': '0xa6f0dacc33c7f63e137e0106ed71cc20b4b931af'},
+                        'returnDepositsWithdrawawls': {'deposits':
+                                                           [{'depositNumber': 7397520,
+                                                             'currency': 'BTC',
+                                                             'address': '131rdg5Rzn6BFufnnQaHhVa5ZtRU1J2EZR',
+                                                             'amount': '0.06830697',
+                                                             'confirmations': 1,
+                                                             'txid': '3a4b9b2404f6e6fb556c3e1d46a9752f5e70a93ac1718605c992b80aacd8bd1d',
+                                                             'timestamp': 1506005439,
+                                                             'status': 'COMPLETE'},
+                                                            {'depositNumber': 7397521,
+                                                             'currency': 'BCH',
+                                                             'address': '1FhCkdKeMGa621mCpAtFYzeVfUBnHbooLj',
+                                                             'amount': '10.00000000',
+                                                             'confirmations': 5,
+                                                             'txid': 'eb2e0914105b02fbe6e17913d74b4e5950c1ba122eb71afdfc49e2c58b272456',
+                                                             'timestamp': 1508436102,
+                                                             'status': 'COMPLETE'},
+                                                            {'depositNumber': 7397519,
+                                                             'currency': 'BTC',
+                                                             'address': '131rdg5Rzn6BFufnnQaHhVa5ZtRU1J2EZR',
+                                                             'amount': '1.49998357',
+                                                             'confirmations': 1,
+                                                             'txid': 'b05bdec7430a56b5a5ed34af4a31a54859dda9b7c88a5586bc5d6540cdfbfc7a',
+                                                             'timestamp': 1537304458,
+                                                             'status': 'COMPLETE'},
+                                                            {'depositNumber': 7397518,
+                                                             'currency': 'ETH',
+                                                             'address': '0xb7e033598cb94ef5a35349316d3a2e4f95f308da',
+                                                             'amount': '29.99825341',
+                                                             'confirmations': 53,
+                                                             'txid': '0xf7e7eeb44edcad14c0f90a5fffb1cbb4b80e8f9652124a0838f6906ca939ccd2',
+                                                             'timestamp': 1537305507,
+                                                             'status': 'COMPLETE'}],
+                                                       'withdrawals':
+                                                           [{'withdrawalNumber': 7397527,
+                                                             'currency': 'ETC',
+                                                             'address': '0x26419a62055af459d2cd69bb7392f5100b75e304',
+                                                             'amount': '13.19951600',
+                                                             'fee': '0.01000000',
+                                                             'timestamp': 1506010932,
+                                                             'status': 'COMPLETE: 0x423346392f82ac16e8c2604f2a604b7b2382d0e9d8030f673821f8de4b5f5a30',
+                                                             'ipAddress': '1.2.3.4',
+                                                             'paymentID': None
+                                                             },
+                                                            {'withdrawalNumber': 7704882,
+                                                             'currency': 'ETH',
+                                                             'address': '0x00c90335F92FfcD26C8c915c79d7aB424454B7c7',
+                                                             'amount': '0.01318826',
+                                                             'fee': '0.00500000',
+                                                             'timestamp': 1507908127,
+                                                             'status': 'COMPLETE: 0xbd4da74e1a0b81c21d056c6f58a5b306de85d21ddf89992693b812bb117eace4',
+                                                             'ipAddress': '1.2.3.4',
+                                                             'paymentID': None
+                                                             },
+                                                            {'withdrawalNumber': 11967216,
+                                                             'currency': 'ZRX',
+                                                             'address': '0x3B2E298b401D1E11cE6ee82b54792CA435CE81eC',
+                                                             'amount': '1535.58403218',
+                                                             'fee': '5.00000000',
+                                                             'timestamp': 1538419390,
+                                                             'status': 'COMPLETE: 0x52f9e37f29944f20b624df4d7a0ea5a09173e6ea048d49fb05c29585f1d74032',
+                                                             'ipAddress': '1.2.3.4',
+                                                             'paymentID': None
+                                                             },
+                                                            {'withdrawalNumber': 12017755,
+                                                             'currency': 'STR',
+                                                             'address': 'GACNWS3R4FJUMHLDNMFGUQZD33FBRE4IODAPK5G7AVX7S2VEJRT2XXHQ',
+                                                             'amount': '7281.99772728',
+                                                             'fee': '0.00001000',
+                                                             'timestamp': 1539709673,
+                                                             'status': 'COMPLETE: 2d27ae26fa9c70d6709e27ac94d4ce2fde19b3986926e9f3bfcf3e2d68354ec5',
+                                                             'ipAddress': '1.2.3.4',
+                                                             'paymentID': 'MEMOTEXT'
+                                                             }],
+                                                       'adjustments':
+                                                           [{'currency': 'STR',
+                                                             'amount': '2.38291827',
+                                                             'timestamp': 1538419390,
+                                                             'status': 'COMPLETE',
+                                                             'category': 'adjustment',
+                                                             'adjustmentTitle': 'Stellar Inflation',
+                                                             'adjustmentDesc': 'Your Stellar inflation reward for the week of Jun 11, 2019.',
+                                                             'adjustmentHelp':
+                                                                 'https://poloniex.freshdesk.com/support/solutions/articles/1000278072-stellar-inflation-what-is-it-and-other-frequently-asked-questions'
+                                                             }
+                                                            ]
+
+                                                       }}
         pass
-
-    def get_orderbook(self, market):
-        order_book = {'success': True, 'result':
-            {
-                'sell': [{'Rate': '0.08', 'Quantity': '1'}],
-                'buy': [{'Rate': '0.0890', 'Quantity': '1'}]
-            }}
-
-        return order_book
-

@@ -36,15 +36,17 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
         raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
 
     # generate a unique list of permutations for comparison [[buy, sell], [buy, sell], ...]
+    # TODO make sure not to do everything twice. Currently calling both APIs twice
     exchange_permutations = list(itertools.permutations(apis_trade_pair_valid, 2))
+
+    # run order book functions asynchronously
+    run_exchange_functions_as_threads(apis_trade_pair_valid, 'order_book')
 
     # determine whether buying and selling across each permutation will result in a profit > FIAT_ARBITRAGE_MINIMUM
     for exchange_permutation in exchange_permutations:
         exchange_buy, exchange_sell = exchange_permutation
         arbitrage = None
         try:
-            # do not fetch the order books until the very last instant. do this asynchronously
-            run_exchange_functions_as_threads(exchange_buy.order_book, exchange_sell.order_book)
             # make sure the volumes are identical in each exchange object
             exchange_buy, exchange_sell = equalise_buy_and_sell_volumes(exchange_buy, exchange_sell)
             # ?????
@@ -75,24 +77,29 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     return result
 
 
-def run_exchange_functions_as_threads(exchange_buy, exchange_sell):
+def run_exchange_functions_as_threads(exchanges, function_name):
     # In Python, because of GIL (Global Interpreter Lock) a single python process cannot run threads in
     # parallel (utilize multiple cores). It can however run them concurrently (context switch during I/O bound operations)
     # TODO make this use multiprocessing
-    buy = Thread(name='buy_thread', target=exchange_buy)
-    sell = Thread(name='sell_thread', target=exchange_sell)
-    buy.start()
-    sell.start()
-    buy.join()
-    sell.join()
+    threads = []
+    count = 0
+    for exchange in exchanges:
+        threads.append(Thread(name='exchange_{}'.format(count), target=getattr(exchange, function_name)))
+        count += 1
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
 
 def get_downstream_jobs(arbitrages, fiat_rate):
     replenish_jobs = []
     viable_arbitrages = []
+    # runs the get balance functions as threads meaning the cpu can switch between tasks during I/O
+    run_exchange_functions_as_threads(arbitrages, 'get_balances')
     for arbitrage in arbitrages:
-        # runs the get balance functions as threads meaning the cpu can switch between tasks during I/O
-        run_exchange_functions_as_threads(arbitrage['buy'].get_balances, arbitrage['sell'].get_balances())
         # first, make sure we do not have zero of the currency we're trying to sell
         # send more of the currency to that exchange if there is a zero balance
         new_replenish_jobs = check_zero_balances(arbitrage)

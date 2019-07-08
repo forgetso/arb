@@ -189,7 +189,7 @@ def test_equalise_buy_and_sell_volumes():
     exchange_sell.lowest_ask = {'price': Decimal('1.2'), 'volume': Decimal('4')}
     exchange_sell.highest_bid = {'price': Decimal('1.1'), 'volume': Decimal('1')}
     # Volume should come out as 1 as we can only sell 1 at price 1.1
-    exchange_permutation = equalise_buy_and_sell_volumes((exchange_buy, exchange_sell))
+    exchange_permutation = equalise_buy_and_sell_volumes(exchange_buy, exchange_sell)
     assert exchange_permutation[0].lowest_ask['volume'] == Decimal('1')
     assert exchange_permutation[1].highest_bid['volume'] == Decimal('1')
 
