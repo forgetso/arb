@@ -4,7 +4,8 @@ from app.lib.db import remove_api_method_locks
 
 remove_api_method_locks()
 client = p2pb2b('5ce9c1264d306651243edc3f')
-markets = load_currency_pairs()
-client.set_trade_pair('ETH-BTC', markets)
-client.get_balances()
-print(client.balances['BTC'])
+# markets = load_currency_pairs()
+# client.set_trade_pair('ETH-BTC', markets)
+# client.get_balances()
+# print(client.balances['BTC'])
+client.get_order(order_id='123456')

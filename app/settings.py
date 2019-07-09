@@ -3,10 +3,10 @@ from app.apikeys import *
 
 FIAT_DEFAULT_SYMBOL = 'GBP'
 # This should be set to a value based in the fiat default symol above. e.g. 1 = 1 GBP
-FIAT_ARBITRAGE_MINIMUM = 1
+FIAT_ARBITRAGE_MINIMUM = 0
 
 DEFAULT_CURRENCY = 'ETH'
-DB_HOST_JOBQUEUE = 'localhost'
+DB_HOST = 'localhost'
 DB_PORT_JOBQUEUE = 27017
 DB_NAME_JOBQUEUE = 'jobqueue'
 DB_NAME_TRADES = 'trades'

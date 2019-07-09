@@ -154,29 +154,33 @@ class p2pb2b(exchange):
 
         result = response.get('result')
         order_id = result.get('orderId')
-        raw_trade = self.get_order_status(order_id)
-        raw_trade['orderId'] = order_id
+        raw_trade = {}
+        while not raw_trade:
+            raw_trade = self.get_order_status(order_id)
+            time.sleep(20)
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 
         return trade
 
     def get_order_status(self, order_id):
-        order_completed = False
         order_result = {}
-        while not order_completed:
-            order_response = self.get_order(order_id=order_id)
-            if order_response.get('success') and order_response.get('result') != []:
-                order_result = order_response['result']
-                break
-            time.sleep(20)
+        order_response = self.get_order(order_id=order_id)
+        success = order_response.get('success')
+
+        if not success:
+            raise WrapP2PB2BError(order_response.get('message'))
+
+        if success and order_response.get('result')['records']:
+            order_result = order_response['result']
+
         return order_result
 
     def get_order(self, order_id):
         try:
             order = self.api.getOrder(order_id)
         except Exception as e:
-            raise WrapP2PB2BError('Error retrieving order: {} {}'.format(e, order))
+            raise WrapP2PB2BError('Error retrieving order: {} {}'.format(order_id, e))
 
         return order
 
@@ -207,17 +211,17 @@ class p2pb2b(exchange):
 
         try:
             trade = {
-                'external_id': raw_trade['orderId'],
+                'external_id': raw_trade['records'][0]['dealOrderId'],
                 '_id': str(trade_id),
                 'status': 'Closed',
                 'trade_pair_common': self.trade_pair_common,
                 'trade_pair': self.trade_pair,
                 'trade_type': trade_type,
-                'price': raw_trade['records'][0]['price'],
-                'volume': raw_trade['records'][0]['amount'],
+                'price': Decimal(raw_trade['records'][0]['price']),
+                'volume': Decimal(raw_trade['records'][0]['amount']),
                 'trades_itemised': raw_trade['records'],
-                'date': raw_trade['records'][0]['time'],
-                'fees': raw_trade['records'][0]['fee'],
+                'date': datetime.fromtimestamp(raw_trade['records'][0]['time']),
+                'fees': Decimal(raw_trade['records'][0]['fee']),
                 'exchange': self.name
             }
         except Exception as e:

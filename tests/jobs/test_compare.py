@@ -4,73 +4,11 @@ from app.jobs.compare import determine_arbitrage_viability, find_arbitrage, calc
 from decimal import Decimal
 from pytest import raises
 from testdata.wraps import wrap_exchange1, wrap_exchange2
+from testdata.markets import MARKETS
 
 # TODO globally override the FIAT_ARBITRAGE_MINIMUM as these tests fail when it is set too low
 
-# this would usually be loaded from a json file
-MARKETS = {'exchange1':
-    {"ETH-BTC": {
-        "name": "ETH-BTC",
-        "trading_code": "BTC-ETH",
-        "base_currency": "ETH",
-        "quote_currency": "BTC",
-        "min_trade_size": 0.00740642,
-        "decimal_places": 8,
-        "min_trade_size_currency": "ETH",
-        "fee": 0.001
-    }, "ETH-ADX": {
-        "name": "ETH-ADX",
-        "trading_code": "ETH-ADX",
-        "base_currency": "ETH",
-        "quote_currency": "ADX",
-        "min_trade_size": 0.00740642,
-        "decimal_places": 8,
-        "min_trade_size_currency": "ETH",
-        "fee": 0.001
-    }},
-    'exchange2':
-        {"ETH-BTC": {
-            "name": "ETH-BTC",
-            "trading_code": "ETHBTC",
-            "base_currency": "ETH",
-            "quote_currency": "BTC",
-            "decimal_places": 3,
-            "min_trade_size": 0.001,
-            "min_trade_size_currency": "ETH",
-            "min_notional": 0.001,
-            "taker_fee": 0.001,
-            "maker_fee": 0.001,
-            "fee": 0.001
-        },
-            "ETH-ADX": {
-                "name": "ETH-ADX",
-                "trading_code": "ETHADX",
-                "base_currency": "ETH",
-                "quote_currency": "ADX",
-                "decimal_places": 3,
-                "min_trade_size": 0.001,
-                "min_trade_size_currency": "ETH",
-                "min_notional": 0.001,
-                "taker_fee": 0.001,
-                "maker_fee": 0.001,
-                "fee": 0.001
-            }},
-    # this exchange will be ignored as it doesn't exist in our allowed list of exchanges
-    'exchange3':
-        {"ETH-BTC": {
-            "name": "ETH-BTC",
-            "trading_code": "ETHBTC",
-            "base_currency": "ETH",
-            "quote_currency": "BTC",
-            "decimal_places": 3,
-            "min_trade_size": 0.001,
-            "min_trade_size_currency": "ETH",
-            "min_notional": 0.001,
-            "taker_fee": 0.001,
-            "maker_fee": 0.001,
-            "fee": 0.001
-        }}
-}
+
 
 JOBQUEUE_ID = '507f191e810c19729de860ea'
 

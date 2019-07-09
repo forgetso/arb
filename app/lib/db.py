@@ -13,7 +13,7 @@ from app.lib.common import check_pid
 # Generic Database connection
 
 def db_connection():
-    dbconn = pymongo.MongoClient(host=settings.DB_HOST_JOBQUEUE,
+    dbconn = pymongo.MongoClient(host=settings.DB_HOST,
                                  port=settings.DB_PORT_JOBQUEUE)
     return dbconn
 

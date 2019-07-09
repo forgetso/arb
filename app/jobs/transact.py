@@ -58,9 +58,8 @@ def transact(exchange, trade_pair_common, volume, price, type, markets, jobqueue
             trade['_id'] = trade_id
             logging.debug(trade)
             store_trade(trade)
-            return_value_to_stdout(json.dumps(trade, default=json_util.default))
+            return_value_to_stdout({'job_result': trade})
     exchange_lock(exchange, jobqueue_id, 'TRANSACT', lock=False)
-    return trade
 
 
 def setup():

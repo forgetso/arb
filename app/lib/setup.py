@@ -1,6 +1,6 @@
 import json
 import os
-from app.settings import DB_HOST_JOBQUEUE, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES, TRADE_PAIRS, MASTER_EXCHANGE
+from app.settings import DB_HOST, DB_NAME_JOBQUEUE, DB_PORT_JOBQUEUE, EXCHANGES, TRADE_PAIRS, MASTER_EXCHANGE
 from pymongo import MongoClient, version_tuple as pymongo_version_tuple
 from pymongo.errors import CollectionInvalid
 from app.lib.jobqueue import JOB_COLLECTION
@@ -15,7 +15,7 @@ FIAT_RATES_JSON = "/app/fiat_rates.json"
 
 
 def setup_database():
-    dbclient = MongoClient(host=DB_HOST_JOBQUEUE, port=DB_PORT_JOBQUEUE)
+    dbclient = MongoClient(host=DB_HOST, port=DB_PORT_JOBQUEUE)
     # creates the database if it doesn't already exist
     db = dbclient[DB_NAME_JOBQUEUE]
     try:
