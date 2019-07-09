@@ -1,15 +1,12 @@
 from p2pb2bapi import P2PB2B
 from app.settings import P2PB2B_SECRET_KEY, P2PB2B_PUBLIC_KEY
-from app.lib.errors import ErrorTradePairDoesNotExist
-from decimal import Decimal, Context, setcontext
-from app.lib.common import round_decimal_number
+from decimal import Decimal
 from app.lib.db import store_balances, get_balances, store_api_access_time, get_api_access_time, lock_api_method, \
     unlock_api_method, get_api_method_lock, get_minutely_api_requests, get_secondly_api_requests
 import logging
 from datetime import datetime, timedelta
 import time
 from app.lib.exchange import exchange
-from app.lib.jobqueue import return_value_to_stdout
 
 P2PB2B_TAKER_FEE = 0.0020
 P2PB2B_MAKER_FEE = 0.0020
@@ -61,29 +58,25 @@ class p2pb2b(exchange):
         ticker_buy_response = None
         if get_minutely_api_requests(self.name) < P2PB2B_API_RATE_LIMIT_MINUTELY and get_secondly_api_requests(
                 self.name) < P2PB2B_API_RATE_LIMIT_SECONDLY:
-            ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
+            try:
+                ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
+            except Exception as e:
+                raise WrapP2PB2BError('Error getting order book from p2pb2b: {}'.format(e))
             store_api_access_time(self.name, 'order_book', datetime.utcnow())
             if not ticker_buy_response.get('success'):
                 raise WrapP2PB2BError(
-                    'Error getting order book for {} : {}, {}'.format(self.trade_pair,
-                                                                      ticker_buy_response.get('message'),
-                                                                      ticker_buy_response))
+                    'Error getting order book for {} : {}'.format(self.trade_pair,
+                                                                  ticker_buy_response.get('message')))
             order_book_dict['buy'] = ticker_buy_response.get('result')
-            ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
+            try:
+                ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
+            except Exception as e:
+                raise WrapP2PB2BError('Error getting order book from p2pb2b: {}'.format(e))
             store_api_access_time(self.name, 'order_book', datetime.utcnow())
             if not ticker_sell_response.get('success'):
                 raise WrapP2PB2BError(
                     'Error getting order book for {} : {}'.format(self.trade_pair, ticker_sell_response.get('message')))
             order_book_dict['sell'] = ticker_sell_response.get('result')
-            # print(order_books)
-            # {'buy': {'offset': 0, 'limit': 1, 'total': 362, 'orders': [
-            #     {'id': 14835298, 'left': '1.375', 'market': 'ETH_BTC', 'amount': '2.909', 'type': 'limit',
-            #      'price': '0.029842', 'timestamp': 1556176474.980993, 'side': 'buy', 'dealFee': '0', 'takerFee': '0',
-            #      'makerFee': '0', 'dealStock': '1.534', 'dealMoney': '0.045777628'}]},
-            #  'sell': {'offset': 0, 'limit': 1, 'total': 408, 'orders': [
-            #      {'id': 14855016, 'left': '60.222', 'market': 'ETH_BTC', 'amount': '60.222', 'type': 'limit',
-            #       'price': '0.02985', 'timestamp': 1556192089.28709, 'side': 'sell', 'dealFee': '0', 'takerFee': '0.002',
-            #       'makerFee': '0.002', 'dealStock': '0', 'dealMoney': '0'}]}}
 
             # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
             # we take the volume from left as this is how much of this trade is left until it completes
@@ -155,9 +148,13 @@ class p2pb2b(exchange):
         result = response.get('result')
         order_id = result.get('orderId')
         raw_trade = {}
+        waits = 0
         while not raw_trade:
             raw_trade = self.get_order_status(order_id)
             time.sleep(20)
+            waits += 1
+            if waits > 6:
+                raise WrapP2PB2BError('Trade not executed after 2 minutes: ID {}'.format(order_id))
 
         trade = self.format_trade(raw_trade, trade_type, trade_id)
 
@@ -177,10 +174,10 @@ class p2pb2b(exchange):
         return order_result
 
     def get_order(self, order_id):
-        try:
-            order = self.api.getOrder(order_id)
-        except Exception as e:
-            raise WrapP2PB2BError('Error retrieving order: {} {}'.format(order_id, e))
+        # try:
+        order = self.api.getOrder(order_id)
+        # except Exception as e:
+        #     raise WrapP2PB2BError('Error retrieving order: {} {}'.format(order_id, e))
 
         return order
 

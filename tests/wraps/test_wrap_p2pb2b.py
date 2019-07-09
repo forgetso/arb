@@ -50,8 +50,8 @@ def test_get_order_status():
     exchange = setup()
     # replace the api with a dummy one
     exchange.api = p2pb2bapi(mockdatetime(FAKE_TIME_NOW))
-    with raises(WrapP2PB2BError):
-        exchange.get_order_status(order_id='invalid')
+    # with raises(WrapP2PB2BError):
+    #     exchange.get_order_status(order_id='invalid')
     order = exchange.get_order_status(order_id='1237')
 
     assert order == {}
@@ -76,14 +76,24 @@ def test_get_order_status():
     }
 
 
+def test_order_book():
+    exchange = setup()
+    # replace the api with a dummy one
+    exchange.api = p2pb2bapi()
+    exchange.trade_pair = 'ETH_BTC'
+    exchange.order_book()
+    assert exchange.lowest_ask['price'] == Decimal('0.02985')
+    assert exchange.highest_bid['price'] == Decimal('0.029842')
+
+
 # allows us to pretend the order is initially not available and later becomes available
 class mockdatetime:
-    def __init__(self, now):
+    def __init__(self, time_now):
         self.start = time.time()
-        self.now = now
+        self.time_now = time_now
 
     def now(self):
-        return self.now + datetime.timedelta(seconds=(time.time() - self.start))
+        return self.time_now + datetime.timedelta(seconds=(time.time() - self.start))
 
     def fromtimestamp(self, timestamp):
         return datetime.datetime.fromtimestamp(timestamp)

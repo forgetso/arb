@@ -45,22 +45,23 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     # determine whether buying and selling across each permutation will result in a profit > FIAT_ARBITRAGE_MINIMUM
     for exchange_permutation in exchange_permutations:
         exchange_buy, exchange_sell = exchange_permutation
-        arbitrage = None
-        try:
-            # make sure the volumes are identical in each exchange object
-            exchange_buy, exchange_sell = equalise_buy_and_sell_volumes(exchange_buy, exchange_sell)
-            # ?????
-            arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
-            # profit!
-        except InvalidTrade:
-            continue
-        if arbitrage:
-            arbitrages.append(arbitrage)
-            exchange_names = [arbitrage['buy'].name, arbitrage['sell'].name]
-            profit_audit_record = profit_audit(arbitrage['profit'],
-                                               arbitrage['buy'].trade_pair_common,
-                                               exchange_names)
-            store_audit(profit_audit_record)
+        if exchange_buy.lowest_ask and exchange_buy.highest_bid and exchange_sell.lowest_ask and exchange_sell.highest_bid:
+            arbitrage = None
+            try:
+                # make sure the volumes are identical in each exchange object
+                exchange_buy, exchange_sell = equalise_buy_and_sell_volumes(exchange_buy, exchange_sell)
+                # ?????
+                arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
+                # profit!
+            except InvalidTrade:
+                continue
+            if arbitrage:
+                arbitrages.append(arbitrage)
+                exchange_names = [arbitrage['buy'].name, arbitrage['sell'].name]
+                profit_audit_record = profit_audit(arbitrage['profit'],
+                                                   arbitrage['buy'].trade_pair_common,
+                                                   exchange_names)
+                store_audit(profit_audit_record)
 
     replenish_jobs, viable_arbitrages = get_downstream_jobs(arbitrages, fiat_rate)
 
