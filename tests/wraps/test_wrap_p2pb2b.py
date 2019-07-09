@@ -1,10 +1,9 @@
-from app.wraps.wrap_p2pb2b import p2pb2b, WrapP2PB2BError
+from app.wraps.wrap_p2pb2b import p2pb2b
 from tests.jobs.test_compare import JOBQUEUE_ID
 from testdata.markets import MARKETS
 import datetime
 from decimal import Decimal
 from testdata.apis.p2pb2b_api import p2pb2bapi, FAKE_TIME_NOW
-from pytest import raises
 import time
 
 
