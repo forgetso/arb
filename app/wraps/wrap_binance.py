@@ -1,10 +1,8 @@
 from binance.client import Client, BinanceWithdrawException
 from app.settings import BINANCE_SECRET_KEY, BINANCE_PUBLIC_KEY
-from app.lib.errors import ErrorTradePairDoesNotExist
 import time
-from decimal import Decimal, Context, setcontext
+from decimal import Decimal
 import math
-from app.lib.common import round_decimal_number
 import logging
 from app.lib.exchange import exchange
 
@@ -31,7 +29,7 @@ class binance(exchange):
         exchange.__init__(self, name=self.name, jobqueue_id=self.jobqueue_id)
 
     def order_book(self):
-        order_book_dict = self.api.get_order_book(symbol=self.trade_pair)
+        order_book_dict = self.api.get_order_book(symbol=self.trade_pair, limit=100)
         if order_book_dict.get('error'):
             raise (WrapBinanceError(order_book_dict.get('error')))
         self.asks = [{'price': Decimal(x[0]), 'volume': Decimal(x[1])} for x in
@@ -58,7 +56,7 @@ class binance(exchange):
                     'base_currency': c['baseAsset'],
                     'quote_currency': c['quoteAsset'],
                     'decimal_places': -int(math.log10(
-                        Decimal([x.get('stepSize') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]))),
+                        Decimal([x.get('stepSize') for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0]))) + 1,
                     'min_trade_size':
                         [float(x.get('minQty')) for x in c['filters'] if x['filterType'] == 'LOT_SIZE'][0],
                     'min_trade_size_currency': c['baseAsset'],

@@ -47,7 +47,6 @@ class JobQueueExecutor:
 
         # when opportunities are identified they are added as jobs to the db. this next function will be notified of any
         # new jobs that are added and it will be called
-
         self.jq.bind_to(self.start_job)
 
         self.check_running_jobs_interval = call_repeatedly(settings.INTERVAL_RUNNINGJOBS, self.check_running_jobs)
@@ -67,6 +66,9 @@ class JobQueueExecutor:
         job_type = job['job_type']
         if job_type not in JOB_DEFINITIONS:
             raise TypeError('Unknown job type {}'.format(job_type))
+
+        if job_type in settings.JOBS_NOT_RUNNING:
+            return
 
         safecmd = ['app.jobs.{}'.format(job_type.lower())]
         for arg_key, arg_value in job['job_args'].items():
@@ -146,7 +148,7 @@ class JobQueueExecutor:
                 },
                 self._id)
         else:
-            logging.debug('Not adding job: Existing job! {}'.format(existing_job))
+            logging.debug('Not adding COMPARE {} {} job: Existing job!'.format(curr_x, curr_y))
 
     def job_finished(self, process):
         retcode = process.wait()

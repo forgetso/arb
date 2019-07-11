@@ -16,8 +16,7 @@ def process(exchange_x, exchange_y, markets):
     setb =set(markets[exchange_y].keys())
 
     intersection = seta.intersection(setb)
-    pprint.pprint(intersection)
-    exit()
+    return intersection
 
 
 def setup():

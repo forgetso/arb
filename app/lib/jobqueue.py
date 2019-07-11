@@ -141,7 +141,7 @@ class Jobqueue:
         (stdout, stderr) = process.communicate(stdin)
 
         if retcode == 0:
-            print(stderr.strip().decode('ascii'))
+            #print(stderr.strip().decode('ascii'))
             print(stdout.strip().decode('ascii'))
             job['job_status'] = STATUS_COMPLETE
             stdout_str = stdout.strip().decode('ascii')

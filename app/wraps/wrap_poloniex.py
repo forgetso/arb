@@ -43,11 +43,13 @@ class poloniex(exchange):
         if order_book_dict.get('error'):
             raise (WrapPoloniexError(order_book_dict.get('error')))
         # ticker contains lowest ask and highest bid. we will only use this info as we currently don't care about other bids
-        self.asks = [order_book_dict.get('asks')]
-        self.lowest_ask = {'price': Decimal(self.asks[0][0][0]), 'volume': Decimal(self.asks[0][0][1])}
-        self.bids = [order_book_dict.get('bids')]
-        self.highest_bid = {'price': Decimal(self.bids[0][0][0]), 'volume': Decimal(self.bids[0][0][1])}
-        #return_value_to_stdout(self.__getstate__())
+        # data is an array of prices and volumes
+        # [['0.00952008', 0.0008061], ['0.00954239', 52.47959867], ['0.00954240', 5], ['0.00954490', 25], ... ]
+        self.asks = [{'price': Decimal(x[0]), 'volume': Decimal(x[1])} for x in order_book_dict.get('asks')]
+        self.lowest_ask = self.asks[0]
+        self.bids = [{'price': Decimal(x[0]), 'volume': Decimal(x[1])} for x in order_book_dict.get('bids')]
+        self.highest_bid = self.bids[1]
+        # return_value_to_stdout(self.__getstate__())
 
     def get_currency_pairs(self):
         # get all of their currency pairs in the format for the markets file
@@ -61,8 +63,8 @@ class poloniex(exchange):
                     # poloniex names things the opposite way round to other exchanges BTC_ETH instead of ETH_BTC
                     'name': '{}-{}'.format(symbol_split[1], symbol_split[0]),
                     'trading_code': symbol,
-                    'base_currency': symbol_split[0],
-                    'quote_currency': symbol_split[1],
+                    'base_currency': symbol_split[1],
+                    'quote_currency': symbol_split[0],
                     'decimal_places': get_number_of_decimal_places(str(c['highestBid'])),
                     # this seems to be the minimum trade size for all currencies on their site
                     'min_trade_size': float(0.0001),

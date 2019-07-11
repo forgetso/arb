@@ -95,14 +95,14 @@ def get_exchange(exchange, jobqueue_id):
 
 
 # take all of the exchanges and choose two of them
-def choose_two_random_exchanges(potential_exchanges=None):
+def choose_random_exchanges(number=2, potential_exchanges=None):
     if not potential_exchanges:
         potential_exchanges = EXCHANGES
     try:
         exchanges = []
         total_exchanges = len(potential_exchanges)
         random_indexes = []
-        while len(exchanges) != 2:
+        while len(exchanges) != number:
             random_index = random.randint(0, total_exchanges - 1)
             if random_index not in random_indexes:
                 random_indexes.append(random_index)
@@ -111,7 +111,6 @@ def choose_two_random_exchanges(potential_exchanges=None):
     except Exception as e:
         raise SetupError('Error randomly selecting exchanges for comparison: {}'.format(e))
     return exchanges
-
 
 def setup_environment(jobqueue_id):
     setup_currency_pairs(jobqueue_id=jobqueue_id)

@@ -34,6 +34,8 @@ class exchange(ABC):
             if not self.name:
                 raise ValueError('Exchange must have name attribute set')
             trade_pair_details = markets.get(self.name).get(trade_pair)
+            if not trade_pair_details:
+                raise ExchangeError('Trade pair does not exist on {}: {}'.format(self.name, trade_pair))
             self.decimal_places = trade_pair_details.get('decimal_places')
             decimal_rounding_context = Context(prec=self.decimal_places)
             setcontext(decimal_rounding_context)

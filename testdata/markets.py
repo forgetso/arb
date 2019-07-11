@@ -18,7 +18,26 @@ MARKETS = {'exchange1':
         "decimal_places": 8,
         "min_trade_size_currency": "ETH",
         "fee": 0.001
-    }},
+    }, "REP-ETH": {
+        "name": "REP-ETH",
+        "trading_code": "ETH-REP",
+        "base_currency": "REP",
+        "quote_currency": "ETH",
+        "min_trade_size": 0.0475009,
+        "decimal_places": 7,
+        "min_trade_size_currency": "REP",
+        "fee": 0.0025
+    }, "REP-BTC": {
+        "name": "REP-BTC",
+        "trading_code": "REP-BTC",
+        "base_currency": "REP",
+        "quote_currency": "BTC",
+        "decimal_places": 7,
+        "min_trade_size": 0.001,
+        "min_trade_size_currency": "REP",
+        "fee": 0.002
+    },
+    },
     'exchange2':
         {"ETH-BTC": {
             "name": "ETH-BTC",
@@ -45,7 +64,19 @@ MARKETS = {'exchange1':
                 "taker_fee": 0.001,
                 "maker_fee": 0.001,
                 "fee": 0.001
-            }},
+            },
+            "REP-BTC": {
+                "name": "REP-BTC",
+                "trading_code": "REP-BTC",
+                "base_currency": "REP",
+                "quote_currency": "BTC",
+                "decimal_places": 7,
+                "min_trade_size": 0.001,
+                "min_trade_size_currency": "REP",
+                "fee": 0.002
+            },
+        },
+
     # this exchange will be ignored as it doesn't exist in our allowed list of exchanges
     'exchange3':
         {"ETH-BTC": {

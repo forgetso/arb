@@ -36,29 +36,41 @@ class hitbtc(exchange):
 
     def order_book(self):
         order_book_dict = self.api.get_orderbook(self.trade_pair)
-        self.asks = order_book_dict.get('ask', [])
+        asks_raw = order_book_dict.get('ask', [])
+        self.asks = [{'price': Decimal(x['price']), 'volume': Decimal(x['size'])} for x in asks_raw]
         if len(self.asks):
-            self.lowest_ask = {'price': Decimal(self.asks[0]['price']), 'volume': Decimal(self.asks[0]['size'])}
-        self.bids = order_book_dict.get('bid', [])
+            self.lowest_ask = self.asks[0]
+        bids_raw = order_book_dict.get('bid', [])
+        self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['size'])} for x in bids_raw]
         if len(self.bids):
-            self.highest_bid = {'price': Decimal(self.bids[0]['price']), 'volume': Decimal(self.bids[0]['size'])}
+            self.highest_bid = self.bids[0]
         return order_book_dict
 
+    def get_currencies(self, symbol=None):
+        currencies_response = self.api.get_currency(symbol)
+        return currencies_response
+
     def get_currency_pairs(self):
+        # first ignore all currencies that have either deposits or withdrawals suspended
+        ignore = [x['id'] for x in self.get_currencies() if
+                  x['delisted'] or not x['payoutEnabled'] or not x['payinEnabled']]
+
         # this just prints all of their currency pairs in the format for the markets file
         currency_pairs_response = self.api.get_symbol('')
         currency_pairs_list = []
+
         for c in currency_pairs_response:
-            currency_pairs_list.append({
-                'name': '-'.join([c['baseCurrency'], c['quoteCurrency']]),
-                'trading_code': c['id'],
-                'base_currency': c['baseCurrency'],
-                'quote_currency': c['quoteCurrency'],
-                'decimal_places': -Decimal(c['tickSize']).as_tuple().exponent,
-                'min_trade_size': float(c['quantityIncrement']),
-                'min_trade_size_currency': c['baseCurrency'],
-                'fee': float(c['takeLiquidityRate'])
-            })
+            if c['baseCurrency'] not in ignore and c['quoteCurrency'] not in ignore:
+                currency_pairs_list.append({
+                    'name': '-'.join([c['baseCurrency'], c['quoteCurrency']]),
+                    'trading_code': c['id'],
+                    'base_currency': c['baseCurrency'],
+                    'quote_currency': c['quoteCurrency'],
+                    'decimal_places': -Decimal(c['tickSize']).as_tuple().exponent,
+                    'min_trade_size': float(c['quantityIncrement']),
+                    'min_trade_size_currency': c['baseCurrency'],
+                    'fee': float(c['takeLiquidityRate'])
+                })
         return currency_pairs_list
 
     def trade(self, trade_type, volume, price, trade_id=None):

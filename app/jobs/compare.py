@@ -1,7 +1,7 @@
 import argparse
 import logging
 import itertools
-from app.lib.setup import setup_environment, load_currency_pairs, choose_two_random_exchanges, \
+from app.lib.setup import setup_environment, load_currency_pairs, choose_random_exchanges, \
     dynamically_import_exchange
 from app.lib.errors import ErrorTradePairDoesNotExist
 from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES, FIAT_REPLENISH_AMOUNT
@@ -10,7 +10,7 @@ from decimal import Decimal
 from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock, get_replenish_jobs
 from app.lib.common import round_decimal_number, decimal_as_string
 from threading import Thread
-
+from app.lib.coingecko import get_current_fiat_rate
 
 def compare(cur_x, cur_y, markets, jobqueue_id):
     arbitrages = []
@@ -24,16 +24,12 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
     apis_trade_pair_valid = exchange_selection(cur_x, cur_y, markets, exchange_shortlist, jobqueue_id)
 
     if len(apis_trade_pair_valid) < 2:
+        logging.debug('No arbitrage possible as less than two exchanges trade this pair')
         # return early as there will be no arbitrage possibility with only one or zero exchanges
         return_value_to_stdout(result)
         return result
 
-    fiat_rates = get_fiat_rates()
-    try:
-        fiat_rate = round_decimal_number(fiat_rates[cur_y][FIAT_DEFAULT_SYMBOL], 2)
-        logging.debug('Fiat rate is {}'.format(fiat_rate))
-    except:
-        raise CompareError('Fiat Rate for {} is not present in db'.format(cur_y))
+    fiat_rate = get_fiat_rate(cur_y)
 
     # generate a unique list of permutations for comparison [[buy, sell], [buy, sell], ...]
     # TODO make sure not to do everything twice. Currently calling both APIs twice
@@ -59,8 +55,8 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
                 arbitrages.append(arbitrage)
                 exchange_names = [arbitrage['buy'].name, arbitrage['sell'].name]
                 profit_audit_record = profit_audit(arbitrage['profit'],
-                                                   arbitrage['buy'].trade_pair_common,
-                                                   exchange_names)
+                                                   exchange_names,
+                                                   arbitrage['buy'].trade_pair_common)
                 store_audit(profit_audit_record)
 
     replenish_jobs, viable_arbitrages = get_downstream_jobs(arbitrages, fiat_rate)
@@ -77,6 +73,15 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
     return result
 
+def get_fiat_rate(symbol):
+    fiat_rates = get_fiat_rates()
+    try:
+        fiat_rate = round_decimal_number(fiat_rates[symbol][FIAT_DEFAULT_SYMBOL], 2)
+        logging.debug('Fiat rate is {}'.format(fiat_rate))
+    except:
+        get_current_fiat_rate(symbol)
+        fiat_rate = get_fiat_rate(symbol)
+    return fiat_rate
 
 def run_exchange_functions_as_threads(exchanges, function_name):
     # In Python, because of GIL (Global Interpreter Lock) a single python process cannot run threads in
@@ -323,7 +328,7 @@ def exchange_selection(cur_x, cur_y, markets, exchanges, jobqueue_id, directory=
         random_exchanges = potential_exchanges
     else:
 
-        random_exchanges = choose_two_random_exchanges(potential_exchanges)
+        random_exchanges = choose_random_exchanges(potential_exchanges)
 
     logging.debug('exchanges chosen {}'.format(random_exchanges))
 
@@ -363,8 +368,8 @@ def profit_audit(profit, exchange_names, trade_pair):
         'type': 'profit',
         'profit': float(round(profit, 2)),
         'currency': FIAT_DEFAULT_SYMBOL,
-        'exchange_names': list(exchange_names),
-        'trade_pair': trade_pair
+        'exchange_names': exchange_names,
+        'trade_pair': trade_pair.split('-')
     }
 
 

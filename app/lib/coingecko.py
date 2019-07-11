@@ -2,6 +2,7 @@ from app.settings import FIAT_DEFAULT_SYMBOL
 import requests
 import os, json
 from pathlib import Path
+from app.lib.db import store_fiat_rates
 
 COINGECKO_META = "/coingecko_meta.json"
 
@@ -82,6 +83,7 @@ def get_fiat_symbol(fiat_symbol):
 
 def get_current_fiat_rate(crypto_symbol, fiat_symbol=None):
     rate_json = get_current_fiat_rates(crypto_symbol, fiat_symbol)
+    store_fiat_rates(rate_json)
     fiat_symbol = get_fiat_symbol(fiat_symbol)
     rate = rate_json.get(crypto_symbol).get(fiat_symbol)
     if not rate:

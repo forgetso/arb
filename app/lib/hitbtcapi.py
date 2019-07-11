@@ -4,15 +4,26 @@ import json
 import requests
 from decimal import *
 
+TRADE_SUCCESS = {'id': '79188782732', 'clientOrderId': 'd449ed67d4c74136b52d140114142ed1', 'symbol': 'ETHBTC',
+                 'side': 'buy', 'status': 'filled', 'type': 'limit', 'timeInForce': 'GTC', 'quantity': '0.001',
+                 'price': '0.028027', 'cumQuantity': '0.001', 'createdAt': '2018-12-02T21:34:30.901Z',
+                 'updatedAt': '2018-12-02T21:34:30.901Z', 'postOnly': False, 'tradesReport': [
+        {'id': 410034353, 'quantity': '0.001', 'price': '0.028027', 'fee': '0.000000029',
+         'timestamp': '2018-12-02T21:34:30.901Z'}]}
 
-
-TRADE_SUCCESS = {'id': '79188782732', 'clientOrderId': 'd449ed67d4c74136b52d140114142ed1', 'symbol': 'ETHBTC', 'side': 'buy', 'status': 'filled', 'type': 'limit', 'timeInForce': 'GTC', 'quantity': '0.001', 'price': '0.028027', 'cumQuantity': '0.001', 'createdAt': '2018-12-02T21:34:30.901Z', 'updatedAt': '2018-12-02T21:34:30.901Z', 'postOnly': False, 'tradesReport': [{'id': 410034353, 'quantity': '0.001', 'price': '0.028027', 'fee': '0.000000029', 'timestamp': '2018-12-02T21:34:30.901Z'}]}
 
 class Client(object):
     def __init__(self, url, public_key, secret):
         self.url = url + "/api/2"
         self.session = requests.session()
         self.session.auth = (public_key, secret)
+
+    def get_currency(self, symbol_code):
+        """Get currency"""
+        if symbol_code:
+            return self.session.get("%s/public/currency/%s" % (self.url, symbol_code)).json()
+        else:
+            return self.session.get("%s/public/currency" % (self.url)).json()
 
     def get_symbol(self, symbol_code):
         """Get symbol."""
