@@ -5,9 +5,9 @@ from decimal import Decimal
 from pytest import raises
 from testdata.wraps import wrap_exchange1, wrap_exchange2
 from testdata.markets import MARKETS
+import itertools
 
 # TODO globally override the FIAT_ARBITRAGE_MINIMUM as these tests fail when it is set too low
-
 
 
 JOBQUEUE_ID = '507f191e810c19729de860ea'
@@ -16,7 +16,7 @@ JOBQUEUE_ID = '507f191e810c19729de860ea'
 def test_determine_arbitrage_viability():
     # TODO better testing of this function
     exchange1 = wrap_exchange1.exchange1(JOBQUEUE_ID)
-    exchange2 = wrap_exchange1.exchange1(JOBQUEUE_ID)
+    exchange2 = wrap_exchange2.exchange2(JOBQUEUE_ID)
     exchange1.set_trade_pair('ETH-BTC', MARKETS)
     exchange2.set_trade_pair('ETH-BTC', MARKETS)
     exchange1.order_book()
@@ -24,7 +24,13 @@ def test_determine_arbitrage_viability():
     # balances are hard coded into the exchange wrappers
     exchange1.get_balances()
     exchange2.get_balances()
-    arbitrages = [find_arbitrage(exchange1, exchange2, fiat_rate=100)]
+    exchange_permutations = list(itertools.permutations([exchange1, exchange2], 2))
+    arbitrages = []
+    for perm in exchange_permutations:
+        exchange_buy, exchange_sell = perm
+        arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate=100)
+        if arbitrage:
+            arbitrages.append(arbitrage)
     viable_arbitrages = []
     for arbitrage in arbitrages:
         viable_arbitrages = determine_arbitrage_viability(arbitrage, fiat_rate=100)
@@ -50,12 +56,13 @@ def test_find_arbitrage():
     # now we should have order book data in each exchange
     assert exchange1.lowest_ask is not None
     assert exchange2.lowest_ask is not None
-    result = find_arbitrage(exchange_x=exchange1, exchange_y=exchange2, fiat_rate=Decimal(100),
+
+    result = find_arbitrage(exchange_x=exchange2, exchange_y=exchange1, fiat_rate=Decimal(100),
                             fiat_arbitrage_minimum=0)
     # an arbitrage should have been found
     assert result != {}
-    assert result['buy'].name == 'exchange1'
-    assert result['profit'] == Decimal('0.983')
+    assert result['buy'].name == 'exchange2'
+    assert result['profit'] == Decimal('0.08210')
 
 
 def test_calculate_profit():
@@ -175,6 +182,8 @@ def test_set_maximum_trade_volume():
 def test_run_exchange_functions_as_threads():
     exchange_buy = wrap_exchange1.exchange1(JOBQUEUE_ID)
     exchange_sell = wrap_exchange2.exchange2(JOBQUEUE_ID)
+    exchange_buy.set_trade_pair('ETH-BTC', markets=MARKETS)
+    exchange_sell.set_trade_pair('ETH-BTC', markets=MARKETS)
     exchanges = [exchange_buy, exchange_sell]
     run_exchange_functions_as_threads(exchanges, 'order_book')
     assert exchange_buy.lowest_ask is not None
@@ -191,7 +200,7 @@ def test_get_downstream_jobs():
     exchange2.order_book()
     exchange1.get_balances()
     exchange2.get_balances()
-    arbitrage = find_arbitrage(exchange1, exchange2, fiat_rate, fiat_arbitrage_minimum=0)
+    arbitrage = find_arbitrage(exchange2, exchange1, fiat_rate, fiat_arbitrage_minimum=0)
     replenish_jobs, viable_arbitrages = get_downstream_jobs([arbitrage], fiat_rate)
     assert len(viable_arbitrages) == 2
 

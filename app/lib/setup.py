@@ -95,7 +95,7 @@ def get_exchange(exchange, jobqueue_id):
 
 
 # take all of the exchanges and choose two of them
-def choose_random_exchanges(number=2, potential_exchanges=None):
+def choose_random_exchanges(number=2, potential_exchanges=None, duplicates=False):
     if not potential_exchanges:
         potential_exchanges = EXCHANGES
     try:
@@ -104,7 +104,7 @@ def choose_random_exchanges(number=2, potential_exchanges=None):
         random_indexes = []
         while len(exchanges) != number:
             random_index = random.randint(0, total_exchanges - 1)
-            if random_index not in random_indexes:
+            if (random_index not in random_indexes) or duplicates:
                 random_indexes.append(random_index)
                 # add the instantiated exchange client to a list of clients, e.g. wrap_binance.binance()
                 exchanges.append(potential_exchanges[random_index])

@@ -5,7 +5,7 @@ from decimal import Decimal
 from app.lib.common import get_number_of_decimal_places
 from app.lib.exchange import exchange
 from datetime import datetime, timedelta
-from app.lib.jobqueue import return_value_to_stdout
+import logging
 
 POLONIEX_TAKER_FEE = 0.002
 POLONIEX_MAKER_FEE = 0.0008
@@ -49,6 +49,8 @@ class poloniex(exchange):
         self.lowest_ask = self.asks[0]
         self.bids = [{'price': Decimal(x[0]), 'volume': Decimal(x[1])} for x in order_book_dict.get('bids')]
         self.highest_bid = self.bids[1]
+        logging.debug(
+            'poloniex lowest ask {} highest bid {}'.format(self.lowest_ask['price'], self.highest_bid['price']))
         # return_value_to_stdout(self.__getstate__())
 
     def get_currency_pairs(self):

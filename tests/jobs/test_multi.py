@@ -1,4 +1,4 @@
-from app.jobs.multi import bellman_ford, construct_rate_graph
+from app.jobs.multi import bellman_ford, construct_rate_graph, match_order_book
 from testdata.wraps.wrap_exchange1 import exchange1
 from testdata.wraps.wrap_exchange2 import exchange2
 from testdata.apis.exchange1_api import ORDER_BOOK
@@ -25,32 +25,29 @@ class TestClass(object):
             exchange.order_book()
             assert exchange.lowest_ask['price'] > exchange.highest_bid['price']
 
-    def test_construct_rate_graph(self):
+    # def test_construct_rate_graph(self):
+    #     self.setup()
+    #
+    #     graph = construct_rate_graph(self.currencies, self.exchanges)
+    #
+    #     # correct output should be a list of rates based on the row currency
+    #     # row currency is determined by the order of self.currencies
+    #     # therefore row[0] = BTC, rates should be set to 1 BTC: 0.000X OTHER
+    #     correct_output = [
+    #         # so row 0 is exchange rate of BTC:BTC, BTC:ETH, BTC:REP
+    #         [float('inf'), Decimal('10'), Decimal('1') / Decimal(ORDER_BOOK['REP-BTC']['result']['sell'][0]['Rate'])],
+    #         # so row 1 is exchange rate of ETH:BTC, ETH:ETH, ETH:REP
+    #         [Decimal('0.09'), float('inf'), Decimal('1') / Decimal('0.05')],
+    #         # so row 2 is exchange rate of REP:BTC, REP:ETH, REP:REP
+    #         [Decimal('0.0020000'), Decimal('0.040000'), float('inf')]
+    #     ]
+    #     print(correct_output)
+    #     assert graph[0] == correct_output[0]
+    #     assert graph[1] == correct_output[1]
+    #     assert graph[2] == correct_output[2]
+
+    def test_match_order_book(self):
         self.setup()
-
-        graph = construct_rate_graph(self.currencies, self.exchanges)
-
-        # correct output should be a list of rates based on the row currency
-        # row currency is determined by the order of self.currencies
-        # therefore row[0] = BTC, rates should be set to 1 BTC: 0.000X OTHER
-        correct_output = [
-            # so row 0 is exchange rate of BTC:BTC, BTC:ETH, BTC:REP
-            [float('inf'), Decimal('10'), Decimal('1') / Decimal(ORDER_BOOK['REP-BTC']['result']['sell'][0]['Rate'])],
-            # so row 1 is exchange rate of ETH:BTC, ETH:ETH, ETH:REP
-            [Decimal('0.09'), float('inf'), Decimal('1') / Decimal('0.05')],
-            # so row 2 is exchange rate of REP:BTC, REP:ETH, REP:REP
-            [Decimal('0.0020000'), Decimal('0.040000'), float('inf')]
-        ]
-        print(correct_output)
-        assert graph[0] == correct_output[0]
-        assert graph[1] == correct_output[1]
-        assert graph[2] == correct_output[2]
-
-    def test_bellman_ford(self):
-        self.setup()
-
-        graph = construct_rate_graph(self.currencies, self.exchanges)
-
-        print(bellman_ford(graph))
+        #bought = match_order_book(self.exchanges[2], Decimal(1.005), 'asks')
 
         assert (0)

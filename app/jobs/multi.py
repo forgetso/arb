@@ -89,10 +89,10 @@ def process():
     # pairs = [pairs[i] for i in pairs_index]
 
     # just choose 3
-    pairs = ['ETC-BTC', 'ETC-ETH', 'ETH-BTC']
+    pairs = ['LTC-BTC', 'LTC-ETH', 'ETH-BTC']
     print('chosen pairs {}'.format(pairs))
 
-    random_exchanges = choose_random_exchanges(number=len(pairs))
+    random_exchanges = choose_random_exchanges(number=len(pairs),duplicates=True)
     for exchange in random_exchanges:
         exchanges.append(dynamically_import_exchange(exchange)('xxx'))
 
@@ -161,8 +161,7 @@ def process():
     logging.debug('Profit is {} GBP'.format(profit))
 
     logging.debug(time.time() - start_time)
-    exit(0)
-    # bellend(currencies, exchanges, pairs)
+    bellend(currencies, exchanges, pairs)
 
 
 def bellend(currencies, exchanges, pairs):

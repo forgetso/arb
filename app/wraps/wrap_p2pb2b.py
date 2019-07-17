@@ -20,6 +20,7 @@ MINIMUM_DEPOSIT = {'BTC': 0.002, 'ETH': 0.05}
 P2PB2B_ADDRESSES = {
     'BTC': '36KYvtDUaqFkqmogT1EuHQdhbwML8Ahs9H',
     'ETH': '0x6cA28a73b125b3F1C3760673AacE15A1EF9c3C90',
+    'LTC': 'MTwXbS618hG2TiseGd3axe37ibjdHAj3pd'
 }
 
 
@@ -59,7 +60,7 @@ class p2pb2b(exchange):
         if get_minutely_api_requests(self.name) < P2PB2B_API_RATE_LIMIT_MINUTELY and get_secondly_api_requests(
                 self.name) < P2PB2B_API_RATE_LIMIT_SECONDLY:
             try:
-                ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=1)
+                ticker_buy_response = self.api.getBook(market=self.trade_pair, side='buy', limit=10)
             except Exception as e:
                 raise WrapP2PB2BError('Error getting order book from p2pb2b: {}'.format(e))
             store_api_access_time(self.name, 'order_book', datetime.utcnow())
@@ -69,7 +70,7 @@ class p2pb2b(exchange):
                                                                   ticker_buy_response.get('message')))
             order_book_dict['buy'] = ticker_buy_response.get('result')
             try:
-                ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=1)
+                ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=10)
             except Exception as e:
                 raise WrapP2PB2BError('Error getting order book from p2pb2b: {}'.format(e))
             store_api_access_time(self.name, 'order_book', datetime.utcnow())

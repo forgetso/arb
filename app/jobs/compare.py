@@ -12,6 +12,7 @@ from app.lib.common import round_decimal_number, decimal_as_string
 from threading import Thread
 from app.lib.coingecko import get_current_fiat_rate
 
+
 def compare(cur_x, cur_y, markets, jobqueue_id):
     arbitrages = []
     result = {'downstream_jobs': []}
@@ -50,6 +51,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
                 arbitrage = find_arbitrage(exchange_buy, exchange_sell, fiat_rate)
                 # profit!
             except InvalidTrade:
+                logging.debug('Invalid Trade')
                 continue
             if arbitrage:
                 arbitrages.append(arbitrage)
@@ -73,15 +75,18 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
     return result
 
+
 def get_fiat_rate(symbol):
     fiat_rates = get_fiat_rates()
     try:
         fiat_rate = round_decimal_number(fiat_rates[symbol][FIAT_DEFAULT_SYMBOL], 2)
         logging.debug('Fiat rate is {}'.format(fiat_rate))
     except:
+        logging.debug('Fiat rate for {} not present. Trying to download.'.format(symbol))
         get_current_fiat_rate(symbol)
         fiat_rate = get_fiat_rate(symbol)
     return fiat_rate
+
 
 def run_exchange_functions_as_threads(exchanges, function_name):
     # In Python, because of GIL (Global Interpreter Lock) a single python process cannot run threads in
@@ -257,7 +262,12 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate, fiat_arbitrage_minimum=Non
     result = {}
     if fiat_arbitrage_minimum is None:
         fiat_arbitrage_minimum = FIAT_ARBITRAGE_MINIMUM
+
     if exchange_x.lowest_ask and exchange_y.highest_bid:
+        # if either of these is false, there's been an error reading the data from an exchange
+        assert (exchange_x.lowest_ask['price'] > exchange_x.highest_bid['price'])
+        assert (exchange_y.lowest_ask['price'] > exchange_y.highest_bid['price'])
+
         if exchange_x.lowest_ask['price'] < exchange_y.highest_bid['price']:
 
             exchange_x, exchange_y, profit = calculate_profit_and_volume(exchange_x, exchange_y, fiat_rate)
@@ -328,7 +338,7 @@ def exchange_selection(cur_x, cur_y, markets, exchanges, jobqueue_id, directory=
         random_exchanges = potential_exchanges
     else:
 
-        random_exchanges = choose_random_exchanges(potential_exchanges)
+        random_exchanges = choose_random_exchanges(potential_exchanges=potential_exchanges)
 
     logging.debug('exchanges chosen {}'.format(random_exchanges))
 

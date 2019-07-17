@@ -1,9 +1,10 @@
 from bittrex.bittrex import Bittrex as BittrexAPI, API_V1_1, API_V2_0
 from app.settings import BITTREX_PRIVATE_KEY, BITTREX_PUBLIC_KEY
 import time
-from decimal import Decimal
-from app.lib.common import get_number_of_decimal_places
+from decimal import Decimal, setcontext, getcontext
+from app.lib.common import get_number_of_decimal_places, round_decimal_number
 from app.lib.exchange import exchange
+import logging
 
 BITTREX_TAKER_FEE = 0.0025
 
@@ -38,14 +39,20 @@ class bittrex(exchange):
         order_book_dict = self.api.get_orderbook(market=self.trade_pair)
         if not order_book_dict.get('success'):
             raise (WrapBittrexError(order_book_dict.get('message')))
-        self.asks = [{'price': Decimal(x['Rate']), 'volume': Decimal(x['Quantity'])} for x in
+        setcontext(self.decimal_rounding_context)
+        # TODO check if rounding context is correct for both rate and quantity
+        self.asks = [{'price': Decimal(x['Rate']),
+                      'volume': round_decimal_number(Decimal(x['Quantity']), getcontext().prec)} for x in
                      order_book_dict.get('result', {}).get('sell', [])]
         if len(self.asks):
             self.lowest_ask = self.asks[0]
-        self.bids = [{'price': Decimal(x['Rate']), 'volume': Decimal(x['Quantity'])} for x in
+        self.bids = [{'price': Decimal(x['Rate']),
+                      'volume': round_decimal_number(Decimal(x['Quantity']), getcontext().prec)} for x in
                      order_book_dict.get('result', {}).get('buy', [])]
         if len(self.bids):
             self.highest_bid = self.bids[0]
+        logging.debug(
+            'Bittrex lowest ask {} highest bid {}'.format(self.lowest_ask['price'], self.highest_bid['price']))
         return order_book_dict
 
     def get_currency_pairs(self):

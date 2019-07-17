@@ -7,7 +7,7 @@ class Exchange2API():
         pass
 
     def get_orderbook(self, market):
-        order_book = {'ETH-BTC':
+        order_book = {'ETHBTC':
                           {'success': True, 'result':
                               {
                                   'buy': [{'Rate': '0.08', 'Quantity': '1'}],

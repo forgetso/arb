@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from app.lib.errors import ErrorTradePairDoesNotExist
-from decimal import Decimal, setcontext, Context
+from decimal import Decimal, setcontext, Context, getcontext
 from app.lib.common import round_decimal_number
 import logging
 
@@ -26,6 +26,7 @@ class exchange(ABC):
         self.balances = None
         self.minimum_deposit = {}
         self.pending_balances = {}
+        self.decimal_rounding_context = None
 
         super().__init__()
 
@@ -37,8 +38,8 @@ class exchange(ABC):
             if not trade_pair_details:
                 raise ExchangeError('Trade pair does not exist on {}: {}'.format(self.name, trade_pair))
             self.decimal_places = trade_pair_details.get('decimal_places')
-            decimal_rounding_context = Context(prec=self.decimal_places)
-            setcontext(decimal_rounding_context)
+            self.decimal_rounding_context = Context(prec=self.decimal_places)
+            setcontext(self.decimal_rounding_context)
             self.trade_pair_common = trade_pair
             self.trade_pair = trade_pair_details.get('trading_code')
             self.fee = Decimal(trade_pair_details.get('fee'))
@@ -151,9 +152,9 @@ class exchange(ABC):
 
         allowed_decimal_places = self.decimal_places
 
-        logging.debug('Allowed decimal places {} Volume {}'.format(allowed_decimal_places, volume))
+        #logging.debug('Allowed decimal places {} Volume {}'.format(allowed_decimal_places, volume))
         volume_corrected = round_decimal_number(volume, allowed_decimal_places)
-        logging.debug('Volume Corrected {} Min Trade Size {}'.format(volume_corrected, self.min_trade_size))
+        #logging.debug('Volume Corrected {} Min Trade Size {}'.format(volume_corrected, self.min_trade_size))
         return volume_corrected
 
     @abstractmethod

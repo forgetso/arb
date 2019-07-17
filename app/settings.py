@@ -3,7 +3,7 @@ from app.apikeys import *
 
 FIAT_DEFAULT_SYMBOL = 'GBP'
 # This should be set to a value based in the fiat default symol above. e.g. 1 = 1 GBP
-FIAT_ARBITRAGE_MINIMUM = 0.2
+FIAT_ARBITRAGE_MINIMUM = 0
 
 DEFAULT_CURRENCY = 'ETH'
 DB_HOST = 'localhost'
@@ -15,12 +15,14 @@ DB_NAME_COMMON = 'common'
 DB_NAME_EXCHANGE = 'exchange'
 
 # EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex', 'p2pb2b']
-EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex']
-# EXCHANGES = ['binance', 'p2pb2b']
+# EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex']
+EXCHANGES = ['binance', 'p2pb2b', 'hitbtc']
 
-TRADE_PAIRS = [
-    'ETH-BTC', 'ETC-ETH', 'LTC-BTC', 'REP-ETH', 'GNT-ETH', 'ZRX-ETH',
-]
+# TRADE_PAIRS = [
+#     'ETH-BTC', 'ETC-ETH', 'LTC-BTC', 'REP-ETH', 'GNT-ETH', 'ZRX-ETH',
+# ]
+TRADE_PAIRS = ['ETH-BTC']
+# TRADE_PAIRS = ['ARDR-BTC']
 LOGLEVEL = 'DEBUG'
 # JOBS_NOT_RUNNING = []
 JOBS_NOT_RUNNING = ['TRANSACT', 'REPLENISH']

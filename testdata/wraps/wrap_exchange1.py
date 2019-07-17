@@ -15,6 +15,7 @@ class exchange1(exchange):
         order_book_dict = self.api.get_orderbook(market=self.trade_pair)
         if not order_book_dict.get('success'):
             raise (ExchangeError(order_book_dict.get('message')))
+
         self.asks = [{'price': Decimal(x['Rate']), 'volume': Decimal(x['Quantity'])} for x in
                      order_book_dict.get('result', {}).get('sell', [])]
         if len(self.asks):

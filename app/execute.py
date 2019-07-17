@@ -96,6 +96,7 @@ class JobQueueExecutor:
                 # the thread is /probably/ dead. But it may simply not have quite started yet. Give it a while to join, then check again
                 jobthread.join(2)
                 if not jobthread.is_alive():
+
                     self.finishedjobs.append(jobthread)
 
                 # we had an internal error => immediate quit!

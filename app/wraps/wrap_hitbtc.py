@@ -44,6 +44,8 @@ class hitbtc(exchange):
         self.bids = [{'price': Decimal(x['price']), 'volume': Decimal(x['size'])} for x in bids_raw]
         if len(self.bids):
             self.highest_bid = self.bids[0]
+        logging.debug(
+            'Hitbtc lowest ask {} highest bid {}'.format(self.lowest_ask['price'], self.highest_bid['price']))
         return order_book_dict
 
     def get_currencies(self, symbol=None):
