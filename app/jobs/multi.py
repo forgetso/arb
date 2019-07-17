@@ -94,6 +94,10 @@ def process():
     # pairs = [pairs[i] for i in pairs_index]
 
     # just choose 3
+    from app.tools.all_combinations import trade_paths
+    print(trade_paths())
+    exit(0)
+
     pairs = ['LTC-BTC', 'LTC-ETH', 'ETH-BTC']
     random.shuffle(pairs)
     # print(pairs)
@@ -161,8 +165,6 @@ def process():
     # set up the volume that we need to sell for the first transaction
     orders = getattr(trade_path[0]['exchange'], trade_path[0]['buy_type'])
     to_sell = orders[0]['volume'] * orders[0]['price']
-    # if trade_path[0]['from'] == 'base_currency':
-    #     to_sell = orders[0]['volume']
     fiat_rate = get_fiat_rate(trade_path[0]['from_symbol'])
     initial_cost = to_sell
 
