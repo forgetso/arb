@@ -179,7 +179,7 @@ def process():
         # print(txs)
 
         computed_sell = sum([tx['buy'] * tx['price'] for tx in txs])
-        logging.debug('Computed_sell {}'.format(computed_sell))
+        #logging.debug('Computed sell {}'.format(computed_sell))
         logging.debug('Bought {} {} using {} {}'.format(bought, p['to_symbol'], to_sell, p['from_symbol']))
         try:
             assert computed_sell / to_sell < 1.001
@@ -198,32 +198,31 @@ def process():
     logging.debug('Profit is {} GBP'.format(profit))
 
     logging.debug('Time taken {}s'.format(time.time() - start_time))
-    # bellend(currencies, exchanges, pairs)
+    #bellend(currencies, exchanges, pairs)
 
 
 def find_trade_path(previous, current):
     # find out where we're starting and finishing
     result = None
-    logging.debug('Going from {} to {}'.format(previous.trade_pair, current.trade_pair))
-
+    # logging.debug('Going from {} to {}'.format(previous.trade_pair, current.trade_pair))
     # there can only be one link between two exchanges, e.g. ETH BTC | LTC BTC. Link is BTC
     if previous.base_currency == current.quote_currency:
-        logging.debug(
-            'Previous Base {} is the same as current Quote {}'.format(previous.base_currency, current.quote_currency))
+        # logging.debug(
+        #     'Previous Base {} is the same as current Quote {}'.format(previous.base_currency, current.quote_currency))
         result = 'quote_currency', 'base_currency', 'asks'
     elif previous.quote_currency == current.quote_currency:
-        logging.debug(
-            'Previous Quote {} is the same as current Quote {}'.format(previous.quote_currency, current.quote_currency))
+        # logging.debug(
+        #     'Previous Quote {} is the same as current Quote {}'.format(previous.quote_currency, current.quote_currency))
         result = 'quote_currency', 'base_currency', 'asks'
     elif previous.base_currency == current.base_currency:
-        logging.debug(
-            'Previous Base {} is the same as current Base {}'.format(previous.base_currency, current.base_currency))
+        # logging.debug(
+        #     'Previous Base {} is the same as current Base {}'.format(previous.base_currency, current.base_currency))
         result = 'base_currency', 'quote_currency', 'bids'
     elif previous.quote_currency == current.base_currency:
-        logging.debug(
-            'Previous Quote {} is the same as current Base {}'.format(previous.quote_currency, current.base_currency))
+        # logging.debug(
+        #     'Previous Quote {} is the same as current Base {}'.format(previous.quote_currency, current.base_currency))
         result = 'base_currency', 'quote_currency', 'bids'
-    logging.debug(result)
+    # logging.debug(result)
     return result
 
 
