@@ -7,7 +7,7 @@ from app.lib.errors import ErrorTradePairDoesNotExist
 from app.settings import FIAT_DEFAULT_SYMBOL, FIAT_ARBITRAGE_MINIMUM, LOGLEVEL, EXCHANGES, FIAT_REPLENISH_AMOUNT
 from app.lib.jobqueue import return_value_to_stdout
 from decimal import Decimal
-from app.lib.db import store_audit, get_fiat_rates, get_exchange_lock, get_replenish_jobs
+from app.lib.db import store_audit, get_fiat_rate as db_get_fiat_rate, get_exchange_lock, get_replenish_jobs
 from app.lib.common import round_decimal_number, decimal_as_string
 from threading import Thread
 from app.lib.coingecko import get_current_fiat_rate
@@ -30,7 +30,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
         return_value_to_stdout(result)
         return result
 
-    fiat_rate = get_fiat_rate(cur_y)
+    fiat_rate = fiat_rate(cur_y)
 
     # generate a unique list of permutations for comparison [[buy, sell], [buy, sell], ...]
     # TODO make sure not to do everything twice. Currently calling both APIs twice
@@ -77,14 +77,13 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
 
 
 def get_fiat_rate(symbol):
-    fiat_rates = get_fiat_rates()
     try:
-        fiat_rate = round_decimal_number(fiat_rates[symbol][FIAT_DEFAULT_SYMBOL], 2)
+        fiat_rate = round_decimal_number(db_get_fiat_rate(symbol)[FIAT_DEFAULT_SYMBOL], 2)
         logging.debug('Fiat rate is {}'.format(fiat_rate))
     except:
         logging.debug('Fiat rate for {} not present. Trying to download.'.format(symbol))
         get_current_fiat_rate(symbol)
-        fiat_rate = get_fiat_rate(symbol)
+        fiat_rate = round_decimal_number(db_get_fiat_rate(symbol)[FIAT_DEFAULT_SYMBOL], 2)
     return fiat_rate
 
 

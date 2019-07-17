@@ -10,51 +10,52 @@ from app.lib.bellmanford import bellman_ford
 from app.tools.all_combinations import process as all_trading_combinations
 import random
 from app.lib.setup import choose_random_exchanges, dynamically_import_exchange
+from collections import deque
 
 
-def match_order_book(exchange, to_sell, buy_type):
+def match_order_book(exchange, to_sell, buy_type, sell_symbol):
     depth = 0
     to_buy = 0
+    transactions = []
     try:
         # if pair is ETH-BTC, volume is in ETH, price is in BTC
         # BTC volume is volume * price
         # if buy type is asks, we are selling BTC (to_sell) for ETH (to_buy)
         # if buy type is bids, we are selling ETH (to_sell) for BTC (to_buy)
-        bids = exchange.bids
-        asks = exchange.asks
-        logging.debug(exchange.name)
-        assert bids[0]['price'] < asks[0]['price']
-        while to_sell >= 0:
-            if buy_type == 'asks':
-                # each one of these buys and sells would need to be stored and then executed individually
-                to_sell -= asks[depth]['volume'] * asks[depth]['price']
-                to_buy += asks[depth]['volume']
-            elif buy_type == 'bids':
-                to_sell -= bids[depth]['volume']
-                to_buy += bids[depth]['volume'] * bids[depth]['price']
-                print(to_buy)
-                print(to_sell)
+        orders = getattr(exchange, buy_type)
+        transactions = []
+        assert exchange.bids[0]['price'] < exchange.asks[0]['price']
+        while to_sell > 0:
+            buy = 0
+            price = orders[depth]['price']
+            volume = orders[depth]['volume']
+            # each one of these buys and sells would need to be stored and then executed individually
+            if sell_symbol == exchange.base_currency:
+                sell_available = volume
+                if sell_available > to_sell:
+                    buy = to_sell / sell_available * price * volume
+                    to_sell = 0
+                else:
+                    to_sell -= sell_available
+                    buy = price * volume
+            if sell_symbol == exchange.quote_currency:
+                sell_available = volume * price
+                if sell_available > to_sell:
+                    buy = to_sell / sell_available * volume
+                    to_sell = 0
+                else:
+                    to_sell -= sell_available
+                    buy = orders[depth]['volume']
+            to_buy += buy
+            transactions.append({'buy': buy, 'price': price})
             depth += 1
-    except IndexError:
-        print('Not enough {} to complete trade. {} {}'.format(buy_type, len(getattr(exchange, buy_type)), buy_type))
 
-    if to_sell < 0:
-        print('here')
-        print(depth)
-        if buy_type == 'asks':
-            # Trying to buy too much ETH. Take some off, equivalent to how much we went past zero
-            logging.debug('buying too much: Buy is {} Sell is {}'.format(to_buy, to_sell))
-            to_buy -= -to_sell * asks[depth - 1]['price']
-            logging.debug('buying now {}'.format(to_buy))
+    except IndexError as e:
+        print(e)
+        logging.debug(
+            'Not enough {} to complete trade. {} {}'.format(buy_type, len(getattr(exchange, buy_type)), buy_type))
 
-        elif buy_type == 'bids':
-            # Trying to buy too much BTC. Take some off, equivalent to how much we went past zero
-            logging.debug('buying too much: Buy is {} Sell is {}'.format(to_buy, to_sell))
-            to_buy -= -to_sell * bids[depth - 1]['price']
-
-            logging.debug('buying now {}'.format(to_buy))
-
-    return to_buy
+    return to_buy, transactions
 
 
 def construct_rate_graph(currencies, exchanges):
@@ -94,8 +95,11 @@ def process():
 
     # just choose 3
     pairs = ['LTC-BTC', 'LTC-ETH', 'ETH-BTC']
-    print('chosen pairs {}'.format(pairs))
+    random.shuffle(pairs)
+    # print(pairs)
+    logging.debug('chosen pairs {}'.format(pairs))
 
+    exchange_count = len(pairs)
     random_exchanges = choose_random_exchanges(number=len(pairs), duplicates=True)
     for exchange in random_exchanges:
         exchanges.append(dynamically_import_exchange(exchange)('xxx'))
@@ -104,10 +108,40 @@ def process():
 
     currencies = []
 
+    previous_exchange = None
     for count, pair in enumerate(pairs):
         exchanges[count].set_trade_pair(pair, markets)
         currencies.append(exchanges[count].base_currency)
         currencies.append(exchanges[count].quote_currency)
+
+    trade_path = deque()
+    for current_exchange in exchanges:
+
+        if previous_exchange is not None:
+            curr_from, curr_to, buy_type = find_trade_path(previous_exchange, current_exchange)
+            # this is actually the last trade
+            trade_path.append({'from': curr_from,
+                               'to': curr_to,
+                               'buy_type': buy_type,
+                               'exchange': current_exchange,
+                               'from_symbol': getattr(current_exchange, curr_from),
+                               'to_symbol': getattr(current_exchange, curr_to)
+                               })
+        else:
+            curr_from, curr_to, buy_type = find_trade_path(exchanges[exchange_count - 1], current_exchange)
+            # all other trades are inserted before the last trade
+            trade_path.appendleft({'from': curr_from,
+                                   'to': curr_to,
+                                   'buy_type': buy_type,
+                                   'exchange': current_exchange,
+                                   'from_symbol': getattr(current_exchange, curr_from),
+                                   'to_symbol': getattr(current_exchange, curr_to)
+                                   })
+        previous_exchange = current_exchange
+
+    # pprint.pprint(trade_path)
+    for p in trade_path:
+        logging.debug('{} to {}'.format(getattr(p['exchange'], p['from']), getattr(p['exchange'], p['to'])))
 
     # this is needed for bellman ford algorithm
     currencies = sorted(list(set(currencies)))
@@ -124,48 +158,73 @@ def process():
     # store all the buy volumes in a list
     buys = list()
 
-    # first buy volume is just whatever the volume of the lowest ask is (up to initial depth)
-    buys.append(sum([x['volume'] for x in exchanges[0].asks[0:initial_depth]]))
+    # set up the volume that we need to sell for the first transaction
+    orders = getattr(trade_path[0]['exchange'], trade_path[0]['buy_type'])
+    to_sell = orders[0]['volume'] * orders[0]['price']
+    # if trade_path[0]['from'] == 'base_currency':
+    #     to_sell = orders[0]['volume']
+    fiat_rate = get_fiat_rate(trade_path[0]['from_symbol'])
+    initial_cost = to_sell
 
-    initial_cost = sum([x['volume'] * x['price'] for x in exchanges[0].asks[0:initial_depth]])
-    logging.debug('buying {} {} for initial {} {}'.format(buys[0], exchanges[0].base_currency, initial_cost,
-                                                          exchanges[0].quote_currency))
+    # print(orders[0])
+    # now loop all the transactions in the transaction path
+    for p in trade_path:
+        logging.debug('To Sell {} {}'.format(to_sell, p['from_symbol']))
+        # pprint.pprint(p)
+        buy_type = p['buy_type']
+        exchange = p['exchange']
+        orders = getattr(p['exchange'], p['buy_type'])
+        # print(orders[0])
+        bought, txs = match_order_book(exchange, to_sell, buy_type, sell_symbol=p['from_symbol'])
+        # print(txs)
 
-    fiat_rate = get_fiat_rate(exchanges[0].quote_currency)
-    initial_cost_fiat = fiat_rate * initial_cost
+        computed_sell = sum([tx['buy'] * tx['price'] for tx in txs])
+        logging.debug('Computed_sell {}'.format(computed_sell))
+        logging.debug('Bought {} {} using {} {}'.format(bought, p['to_symbol'], to_sell, p['from_symbol']))
+        try:
+            assert computed_sell / to_sell < 1.001
+        except AssertionError as e:
+            print(orders[0])
+            print(txs)
+            raise Exception('Computed sell differs to sell value!')
 
-    # if we're going BTC -> ETC -> ETH -> BTC then we're making the following trades
-    # BTC/ETC base ETC quote BTC buying ETC (base)  = asks
-    # ETC/ETH base ETC quote ETH buying ETH (quote) = bids
-    # ETH/BTC base ETH quote BTC buying BTC (quote) = bids
-    path = [exchanges[0].base_currency]
-    path.extend([e.quote_currency for e in exchanges[1:]])
-    # BTC -> ['ETC', 'ETH', 'BTC']
-
-    for count, exchange in enumerate(exchanges[1:]):
-
-        buying = path[count]
-        base = exchange.base_currency
-        quote = exchange.quote_currency
-        if buying == quote:
-            buy_type = 'bids'
-        else:
-            buy_type = 'asks'
-        buys.append(match_order_book(exchange, to_sell=buys[count], buy_type=buy_type))
-        if buy_type == 'asks':
-            logging.debug('Sold {} {} for {} {}'.format(buys[count], base, buys[count + 1], quote))
-        else:
-            logging.debug('Sold {} {} for {} {}'.format(buys[count], quote, buys[count + 1], base))
+        to_sell = bought
+        buys.append(bought)
 
     diff = buys[len(buys) - 1] - initial_cost
-
     # fees
     profit = (diff - initial_cost * Decimal('0.006')) * Decimal(fiat_rate)
 
     logging.debug('Profit is {} GBP'.format(profit))
 
-    logging.debug(time.time() - start_time)
-    bellend(currencies, exchanges, pairs)
+    logging.debug('Time taken {}s'.format(time.time() - start_time))
+    # bellend(currencies, exchanges, pairs)
+
+
+def find_trade_path(previous, current):
+    # find out where we're starting and finishing
+    result = None
+    logging.debug('Going from {} to {}'.format(previous.trade_pair, current.trade_pair))
+
+    # there can only be one link between two exchanges, e.g. ETH BTC | LTC BTC. Link is BTC
+    if previous.base_currency == current.quote_currency:
+        logging.debug(
+            'Previous Base {} is the same as current Quote {}'.format(previous.base_currency, current.quote_currency))
+        result = 'quote_currency', 'base_currency', 'asks'
+    elif previous.quote_currency == current.quote_currency:
+        logging.debug(
+            'Previous Quote {} is the same as current Quote {}'.format(previous.quote_currency, current.quote_currency))
+        result = 'quote_currency', 'base_currency', 'asks'
+    elif previous.base_currency == current.base_currency:
+        logging.debug(
+            'Previous Base {} is the same as current Base {}'.format(previous.base_currency, current.base_currency))
+        result = 'base_currency', 'quote_currency', 'bids'
+    elif previous.quote_currency == current.base_currency:
+        logging.debug(
+            'Previous Quote {} is the same as current Base {}'.format(previous.quote_currency, current.base_currency))
+        result = 'base_currency', 'quote_currency', 'bids'
+    logging.debug(result)
+    return result
 
 
 def bellend(currencies, exchanges, pairs):
@@ -182,7 +241,7 @@ def bellend(currencies, exchanges, pairs):
             logging.debug("No opportunity here :(")
         else:
             trade_pair = '{}-{}'.format(path[0], path[1])
-            fiat_rate = get_fiat_rate(path[0])
+            fiat_rate = fiat_rate(path[0])
             try:
                 exchange = exchanges[pairs.index(trade_pair)]
             except ValueError:

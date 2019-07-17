@@ -13,7 +13,7 @@ def process():
     for setb in trade_pair_combinations[1:]:
         seta = seta.intersection(setb)
 
-    logging.debug(seta)
+    #logging.debug(seta)
     return seta
 
 if __name__ == "__main__":  # pragma: nocoverage

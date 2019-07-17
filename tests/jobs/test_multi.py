@@ -49,6 +49,40 @@ class TestClass(object):
     def test_match_order_book(self):
         self.setup()
         assert self.exchanges[2].trade_pair_common == 'ETH-BTC'
-        assert len(self.exchanges[2].bids) == 2
-        bought = match_order_book(exchange=self.exchanges[2], to_sell=Decimal(1.005), buy_type='bids')
-        assert bought == Decimal(1 * Decimal('0.09') + Decimal('0.088') * Decimal('0.005'))
+        assert len(self.exchanges[2].bids) == 3
+        # this is selling BASE for QUOTE (bids)
+        bought, _ = match_order_book(exchange=self.exchanges[2],
+                                     to_sell=Decimal('2.005'),
+                                     buy_type='bids',
+                                     sell_symbol=self.exchanges[2].base_currency)
+        assert bought == Decimal('0.177442')
+        # this is selling QUOTE for BASE (asks)
+        bought, _ = match_order_book(exchange=self.exchanges[2],
+                                     to_sell=Decimal('0.278'),
+                                     buy_type='asks',
+                                     sell_symbol=self.exchanges[2].quote_currency)
+        assert bought == Decimal('2.7090909')
+        bought, _ = match_order_book(exchange=self.exchanges[2],
+                                     to_sell=Decimal('0.170'),
+                                     buy_type='asks',
+                                     sell_symbol=self.exchanges[2].quote_currency)
+        assert bought == Decimal('1.7')
+
+        # now use some real LTC ETH data. Here 42 LTC are selling at rate 0.42 ETH
+        self.exchanges[2].asks = [{'price': Decimal('0.425564'), 'volume': Decimal('42.806')}]
+        self.exchanges[2].base_currency = 'LTC'
+        self.exchanges[2].quote_currency = 'ETH'
+        # we want to sell 2.9955 ETH
+        to_sell = Decimal('2.9955')
+        print(self.exchanges[2].asks)
+        bought, transactions = match_order_book(exchange=self.exchanges[2],
+                                     to_sell=to_sell,
+                                     buy_type='asks',
+                                     sell_symbol=self.exchanges[2].quote_currency)
+        # we can buy (to_sell / price * volume) * volume
+        assert bought == Decimal('7.0388941')
+
+        computed_sell = sum([tx['buy'] * tx['price'] for tx in transactions])
+
+        # want to be less than 1% out
+        assert computed_sell / to_sell < 1.001

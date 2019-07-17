@@ -65,9 +65,11 @@ class p2pb2b(exchange):
                 raise WrapP2PB2BError('Error getting order book from p2pb2b: {}'.format(e))
             store_api_access_time(self.name, 'order_book', datetime.utcnow())
             if not ticker_buy_response.get('success'):
+                print(ticker_buy_response)
                 raise WrapP2PB2BError(
                     'Error getting order book for {} : {}'.format(self.trade_pair,
                                                                   ticker_buy_response.get('message')))
+
             order_book_dict['buy'] = ticker_buy_response.get('result')
             try:
                 ticker_sell_response = self.api.getBook(market=self.trade_pair, side='sell', limit=10)

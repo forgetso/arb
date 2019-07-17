@@ -93,9 +93,9 @@ def store_fiat_rates(fiat_rates):
     db.fiat_rates.insert_one(fiat_rates)
 
 
-def get_fiat_rates():
+def get_fiat_rate(symbol):
     db = common_db()
-    fiat_rates = [x for x in db.fiat_rates.find({}).sort([('datetime', -1)]).limit(1)][0]
+    fiat_rates = [x[symbol] for x in db.fiat_rates.find({symbol: {'$exists': True}}).sort([('datetime', -1)]).limit(1)][0]
     return fiat_rates
 
 

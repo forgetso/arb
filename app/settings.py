@@ -16,7 +16,7 @@ DB_NAME_EXCHANGE = 'exchange'
 
 # EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex', 'p2pb2b']
 # EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex']
-EXCHANGES = ['binance', 'p2pb2b', 'hitbtc']
+EXCHANGES = ['binance', 'hitbtc']
 
 # TRADE_PAIRS = [
 #     'ETH-BTC', 'ETC-ETH', 'LTC-BTC', 'REP-ETH', 'GNT-ETH', 'ZRX-ETH',

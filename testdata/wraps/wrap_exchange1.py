@@ -17,11 +17,11 @@ class exchange1(exchange):
             raise (ExchangeError(order_book_dict.get('message')))
 
         self.asks = [{'price': Decimal(x['Rate']), 'volume': Decimal(x['Quantity'])} for x in
-                     order_book_dict.get('result', {}).get('sell', [])]
+                     order_book_dict.get('result', {}).get('asks', [])]
         if len(self.asks):
             self.lowest_ask = self.asks[0]
         self.bids = [{'price': Decimal(x['Rate']), 'volume': Decimal(x['Quantity'])} for x in
-                     order_book_dict.get('result', {}).get('buy', [])]
+                     order_book_dict.get('result', {}).get('bids', [])]
         if len(self.bids):
             self.highest_bid = self.bids[0]
         return order_book_dict

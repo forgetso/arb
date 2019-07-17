@@ -59,6 +59,8 @@ class bittrex(exchange):
         # get all of their currency pairs in the format for the markets file
         currency_pairs_response = self.api.get_markets()
         currency_pairs_list = []
+        if not currency_pairs_response.get('success'):
+            raise (WrapBittrexError(currency_pairs_response.get('message')))
         for c in currency_pairs_response.get('result'):
             if c['IsActive'] and not c['IsRestricted']:
                 currency_pairs_list.append({

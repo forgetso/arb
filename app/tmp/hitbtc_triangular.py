@@ -108,7 +108,7 @@ def process():
 
     markets = load_currency_pairs()
 
-    fiat_rate = get_fiat_rate('ETH')
+    fiat_rate = fiat_rate('ETH')
 
     for count, pair in enumerate(pairs):
         exchanges[count].set_trade_pair(pair, markets)
