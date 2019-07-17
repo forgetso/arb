@@ -11,6 +11,7 @@ from app.tools.all_combinations import process as all_trading_combinations
 import random
 from app.lib.setup import choose_random_exchanges, dynamically_import_exchange
 
+
 def match_order_book(exchange, to_sell, buy_type):
     depth = 0
     to_buy = 0
@@ -26,29 +27,32 @@ def match_order_book(exchange, to_sell, buy_type):
         while to_sell >= 0:
             if buy_type == 'asks':
                 # each one of these buys and sells would need to be stored and then executed individually
-                to_sell -= asks[depth]['volume']
-                to_buy += asks[depth]['volume'] * bids[depth]['price']
+                to_sell -= asks[depth]['volume'] * asks[depth]['price']
+                to_buy += asks[depth]['volume']
             elif buy_type == 'bids':
-                to_buy += bids[depth]['volume']
-                to_sell -= bids[depth]['volume'] * asks[depth]['price']
+                to_sell -= bids[depth]['volume']
+                to_buy += bids[depth]['volume'] * bids[depth]['price']
+                print(to_buy)
+                print(to_sell)
             depth += 1
-
-        if to_sell < 0:
-            if buy_type == 'asks':
-                # Trying to buy too much ETH. Take some off, equivalent to how much we went past zero
-                # print('buying too much {} {}'.format(to_buy, to_sell))
-                to_buy -= -to_sell * asks[depth]['price']
-                # print('buying now')
-                # print(to_buy)
-
-            elif buy_type == 'bids':
-                # Trying to buy too much BTC. Take some off, equivalent to how much we went past zero
-                logging.debug('buying too much {} {}'.format(to_buy, to_sell))
-                to_buy -= -to_sell / bids[depth]['price']
-                logging.debug('buying now')
-                logging.debug(to_buy)
     except IndexError:
         print('Not enough {} to complete trade. {} {}'.format(buy_type, len(getattr(exchange, buy_type)), buy_type))
+
+    if to_sell < 0:
+        print('here')
+        print(depth)
+        if buy_type == 'asks':
+            # Trying to buy too much ETH. Take some off, equivalent to how much we went past zero
+            logging.debug('buying too much: Buy is {} Sell is {}'.format(to_buy, to_sell))
+            to_buy -= -to_sell * asks[depth - 1]['price']
+            logging.debug('buying now {}'.format(to_buy))
+
+        elif buy_type == 'bids':
+            # Trying to buy too much BTC. Take some off, equivalent to how much we went past zero
+            logging.debug('buying too much: Buy is {} Sell is {}'.format(to_buy, to_sell))
+            to_buy -= -to_sell * bids[depth - 1]['price']
+
+            logging.debug('buying now {}'.format(to_buy))
 
     return to_buy
 
@@ -92,7 +96,7 @@ def process():
     pairs = ['LTC-BTC', 'LTC-ETH', 'ETH-BTC']
     print('chosen pairs {}'.format(pairs))
 
-    random_exchanges = choose_random_exchanges(number=len(pairs),duplicates=True)
+    random_exchanges = choose_random_exchanges(number=len(pairs), duplicates=True)
     for exchange in random_exchanges:
         exchanges.append(dynamically_import_exchange(exchange)('xxx'))
 

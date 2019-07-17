@@ -48,6 +48,7 @@ class TestClass(object):
 
     def test_match_order_book(self):
         self.setup()
-        #bought = match_order_book(self.exchanges[2], Decimal(1.005), 'asks')
-
-        assert (0)
+        assert self.exchanges[2].trade_pair_common == 'ETH-BTC'
+        assert len(self.exchanges[2].bids) == 2
+        bought = match_order_book(exchange=self.exchanges[2], to_sell=Decimal(1.005), buy_type='bids')
+        assert bought == Decimal(1 * Decimal('0.09') + Decimal('0.088') * Decimal('0.005'))
