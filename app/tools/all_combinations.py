@@ -6,12 +6,17 @@ import logging
 
 
 def process():
+    seta = get_intersections()
+
+    # logging.debug(seta)
+    return seta
+
+
+def get_intersections():
     trade_pair_combinations = get_combinations()
     seta = trade_pair_combinations[0]
     for setb in trade_pair_combinations[1:]:
         seta = seta.intersection(setb)
-
-    # logging.debug(seta)
     return seta
 
 
@@ -24,17 +29,29 @@ def get_combinations():
     return trade_pair_combinations
 
 
-def trade_paths():
-    trade_pair_combinations = get_combinations()
-    trade_paths = []
-    for combo in trade_pair_combinations:
-        pair_a = combo[0].split('-')
-        pair_b = combo[1].split('-')
-        join = [x for x in pair_a if x in pair_b]
-        if join:
-            trade_paths.append([pair_a, pair_b])
+def get_combinations_split():
+    trade_pair_combinations = get_intersections()
 
-    print(trade_paths)
+    split_combos = []
+    for trade_pair in trade_pair_combinations:
+        pair = trade_pair.split('-')
+        split_combos.append(pair)
+    return split_combos
+
+
+def trade_paths():
+    trade_paths = []
+    split_combos = get_combinations_split()
+    joins = []
+    for trade_pair_x in split_combos:
+        for trade_pair_y in split_combos:
+            join = [x for x in trade_pair_x if x in trade_pair_y and trade_pair_x != trade_pair_y]
+            if join:
+                joins.append(frozenset(trade_pair_x))
+                joins.append(frozenset(trade_pair_y))
+
+    import pprint
+    pprint.pprint(set(joins))
 
 
 if __name__ == "__main__":  # pragma: nocoverage

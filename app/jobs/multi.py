@@ -94,9 +94,9 @@ def process():
     # pairs = [pairs[i] for i in pairs_index]
 
     # just choose 3
-    from app.tools.all_combinations import trade_paths
-    print(trade_paths())
-    exit(0)
+    # from app.tools.all_combinations import trade_paths
+    # print(trade_paths())
+    # exit(0)
 
     pairs = ['LTC-BTC', 'LTC-ETH', 'ETH-BTC']
     random.shuffle(pairs)

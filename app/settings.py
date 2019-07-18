@@ -18,10 +18,10 @@ DB_NAME_EXCHANGE = 'exchange'
 # EXCHANGES = ['binance', 'bittrex', 'hitbtc', 'poloniex']
 EXCHANGES = ['binance', 'hitbtc']
 
-# TRADE_PAIRS = [
-#     'ETH-BTC', 'ETC-ETH', 'LTC-BTC', 'REP-ETH', 'GNT-ETH', 'ZRX-ETH',
-# ]
-TRADE_PAIRS = ['ETH-BTC']
+TRADE_PAIRS = [
+    'ETH-BTC', 'ETC-ETH', 'LTC-BTC', 'REP-ETH', 'GNT-ETH', 'ZRX-ETH',
+]
+# TRADE_PAIRS = ['ETH-BTC']
 # TRADE_PAIRS = ['ARDR-BTC']
 LOGLEVEL = 'DEBUG'
 # JOBS_NOT_RUNNING = []
@@ -34,4 +34,4 @@ INTERVAL_RUNNINGJOBS = int(3)
 INTERVAL_FIAT_RATE = int(600)
 
 MASTER_EXCHANGE = 'bittrex'
-FIAT_REPLENISH_AMOUNT = 100
+FIAT_REPLENISH_AMOUNT = 1000

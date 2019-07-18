@@ -126,6 +126,18 @@ def decimal_as_string(number):
 def get_exchanges():
     return EXCHANGES
 
+def get_longest_trade_path(trade_pairs):
+    # trade_pairs is a list of pairs like [[ETH, BTC], [LTC, BTC], ...]
+    # this function will find the longest route between trade pairs
+    occurrences = {}
+    for trade_pair in trade_pairs:
+        occurrences.setdefault(trade_pair[0], 0)
+        occurrences.setdefault(trade_pair[1], 0)
+        occurrences[trade_pair[0]] += 1
+        occurrences[trade_pair[1]] += 1
+
+    print(sorted(occurrences.items(), key=lambda x: x[1], reverse=True))
+    return None
 
 class CommonError(Exception):
     pass

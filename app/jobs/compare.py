@@ -30,7 +30,7 @@ def compare(cur_x, cur_y, markets, jobqueue_id):
         return_value_to_stdout(result)
         return result
 
-    fiat_rate = fiat_rate(cur_y)
+    fiat_rate = get_fiat_rate(cur_y)
 
     # generate a unique list of permutations for comparison [[buy, sell], [buy, sell], ...]
     # TODO make sure not to do everything twice. Currently calling both APIs twice
@@ -268,6 +268,7 @@ def find_arbitrage(exchange_x, exchange_y, fiat_rate, fiat_arbitrage_minimum=Non
         assert (exchange_y.lowest_ask['price'] > exchange_y.highest_bid['price'])
 
         if exchange_x.lowest_ask['price'] < exchange_y.highest_bid['price']:
+            logging.debug('Potential arbitrages')
 
             exchange_x, exchange_y, profit = calculate_profit_and_volume(exchange_x, exchange_y, fiat_rate)
 
@@ -311,6 +312,8 @@ def calculate_profit_and_volume(exchange_buy, exchange_sell, fiat_rate):
                         type(exchange_sell.fee))
 
     profit = ((price_sell - price_buy) * volume - fee) * fiat_rate
+
+    logging.debug('\nPROFIT {}\n'.format(profit))
 
     exchange_buy.lowest_ask['volume'] = volume
     exchange_sell.highest_bid['volume'] = volume

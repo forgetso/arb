@@ -1,11 +1,12 @@
 from app.lib.common import get_number_of_decimal_places, get_replenish_quantity, CommonError, \
-    get_number_of_places_before_point, round_decimal_number, decimal_as_string, dynamically_import_exchange
+    get_number_of_places_before_point, round_decimal_number, decimal_as_string, dynamically_import_exchange, \
+    get_longest_trade_path
 from app.settings import FIAT_REPLENISH_AMOUNT
 from decimal import Decimal
 from pytest import raises
 from abc import ABCMeta
 from app.wraps.wrap_poloniex import poloniex
-
+from app.tools.all_combinations import get_combinations_split
 
 def test_get_number_of_decimal_places():
     assert get_number_of_decimal_places(Decimal('0.001')) == 3
@@ -57,3 +58,17 @@ def test_dynamically_import_exchange():
     assert isinstance(exchange, ABCMeta)
     exchange_init = exchange(jobqueue_id='blah')
     assert isinstance(exchange_init, poloniex)
+
+
+def test_get_longest_trade_path():
+    trade_pairs = [['ETH', 'BTC'], ['PAX', 'ETH'], ['LTC', 'BTC'], ['REP', 'ETH']]
+    trade_pairs = get_combinations_split()
+    longest_length = get_longest_trade_path(trade_pairs)
+    assert longest_length == 4
+    # assert ['PAX', 'ETH', 'BTC', 'LTC'] in longest_paths
+    # assert ['REP', 'ETH', 'BTC', 'LTC'] in longest_paths
+    # assert ['LTC', 'BTC', 'ETH', 'REP'] in longest_paths
+
+    # common denominators are
+    # ETH with 3 entries
+    # BTC with 2 entries
